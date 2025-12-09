@@ -20,8 +20,6 @@ import {
   PanelRight
 } from "lucide-react";
 
-import { getApiUrl } from "../config/api";
-
 export const LandCode = () => {
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
@@ -63,7 +61,7 @@ export const LandCode = () => {
     count: 10,
   });
 
-  const API_URL = getApiUrl(`/admin`);
+  const API_URL = "http://72.61.169.226/admin";
   const token = localStorage.getItem("token");
 
   useEffect(() => {

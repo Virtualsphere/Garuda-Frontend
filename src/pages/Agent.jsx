@@ -3,7 +3,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AgentForm } from "./AgentForm";
 import { PanelRight, UserPlus, Search, Filter, X, Plus, Edit, Trash2, Eye } from "lucide-react";
-import { getApiUrl } from "../config/api";
 
 export const Agent = () => {
   const [agents, setAgents] = useState([]);
@@ -23,7 +22,7 @@ export const Agent = () => {
   const [totalAgents, setTotalAgents] = useState(0);
 
   const navigate = useNavigate();
-  const API_URL = getApiUrl(`/admin`);
+  const API_URL = "http://72.61.169.226/admin";
 
   useEffect(() => {
     fetchAgents();

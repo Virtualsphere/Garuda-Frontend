@@ -18,7 +18,6 @@ import {
   Filter,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import { getApiUrl } from "../config/api";
 
 const VerificationContext = createContext();
 
@@ -45,6 +44,7 @@ export default function LandVerification() {
   const [existingPassbookUrl, setExistingPassbookUrl] = useState(null);
   const [existingLandBorderUrl, setExistingLandBorderUrl] = useState(null);
 
+  const API_BASE = "http://72.61.169.226";
   const getToken = () => localStorage.getItem("token") || "";
 
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function LandVerification() {
 
   const fetchLand = async () => {
     try {
-      const res = await axios.get(getApiUrl(`/admin/land`), {
+      const res = await axios.get("http://72.61.169.226/admin/land", {
         headers: { Authorization: `Bearer ${getToken()}` },
         params: {
           district: state?.district || "",
@@ -128,7 +128,7 @@ export default function LandVerification() {
       };
 
       const response = await axios.post(
-        getApiUrl(`/admin/wishlist`),
+        "http://72.61.169.226/admin/wishlist",
         payload,
         {
           headers: {
@@ -304,9 +304,9 @@ export default function LandVerification() {
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const url = getApiUrl(`/admin/land/${encodeURIComponent(
+      const url = `http://72.61.169.226/admin/land/${encodeURIComponent(
         formData.land_id
-      )}`);
+      )}`;
       const res = await axios.put(url, fd, { headers });
 
       alert("Update successful");

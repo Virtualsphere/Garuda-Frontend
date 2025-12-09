@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, Calculator, Check, ChevronDown, Loader, Search, User, Filter } from 'lucide-react';
-import { getApiUrl } from "../config/api";
 
 export const AgentForm = ({ agent, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -31,7 +30,7 @@ export const AgentForm = ({ agent, onClose, onSuccess }) => {
   const [formErrors, setFormErrors] = useState({});
   const [userSearch, setUserSearch] = useState('');
 
-  const API_URL = getApiUrl(`/admin`);
+  const API_URL = 'http://72.61.169.226/admin';
 
   useEffect(() => {
     if (agent) {

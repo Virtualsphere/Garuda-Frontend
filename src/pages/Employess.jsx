@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { PanelRight, X, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getApiUrl } from "../config/api";
 
 /**
  * Employee.jsx
@@ -62,7 +61,7 @@ export default function Employee() {
   // fetch users + relational tables and merge for UI
   const fetchAll = async () => {
     try {
-      const res = await fetch(getApiUrl(`/admin/personal/details`), {
+      const res = await fetch("http://72.61.169.226/admin/personal/details", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -233,7 +232,7 @@ export default function Employee() {
     }
 
     try {
-      const res = await fetch(getApiUrl(`/admin/personal/details`), {
+      const res = await fetch("http://72.61.169.226/admin/personal/details", {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

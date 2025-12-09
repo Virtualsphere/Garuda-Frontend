@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { getApiUrl } from "../config/api";
 
 const Signin = () => {
   const navigate = useNavigate();
@@ -23,7 +22,7 @@ const Signin = () => {
     const { identifier, password } = formData;
 
     try {
-      const response = await fetch(getApiUrl(`/auth/login-user`), {
+      const response = await fetch("http://72.61.169.226/auth/login-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

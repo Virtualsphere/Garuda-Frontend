@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { PanelRight } from "lucide-react";
-import { getApiUrl } from "../config/api";
 
 export default function NewLand() {
   const [form, setForm] = useState({
@@ -93,7 +92,7 @@ export default function NewLand() {
     try {
       setLoading(prev => ({ ...prev, states: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(getApiUrl(`/admin/states`), {
+      const res = await fetch("http://72.61.169.226/admin/states", {
         headers: { 
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -117,7 +116,7 @@ export default function NewLand() {
     try {
       setLoading(prev => ({ ...prev, districts: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(getApiUrl(`/admin/states/${stateId}/districts`), {
+      const res = await fetch(`http://72.61.169.226/admin/states/${stateId}/districts`, {
         headers: { 
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -141,7 +140,7 @@ export default function NewLand() {
     try {
       setLoading(prev => ({ ...prev, mandals: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(getApiUrl(`/admin/districts/${districtId}/mandals`), {
+      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/mandals`, {
         headers: { 
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -165,7 +164,7 @@ export default function NewLand() {
     try {
       setLoading(prev => ({ ...prev, villages: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(getApiUrl(`/admin/mandals/${mandalId}/villages`), {
+      const res = await fetch(`http://72.61.169.226/admin/mandals/${mandalId}/villages`, {
         headers: { 
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -260,7 +259,7 @@ export default function NewLand() {
       landPhotos.forEach((file) => fd.append("land_photo", file));
       landVideos.forEach((file) => fd.append("land_video", file));
 
-      const res = await fetch(getApiUrl(`/field-executive/land`), {
+      const res = await fetch("http://72.61.169.226/field-executive/land", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: fd,

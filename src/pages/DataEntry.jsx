@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, PanelRight } from "lucide-react";
-import { getApiUrl } from "../config/api";
 
 export const DataEntry = () => {
   const [form, setForm] = useState({
@@ -84,7 +83,7 @@ export const DataEntry = () => {
         landPhotos.forEach((file) => fd.append("land_photo", file));
         landVideos.forEach((file) => fd.append("land_video", file));
   
-        const res = await fetch(getApiUrl(`/field-executive/land`), {
+        const res = await fetch("http://72.61.169.226/field-executive/land", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: fd,

@@ -21,7 +21,6 @@ import {
   Tag
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getApiUrl } from "../config/api";
 
 export const BuyerForm = () => {
   const navigate = useNavigate();
@@ -61,7 +60,7 @@ export const BuyerForm = () => {
     }
 
     try {
-      const response = await fetch(getApiUrl(`/admin/buyers`), {
+      const response = await fetch("http://72.61.169.226/admin/buyers", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

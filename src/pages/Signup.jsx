@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { getApiUrl } from "../config/api";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -34,7 +33,7 @@ const Signup = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(getApiUrl(`/api/create-user`), {
+      const response = await fetch("http://72.61.169.226/api/create-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

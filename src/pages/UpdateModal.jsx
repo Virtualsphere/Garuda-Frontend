@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import axios from "axios";
 import { FiX, FiSend, FiDollarSign, FiCheckCircle, FiAlertCircle, FiLoader } from "react-icons/fi";
 import { toast, Toaster } from "react-hot-toast";
-import { getApiUrl } from "../config/api";
 
 export const UpdateModal = ({ row, onClose, refreshTable }) => {
   const [amount, setAmount] = useState(row.amount);
@@ -26,7 +25,7 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        getApiUrl(`/admin/travel/wallet/${row.travel_id}`),
+        `http://72.61.169.226/admin/travel/wallet/${row.travel_id}`,
         { amount, status, notes: notes || undefined },
         {
           headers: { Authorization: `Bearer ${token}` },

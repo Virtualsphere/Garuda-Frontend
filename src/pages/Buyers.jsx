@@ -19,7 +19,6 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getApiUrl } from "../config/api";
 
 export const Buyers = () => {
   const [view, setView] = useState("cards");
@@ -38,7 +37,7 @@ export const Buyers = () => {
   const fetchBuyers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(getApiUrl(`/admin/buyers`), {
+      const res = await axios.get(`http://72.61.169.226/admin/buyers`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + localStorage.getItem("token"),
@@ -61,7 +60,7 @@ export const Buyers = () => {
   const fetchWishlist = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(getApiUrl(`/admin/wishlist`), {
+      const res = await axios.get(`http://72.61.169.226/admin/wishlist`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + localStorage.getItem("token"),

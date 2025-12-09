@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { SessionDetails } from "./SessionDetails";
 import { UpdateModal } from "./UpdateModal";
-import { getApiUrl } from "../config/api";
+
 import { 
   FiArrowDown, 
   FiArrowUp, 
@@ -34,7 +34,7 @@ export const TravelWallet = () => {
   const fetchTravelWallet = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(getApiUrl(`/admin/travel/wallet`), {
+      const res = await axios.get("http://72.61.169.226/admin/travel/wallet", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTravelData(res.data.data);
@@ -63,7 +63,7 @@ export const TravelWallet = () => {
 
     try {
       const res = await axios.get(
-        getApiUrl(`/admin/session/${sessionId}`),
+        `http://72.61.169.226/admin/session/${sessionId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

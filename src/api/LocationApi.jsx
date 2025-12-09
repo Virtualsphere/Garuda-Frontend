@@ -1,7 +1,5 @@
-import { API_BASE } from "../config/api";
-
 // services/locationApi.js - FIXED VERSION
-const API_BASE_URL = `${API_BASE}/admin`;
+const API_BASE_URL = 'http://72.61.169.226/admin';
 
 // Get token function (don't define token at module level, it might be undefined)
 const getToken = () => {
