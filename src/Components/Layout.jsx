@@ -78,6 +78,7 @@ export default function Layout() {
         { icon: List, name: "Land Codes", path: "/land-code" },
         { icon: MapPin, name: "Locations", path: "/location" },
         { icon: List, name: "Travel Wallet", path: "/travel/wallet" },
+        { icon: List, name: "Land Wallet", path: "/land/wallet" },
       ],
     },
     {

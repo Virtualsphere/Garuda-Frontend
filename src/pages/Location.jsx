@@ -270,8 +270,6 @@ function PageHeader({
         <div className="bg-gray-100 px-3 py-1.5 rounded-lg">
           {count} {title.toLowerCase()} found
         </div>
-        <div className="h-1 w-1 rounded-full bg-gray-300"></div>
-        <span>Sorted by name</span>
       </div>
     </div>
   );

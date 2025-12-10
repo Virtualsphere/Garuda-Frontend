@@ -710,8 +710,8 @@ export const LandCode = () => {
 
               <div className="pt-4 border-t border-gray-200">
                 <div className="text-sm text-gray-600 mb-4">
-                  Codes will be generated as: {generateForm.prefix}@01,{" "}
-                  {generateForm.prefix}@02, etc.
+                  Codes will be generated as: {generateForm.prefix}01,{" "}
+                  {generateForm.prefix}02, etc.
                 </div>
 
                 <div className="flex justify-end space-x-3">

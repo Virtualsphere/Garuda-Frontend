@@ -20,6 +20,9 @@ import { TravelWallet } from './pages/TravelWallet';
 import { UpdateModal } from './pages/UpdateModal';
 import { SessionDetails } from './pages/SessionDetails';
 import { AgentForm } from './pages/AgentForm';
+import { LandWallet } from './pages/LandWallet';
+import { LandDetails } from './pages/LandDetails';
+import { UpdateLandModal } from './pages/UpdateLandModal';
 
 function App() {
 
@@ -45,6 +48,9 @@ function App() {
           <Route path="travel/wallet" element={<TravelWallet />} />
           <Route path="updatetravel/wallet" element={<UpdateModal />} />
           <Route path="session" element={<SessionDetails />} />
+          <Route path="land/wallet" element={<LandWallet />} />
+          <Route path="updateLand/wallet" element={<LandDetails />} />
+          <Route path="land/model" element={<UpdateLandModal />} />
         </Route>
         <Route index element={<Signin />} />
       </Routes>

@@ -153,8 +153,7 @@ export const Agent = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     })
-      .format(amount)
-      .replace("₹", "¥");
+      .format(amount);
   };
 
   if (loading && agents.length === 0) {

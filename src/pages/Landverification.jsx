@@ -464,11 +464,6 @@ export default function LandVerification() {
                   <option value="pending">Pending</option>
                   <option value="rejected">In Progress</option>
                 </select>
-
-                <button className="flex items-center gap-2 px-4 py-3 rounded-xl border border-gray-300 hover:bg-gray-50 transition-colors">
-                  <Filter className="w-5 h-5" />
-                  Filter
-                </button>
               </div>
             </div>
           </div>
@@ -704,18 +699,12 @@ export default function LandVerification() {
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                               State
                                             </label>
-                                            <select
+                                            <input
                                               name="state"
                                               onChange={handleInput}
                                               value={formData.state || ""}
                                               className="w-full p-3 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
-                                            >
-                                              <option value="">
-                                                Select State
-                                              </option>
-                                              <option>Telangana</option>
-                                              <option>Delhi</option>
-                                            </select>
+                                            />
                                             <VerificationButtons field="state" />
                                           </div>
                                           <div>

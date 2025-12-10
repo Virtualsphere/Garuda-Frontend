@@ -197,34 +197,25 @@ export const Buyers = () => {
                 <Filter className="h-5 w-5 text-gray-500" />
                 <h3 className="font-semibold text-gray-700">Filters</h3>
               </div>
-              
+          
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div className="relative">
-                  <select
+                  <input
                     value={stateFilter}
                     onChange={(e) => setStateFilter(e.target.value)}
+                    placeholder="Enter state"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white appearance-none"
-                  >
-                    <option value="">All States</option>
-                    <option value="Telangana">Telangana</option>
-                    <option value="Andhra Pradesh">Andhra Pradesh</option>
-                    <option value="Karnataka">Karnataka</option>
-                  </select>
+                  />
                   <Building className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                 </div>
 
                 <div className="relative">
-                  <select
+                  <input
                     value={districtFilter}
                     onChange={(e) => setDistrictFilter(e.target.value)}
+                    placeholder="Enter district"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white appearance-none"
-                  >
-                    <option value="">All Districts</option>
-                    <option value="Hyderabad">Hyderabad</option>
-                    <option value="Warangal">Warangal</option>
-                    <option value="Rangareddy">Rangareddy</option>
-                    <option value="Medchal">Medchal</option>
-                  </select>
+                  />
                   <Landmark className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                 </div>
 

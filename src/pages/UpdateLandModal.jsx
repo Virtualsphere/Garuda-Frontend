@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { FiX, FiSend, FiDollarSign, FiCheckCircle, FiAlertCircle, FiLoader, FiChevronDown, FiChevronUp, FiUser, FiCalendar, FiCreditCard } from "react-icons/fi";
+import { FiX, FiSend, FiDollarSign, FiCheckCircle, FiAlertCircle, FiLoader, FiClock, FiCalendar, FiBriefcase, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { toast, Toaster } from "react-hot-toast";
 
-export const UpdateModal = ({ row, onClose, refreshTable }) => {
+export const UpdateLandModal = ({ row, onClose, onSuccess, isLandMonth }) => {
   const [amount, setAmount] = useState(row.amount);
   const [status, setStatus] = useState(row.status);
   const [loading, setLoading] = useState(false);
@@ -11,8 +11,10 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
 
   const statusOptions = [
     { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-800", icon: FiLoader },
+    { value: "processing", label: "Processing", color: "bg-blue-100 text-blue-800", icon: FiClock },
     { value: "approved", label: "Approved", color: "bg-green-100 text-green-800", icon: FiCheckCircle },
     { value: "rejected", label: "Rejected", color: "bg-red-100 text-red-800", icon: FiAlertCircle },
+    { value: "completed", label: "Completed", color: "bg-purple-100 text-purple-800", icon: FiCheckCircle },
   ];
 
   const handleSubmit = async () => {
@@ -24,21 +26,36 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
+      
+      const updateData = { 
+        status 
+      };
+      
+      if (isLandMonth) {
+        updateData.month_end_amount = parseFloat(amount);
+      } else {
+        updateData.work_amount = parseFloat(amount);
+      }
+
+      const endpoint = isLandMonth 
+        ? `http://72.61.169.226/admin/land/month/wallet/${row.id || row.land_wallet_id}`
+        : `http://72.61.169.226/admin/land/wallet/${row.id || row.land_wallet_id}`;
+      
       await axios.put(
-        `http://72.61.169.226/admin/travel/wallet/${row.travel_id}`,
-        { amount, status },
+        endpoint,
+        updateData,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      toast.success("Travel wallet updated successfully!");
-      refreshTable();
+      toast.success(`${isLandMonth ? "Land Month Wallet" : "Land Wallet"} updated successfully!`);
+      onSuccess();
       setTimeout(() => {
         onClose();
       }, 1000);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update");
+      toast.error(error.response?.data?.error || "Failed to update record");
       console.error("Update error:", error);
     } finally {
       setLoading(false);
@@ -52,7 +69,7 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
         onClick={() => setStatus(option.value)}
         className={`
           flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all
-          border-2 ${status === option.value ? 'border-blue-300 bg-blue-50' : 'border-gray-100 hover:border-gray-200'}
+          border-2 ${status === option.value ? 'border-emerald-300 bg-emerald-50' : 'border-gray-100 hover:border-gray-200'}
           hover:shadow-sm
         `}
       >
@@ -63,7 +80,7 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
           <span className="font-medium">{option.label}</span>
         </div>
         {status === option.value && (
-          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+          <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
         )}
       </div>
     );
@@ -75,15 +92,19 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
       <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 p-4 backdrop-blur-sm overflow-y-auto">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col animate-fadeInUp my-4">
           {/* Header - Fixed */}
-          <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0 bg-gradient-to-r from-blue-50 to-white">
+          <div className="px-6 py-4 border-b border-gray-100 flex-shrink-0 bg-gradient-to-r from-emerald-50 to-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                  <FiCreditCard className="text-blue-600 text-lg" />
+                <div className="p-2 bg-emerald-100 rounded-lg mr-3">
+                  {isLandMonth ? <FiCalendar className="text-emerald-600 text-lg" /> : <FiBriefcase className="text-emerald-600 text-lg" />}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Update Travel Record</h3>
-                  <p className="text-sm text-gray-600 mt-1">Update for {row.name}</p>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    Update {isLandMonth ? "Land Month Wallet" : "Land Wallet"}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {isLandMonth ? "Month End" : "Work"} Amount for {row.name}
+                  </p>
                 </div>
               </div>
               <button
@@ -106,7 +127,7 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
                 >
                   <div className="flex items-center">
                     <div className="p-2 bg-gray-200 rounded-lg mr-3">
-                      <FiUser className="text-gray-600" />
+                      <FiBriefcase className="text-gray-600" />
                     </div>
                     <span className="font-medium text-gray-700">User Information</span>
                   </div>
@@ -124,19 +145,12 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
                         <p className="font-medium text-gray-800">{row.role}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500 mb-1">Session ID</p>
-                        <p className="font-medium text-gray-800 font-mono text-xs bg-gray-100 p-1 rounded">{row.session_id}</p>
+                        <p className="text-gray-500 mb-1">Land ID</p>
+                        <p className="font-medium text-gray-800 font-mono text-xs bg-gray-100 p-1 rounded">{row.land_id}</p>
                       </div>
                       <div>
                         <p className="text-gray-500 mb-1">Date</p>
-                        <p className="font-medium text-gray-800 flex items-center">
-                          <FiCalendar className="mr-1 text-gray-400" />
-                          {row.date}
-                        </p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-gray-500 mb-1">Phone</p>
-                        <p className="font-medium text-gray-800">{row.phone || "N/A"}</p>
+                        <p className="font-medium text-gray-800">{row.date}</p>
                       </div>
                     </div>
                   </div>
@@ -145,11 +159,11 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
 
               {/* Amount Input */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                  <FiDollarSign className="mr-2 text-blue-500" />
-                  Travel Amount (₹)
-                  <span className="ml-2 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                    Transport
+                <label className="block text-sm font-semibold text-gray-700 flex items-center">
+                  <FiDollarSign className="mr-2 text-emerald-500" />
+                  {isLandMonth ? "Month End Amount (₹)" : "Work Amount (₹)"}
+                  <span className="ml-2 text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">
+                    {isLandMonth ? "Monthly" : "Per Work"}
                   </span>
                 </label>
                 <div className="relative">
@@ -158,8 +172,8 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-all"
-                    placeholder="Enter travel amount"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400 transition-all"
+                    placeholder={isLandMonth ? "Enter month end amount" : "Enter work amount"}
                     min="0"
                     step="1"
                   />
@@ -168,7 +182,9 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
                   </div>
                 </div>
                 <p className="text-xs text-gray-500">
-                  Update the travel reimbursement amount
+                  {isLandMonth 
+                    ? "This amount will be sent as month_end_amount field"
+                    : "This amount will be sent as work_amount field"}
                 </p>
               </div>
 
@@ -183,26 +199,6 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
                   ))}
                 </div>
               </div>
-
-              {/* Status Legend */}
-              <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
-                      <span className="text-gray-600">Approved</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></div>
-                      <span className="text-gray-600">Pending</span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-red-500 mr-1"></div>
-                      <span className="text-gray-600">Rejected</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -210,7 +206,7 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
           <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0 bg-gray-50 rounded-b-2xl">
             <div className="flex flex-col space-y-3">
               <div className="text-xs text-gray-500 text-center">
-                Updating: <span className="font-mono font-medium">amount</span> and <span className="font-mono font-medium">status</span> fields
+                Updating: <span className="font-mono font-medium">{isLandMonth ? "month_end_amount" : "work_amount"}</span> field
               </div>
               <div className="flex justify-end gap-3">
                 <button
@@ -226,8 +222,8 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
                     px-5 py-2.5 text-white font-medium rounded-lg transition-all
                     flex items-center justify-center min-w-[100px] flex-1 md:flex-none
                     ${loading 
-                      ? 'bg-blue-400 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg'
+                      ? 'bg-emerald-400 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 hover:shadow-lg'
                     }
                   `}
                 >
@@ -239,7 +235,7 @@ export const UpdateModal = ({ row, onClose, refreshTable }) => {
                   ) : (
                     <>
                       <FiSend className="mr-2" />
-                      Update Travel
+                      {isLandMonth ? "Update Month" : "Update Work"}
                     </>
                   )}
                 </button>

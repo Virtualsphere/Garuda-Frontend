@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { PanelRight } from "lucide-react";
 
 export default function NewLand() {
-  const [form, setForm] = useState({
-    state: "",
+
+  const initialFormState = {
+   state: "",
     district: "",
     status: "true",
     mandal: "",
@@ -33,7 +34,9 @@ export default function NewLand() {
     path_to_land: "",
     dispute_type: "",
     siblings_involve_in_dispute: "",
-  });
+  };
+
+  const [form, setForm] = useState(initialFormState);
 
   // Location states
   const [states, setStates] = useState([]);
@@ -214,7 +217,19 @@ export default function NewLand() {
         village: ""
       }));
     }
-    // For other fields
+
+    else if ( name === "guntas" ){
+      let val = value;
+
+      if (name === "guntas") {
+        let num = Number(value);
+        if (num > 40) num = 40;
+        if (num < 0) num = 0;
+        val = num;
+      }
+      setForm(prev => ({ ...prev, [name]: val }));
+    }
+    
     else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
@@ -269,8 +284,18 @@ export default function NewLand() {
 
       if (res.ok) {
         alert("Land Entry Saved Successfully: " + data.land_id);
+        setForm(initialFormState);
+        setPassbookPhoto(null);
+        setLandBorder(null);
+        setLandPhotos([]);
+        setLandVideos([]);
       } else {
         alert("Error: " + data.error);
+        setForm(initialFormState);
+        setPassbookPhoto(null);
+        setLandBorder(null);
+        setLandPhotos([]);
+        setLandVideos([]);
       }
     } catch (error) {
       console.error(error);
@@ -290,9 +315,7 @@ export default function NewLand() {
         </div>
       </header>
 
-      {/* CONTENT */}
       <div className="p-4 space-y-6">
-
         {/* ------------------ VILLAGE ADDRESS ------------------ */}
         <div className="bg-white rounded-2xl shadow p-4 space-y-3">
           <h2 className="font-semibold text-lg">Village Address</h2>
@@ -309,7 +332,7 @@ export default function NewLand() {
               >
                 <option value="">Select State</option>
                 {states.map(state => (
-                  <option key={state.id} value={state.id}>
+                  <option key={state.id} value={state.name}>
                     {state.name}
                   </option>
                 ))}
@@ -328,7 +351,7 @@ export default function NewLand() {
               >
                 <option value="">Select District</option>
                 {districts.map(district => (
-                  <option key={district.id} value={district.id}>
+                  <option key={district.id} value={district.name}>
                     {district.name}
                   </option>
                 ))}
@@ -350,7 +373,7 @@ export default function NewLand() {
               >
                 <option value="">Select Mandal</option>
                 {mandals.map(mandal => (
-                  <option key={mandal.id} value={mandal.id}>
+                  <option key={mandal.id} value={mandal.name}>
                     {mandal.name}
                   </option>
                 ))}
@@ -370,7 +393,7 @@ export default function NewLand() {
               >
                 <option value="">Select Village</option>
                 {villages.map(village => (
-                  <option key={village.id} value={village.id}>
+                  <option key={village.id} value={village.name}>
                     {village.name}
                   </option>
                 ))}
@@ -471,10 +494,12 @@ export default function NewLand() {
               <div>
                 <label className="text-sm font-medium">Guntas</label>
                 <input
-                  type="text"
+                  type="number"
                   name="guntas"
                   value={form.guntas}
                   onChange={handleInput}
+                  max={40}
+                  min= {0}
                   className="w-full mt-1 p-2 rounded-xl bg-gray-50"
                 />
               </div>
@@ -567,24 +592,6 @@ export default function NewLand() {
         <div className="bg-white rounded-2xl shadow p-4 space-y-3">
           <h2 className="font-semibold text-lg">GPS & Path Tracking</h2>
 
-          <label className="text-sm font-medium">Path from Main Road</label>
-          <div className="flex gap-2 mt-2">
-            {["Attached to Road", "No Connectivity", "Record a Path"].map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => handleSelectButton("road_path", v)}
-                className={`px-4 py-1 rounded-full ${
-                  form.road_path === v 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-
           <label className="text-sm font-medium">Land Entry Point</label>
           <div className="flex gap-2 mt-2">
             <input
@@ -602,13 +609,6 @@ export default function NewLand() {
               className="px-4 py-1 rounded-full bg-gray-100"
             />
           </div>
-
-          <label className="text-sm font-medium">Land Border</label>
-          <input
-            type="file"
-            onChange={(e) => setLandBorder(e.target.files[0])}
-            className="w-full mt-2 p-2 rounded-xl bg-gray-50"
-          />
         </div>
 
         {/* ------------------ PHOTOS & VIDEOS ------------------ */}
@@ -675,24 +675,6 @@ export default function NewLand() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-        
-        {/* ------------------ COMMISSION ------------------ */}
-        <div className="bg-white rounded-2xl shadow p-4 space-y-3">
-          <h2 className="font-semibold text-lg">Total Commission</h2>
-
-          <p className="text-xs text-gray-500">
-            Calculated based on the weightage of data entered.
-          </p>
-
-          <div className="flex items-center gap-4 mt-4">
-            <span className="text-orange-500 text-5xl font-bold">$</span>
-            <span className="text-5xl font-extrabold">135%</span>
-          </div>
-
-          <div className="bg-green-500 hover:bg-green-600 rounded-xl p-3 flex items-center justify-center gap-2 mt-4 cursor-pointer">
-            <span className="text-white font-medium">✏️ Edit Weightage Points</span>
           </div>
         </div>
       </div>

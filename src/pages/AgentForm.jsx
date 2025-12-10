@@ -437,7 +437,7 @@ export const AgentForm = ({ agent, onClose, onSuccess }) => {
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount).replace('₹', '¥');
+    }).format(amount);
   };
 
   const getFilterStats = () => {
