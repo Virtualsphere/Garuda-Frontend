@@ -335,7 +335,7 @@ export default function Layout() {
                 </div>
               ) : userImage ? (
                 <img 
-                  src={userImage} 
+                  src={userImage || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iI0VFRUVFRSIvPjwvc3ZnPg=="} 
                   alt={userName || "User"}
                   className="w-10 h-10 rounded-full object-cover border-2 border-gray-600"
                   onError={(e) => {
@@ -405,7 +405,7 @@ export default function Layout() {
               </div>
             ) : userImage ? (
               <img 
-                src={userImage} 
+                src={userImage || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iI0VFRUVFRSIvPjwvc3ZnPg=="} 
                 alt={userName || "User"}
                 className="w-10 h-10 rounded-full object-cover border-2 border-gray-600"
                 onError={(e) => {

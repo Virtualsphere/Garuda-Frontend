@@ -16,20 +16,9 @@ export default function Employee() {
   const formatRoleName = (roleName) => {
     if (!roleName) return "Unknown";
     return roleName
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-  };
-
-  // File preview helper
-  const filePreview = (fileOrUrl) => {
-    if (!fileOrUrl) return null;
-    if (fileOrUrl instanceof File) {
-      const url = URL.createObjectURL(fileOrUrl);
-      createdUrls.current.push(url);
-      return url;
-    }
-    return fileOrUrl;
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   };
 
   // Fetch all users + relational tables
@@ -43,7 +32,7 @@ export default function Employee() {
         },
       });
       const data = await res.json();
-      
+
       if (!data?.users) {
         setEmployees([]);
         setTabs([]);
@@ -70,29 +59,30 @@ export default function Employee() {
       }));
 
       setEmployees(merged);
-      
+
       // Extract unique roles from users to create tabs
-      const uniqueRoles = [...new Set(merged.map(emp => emp.role).filter(Boolean))];
-      
+      const uniqueRoles = [
+        ...new Set(merged.map((emp) => emp.role).filter(Boolean)),
+      ];
+
       // Create tabs with formatted names and sort alphabetically
       const roleTabs = uniqueRoles
-        .map(role => ({
+        .map((role) => ({
           original: role,
           display: formatRoleName(role),
-          count: merged.filter(emp => emp.role === role).length
+          count: merged.filter((emp) => emp.role === role).length,
         }))
         .sort((a, b) => a.display.localeCompare(b.display));
-      
+
       setTabs(roleTabs);
-      
+
       // Set first tab as active if available
       if (roleTabs.length > 0 && !activeTab) {
         setActiveTab(roleTabs[0].original);
       }
-      
+
       console.log(`Found ${uniqueRoles.length} unique roles:`, uniqueRoles);
       console.log(`Total employees: ${merged.length}`);
-      
     } catch (err) {
       console.error("Fetch Error:", err);
       alert("Failed to load employees. Please check your connection.");
@@ -254,23 +244,23 @@ export default function Employee() {
   };
 
   // Filter employees by active tab
-  const filteredEmployees = employees.filter(
-    (emp) => emp.role === activeTab
-  );
+  const filteredEmployees = employees.filter((emp) => emp.role === activeTab);
 
   // Handle role change in form
   const handleRoleChange = (e) => {
     const newRole = e.target.value;
-    setFormData(prev => ({ ...prev, role: newRole }));
-    
+    setFormData((prev) => ({ ...prev, role: newRole }));
+
     // If changing role and it's a new role, add to tabs if not already present
-    if (newRole && !tabs.find(tab => tab.original === newRole)) {
+    if (newRole && !tabs.find((tab) => tab.original === newRole)) {
       const newTab = {
         original: newRole,
         display: formatRoleName(newRole),
-        count: 1
+        count: 1,
       };
-      setTabs(prev => [...prev, newTab].sort((a, b) => a.display.localeCompare(b.display)));
+      setTabs((prev) =>
+        [...prev, newTab].sort((a, b) => a.display.localeCompare(b.display))
+      );
     }
   };
 
@@ -289,8 +279,8 @@ export default function Employee() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => navigate("/signup")} 
+          <button
+            onClick={() => navigate("/signup")}
             className="flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white"
           >
             <Plus size={16} /> Add User
@@ -309,7 +299,7 @@ export default function Employee() {
                 Browse, manage, and recruit employees by role.
               </p>
             </div>
-            
+
             {loading && (
               <div className="flex items-center gap-2 text-sm text-blue-600">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -323,7 +313,10 @@ export default function Employee() {
             {loading ? (
               <div className="flex gap-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
+                  <div
+                    key={i}
+                    className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"
+                  ></div>
                 ))}
               </div>
             ) : tabs.length > 0 ? (
@@ -347,7 +340,9 @@ export default function Employee() {
               </div>
             ) : (
               <div className="text-center p-6 border border-dashed border-gray-300 rounded-xl">
-                <p className="text-gray-500">No employees found. Add your first employee!</p>
+                <p className="text-gray-500">
+                  No employees found. Add your first employee!
+                </p>
               </div>
             )}
           </div>
@@ -356,7 +351,10 @@ export default function Employee() {
           {loading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>
+                <div
+                  key={i}
+                  className="h-16 bg-gray-100 rounded-lg animate-pulse"
+                ></div>
               ))}
             </div>
           ) : filteredEmployees.length > 0 ? (
@@ -364,7 +362,8 @@ export default function Employee() {
               {/* Active Tab Header */}
               <div className="mb-4 px-2">
                 <h3 className="text-lg font-semibold text-gray-800">
-                  {formatRoleName(activeTab)} ({filteredEmployees.length} employees)
+                  {formatRoleName(activeTab)} ({filteredEmployees.length}{" "}
+                  employees)
                 </h3>
               </div>
 
@@ -377,7 +376,6 @@ export default function Employee() {
                 <span>Salary</span>
               </div>
 
-              {/* Employee List */}
               {filteredEmployees.map((emp) => (
                 <div
                   key={emp.unique_id}
@@ -386,14 +384,20 @@ export default function Employee() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
+                      {/* FIX THIS IMAGE TAG */}
                       <img
-                        src={emp.image || emp.photo || "/placeholder.png"}
+                        src={
+                          emp.image ||
+                          emp.photo ||
+                          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iI0VFRUVFRSIvPjwvc3ZnPg=="
+                        }
                         alt={emp.name}
                         className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
                         onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/placeholder.png";
+                          e.target.onerror = null; // CRITICAL: Prevent infinite loop
+                          e.target.style.display = "none";
                         }}
+                        loading="lazy"
                       />
                       {emp.blood_group && (
                         <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full">
@@ -407,10 +411,13 @@ export default function Employee() {
                       </span>
                     </div>
                   </div>
-
                   <span className="font-medium">{emp.displayRole}</span>
                   <span className="text-gray-700">{emp.phone || "-"}</span>
-                  <span className="text-gray-700">{emp.work_location?.work_district || emp.address?.district || "-"}</span>
+                  <span className="text-gray-700">
+                    {emp.work_location?.work_district ||
+                      emp.address?.district ||
+                      "-"}
+                  </span>
                   <span className="font-medium text-green-600">
                     {emp.salary?.package ? `₹${emp.salary.package}` : "-"}
                   </span>
@@ -420,20 +427,33 @@ export default function Employee() {
           ) : (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                <svg
+                  className="w-16 h-16 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  ></path>
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-700 mb-2">
                 No {activeTab ? formatRoleName(activeTab) : "Employees"} Found
               </h3>
               <p className="text-gray-500 mb-4">
-                {activeTab 
-                  ? `No employees with role "${formatRoleName(activeTab)}" found.` 
+                {activeTab
+                  ? `No employees with role "${formatRoleName(
+                      activeTab
+                    )}" found.`
                   : "No employees found in the system."}
               </p>
-              <button 
-                onClick={() => navigate("/signup")} 
+              <button
+                onClick={() => navigate("/signup")}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white"
               >
                 <Plus size={16} /> Add New Employee
@@ -450,9 +470,11 @@ export default function Employee() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-semibold">Edit Employee</h2>
-                <p className="text-sm text-gray-500">ID: {formData.unique_id}</p>
+                <p className="text-sm text-gray-500">
+                  ID: {formData.unique_id}
+                </p>
               </div>
-              <button 
+              <button
                 onClick={closeEditPanel}
                 className="p-2 hover:bg-gray-100 rounded-lg"
               >
@@ -462,7 +484,9 @@ export default function Employee() {
 
             {/* BASIC DETAILS */}
             <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">Basic Details</h3>
+              <h3 className="font-semibold text-lg border-b pb-2">
+                Basic Details
+              </h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -491,7 +515,7 @@ export default function Employee() {
                     list="role-suggestions"
                   />
                   <datalist id="role-suggestions">
-                    {tabs.map(tab => (
+                    {tabs.map((tab) => (
                       <option key={tab.original} value={tab.original} />
                     ))}
                   </datalist>
@@ -542,8 +566,10 @@ export default function Employee() {
 
             {/* IMAGES SECTION */}
             <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">Profile Images</h3>
-              
+              <h3 className="font-semibold text-lg border-b pb-2">
+                Profile Images
+              </h3>
+
               <div className="grid grid-cols-2 gap-6">
                 {/* Profile Image */}
                 <div>
@@ -566,7 +592,9 @@ export default function Employee() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileChange("image", e.target.files[0])}
+                    onChange={(e) =>
+                      handleFileChange("image", e.target.files[0])
+                    }
                     className="w-full p-2 border border-gray-300 rounded-lg"
                   />
                 </div>
@@ -592,7 +620,9 @@ export default function Employee() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileChange("photo", e.target.files[0])}
+                    onChange={(e) =>
+                      handleFileChange("photo", e.target.files[0])
+                    }
                     className="w-full p-2 border border-gray-300 rounded-lg"
                   />
                 </div>
@@ -601,13 +631,15 @@ export default function Employee() {
 
             {/* ADDRESS SECTION */}
             <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">Address Details</h3>
+              <h3 className="font-semibold text-lg border-b pb-2">
+                Address Details
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 {["state", "district", "mandal", "village", "pincode"].map(
                   (field) => (
                     <div key={field}>
                       <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                        {field.replace('_', ' ')}
+                        {field.replace("_", " ")}
                       </label>
                       <input
                         value={formData.address?.[field] || ""}
@@ -625,8 +657,10 @@ export default function Employee() {
 
             {/* AADHAR SECTION */}
             <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">Aadhar Details</h3>
-              
+              <h3 className="font-semibold text-lg border-b pb-2">
+                Aadhar Details
+              </h3>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Aadhar Number
@@ -634,7 +668,11 @@ export default function Employee() {
                 <input
                   value={formData.aadhar?.aadhar_number || ""}
                   onChange={(e) =>
-                    handleNestedChange("aadhar", "aadhar_number", e.target.value)
+                    handleNestedChange(
+                      "aadhar",
+                      "aadhar_number",
+                      e.target.value
+                    )
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
                   placeholder="Aadhar Number"
@@ -706,7 +744,9 @@ export default function Employee() {
 
             {/* SALARY SECTION */}
             <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">Salary Information</h3>
+              <h3 className="font-semibold text-lg border-b pb-2">
+                Salary Information
+              </h3>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Salary Package
@@ -724,7 +764,9 @@ export default function Employee() {
 
             {/* BANK SECTION */}
             <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">Bank Information</h3>
+              <h3 className="font-semibold text-lg border-b pb-2">
+                Bank Information
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 {[
                   "bank_name",
@@ -736,7 +778,7 @@ export default function Employee() {
                 ].map((field) => (
                   <div key={field}>
                     <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                      {field.replace(/_/g, ' ')}
+                      {field.replace(/_/g, " ")}
                     </label>
                     <input
                       value={formData.bank?.[field] || ""}
@@ -744,7 +786,7 @@ export default function Employee() {
                         handleNestedChange("bank", field, e.target.value)
                       }
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={`Enter ${field.replace(/_/g, ' ')}`}
+                      placeholder={`Enter ${field.replace(/_/g, " ")}`}
                     />
                   </div>
                 ))}
@@ -753,7 +795,9 @@ export default function Employee() {
 
             {/* WORK LOCATION */}
             <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">Work Location</h3>
+              <h3 className="font-semibold text-lg border-b pb-2">
+                Work Location
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 {[
                   "work_state",
@@ -763,15 +807,21 @@ export default function Employee() {
                 ].map((field) => (
                   <div key={field}>
                     <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                      {field.replace('work_', '').replace('_', ' ')}
+                      {field.replace("work_", "").replace("_", " ")}
                     </label>
                     <input
                       value={formData.work_location?.[field] || ""}
                       onChange={(e) =>
-                        handleNestedChange("work_location", field, e.target.value)
+                        handleNestedChange(
+                          "work_location",
+                          field,
+                          e.target.value
+                        )
                       }
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder={`Enter ${field.replace('work_', '').replace('_', ' ')}`}
+                      placeholder={`Enter ${field
+                        .replace("work_", "")
+                        .replace("_", " ")}`}
                     />
                   </div>
                 ))}
@@ -780,7 +830,9 @@ export default function Employee() {
 
             {/* VEHICLE INFORMATION */}
             <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">Vehicle Information</h3>
+              <h3 className="font-semibold text-lg border-b pb-2">
+                Vehicle Information
+              </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -789,7 +841,11 @@ export default function Employee() {
                   <input
                     value={formData.vehicle?.vehicle_type || ""}
                     onChange={(e) =>
-                      handleNestedChange("vehicle", "vehicle_type", e.target.value)
+                      handleNestedChange(
+                        "vehicle",
+                        "vehicle_type",
+                        e.target.value
+                      )
                     }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Vehicle Type"
@@ -802,7 +858,11 @@ export default function Employee() {
                   <input
                     value={formData.vehicle?.license_plate || ""}
                     onChange={(e) =>
-                      handleNestedChange("vehicle", "license_plate", e.target.value)
+                      handleNestedChange(
+                        "vehicle",
+                        "license_plate",
+                        e.target.value
+                      )
                     }
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="License Plate"
