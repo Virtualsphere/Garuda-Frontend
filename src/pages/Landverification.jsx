@@ -283,7 +283,7 @@ export default function LandVerification() {
       const fd = new FormData();
       Object.values(verificationChecks).forEach((v) => {
         if (v === "fail") {
-          verificationStatus = "in progress";
+          verificationStatus = "rejected";
         }
       });
 
@@ -462,7 +462,7 @@ export default function LandVerification() {
                   <option value="all">All Status</option>
                   <option value="verified">Verified</option>
                   <option value="pending">Pending</option>
-                  <option value="rejected">In Progress</option>
+                  <option value="rejected">Rejected</option>
                 </select>
               </div>
             </div>

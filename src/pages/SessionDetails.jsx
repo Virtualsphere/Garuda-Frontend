@@ -92,29 +92,6 @@ export const SessionDetails = ({ data }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Timeline Section */}
             <div className="space-y-6">
-              <div>
-                <h5 className="font-semibold text-gray-700 mb-4 flex items-center">
-                  <FiClock className="mr-2 text-blue-500" />
-                  Timeline
-                </h5>
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <div className="w-3 h-3 rounded-full bg-green-500 mt-1 mr-3"></div>
-                    <div>
-                      <p className="text-sm text-gray-500">Start Time</p>
-                      <p className="font-medium text-gray-800">{formatTime(data.starting_time)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="w-3 h-3 rounded-full bg-red-500 mt-1 mr-3"></div>
-                    <div>
-                      <p className="text-sm text-gray-500">End Time</p>
-                      <p className="font-medium text-gray-800">{formatTime(data.end_time)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Kilometer Section */}
               <div>
                 <h5 className="font-semibold text-gray-700 mb-4 flex items-center">
@@ -162,7 +139,6 @@ export const SessionDetails = ({ data }) => {
                 <h5 className="font-semibold text-gray-700 mb-2">Additional Information</h5>
                 <div className="space-y-2 text-sm">
                   <p><span className="text-gray-500">Date:</span> <span className="font-medium">{data.date || "N/A"}</span></p>
-                  <p><span className="text-gray-500">Session Duration:</span> <span className="font-medium">Calculating...</span></p>
                 </div>
               </div>
             </div>

@@ -94,16 +94,6 @@ const Signin = () => {
             />
           </div>
 
-          {/* Forgot password */}
-          <div className="text-right">
-            <a
-              href="/forgot-password"
-              className="text-sm text-green-600 font-medium hover:underline"
-            >
-              Forgot Password?
-            </a>
-          </div>
-
           <motion.button
             type="submit"
             whileTap={{ scale: 0.97 }}
@@ -114,13 +104,6 @@ const Signin = () => {
             LOGIN
           </motion.button>
         </form>
-
-        <p className="text-center text-gray-600 text-sm mt-6">
-          Don’t have an account?{" "}
-          <a href="/signup" className="text-green-600 font-semibold underline">
-            Sign Up
-          </a>
-        </p>
       </motion.div>
     </div>
   );
