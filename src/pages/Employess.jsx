@@ -21,6 +21,18 @@ export default function Employee() {
       .join(" ");
   };
 
+   const filePreview = (fileOrUrl) => {
+    if (!fileOrUrl) return null;
+    if (fileOrUrl instanceof File) {
+      const url = URL.createObjectURL(fileOrUrl);
+      createdUrls.current.push(url);
+      return url;
+    }
+    // backend already returns full URL like http://localhost:5000/public/images/...
+    return fileOrUrl;
+  };
+
+
   // Fetch all users + relational tables
   const fetchAll = async () => {
     try {
