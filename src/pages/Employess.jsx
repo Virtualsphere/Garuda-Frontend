@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { PanelRight, X, Plus, RefreshCw } from "lucide-react";
+import { PanelRight, X, Plus, RefreshCw, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Employee() {
   const navigate = useNavigate();
   const [employees, setEmployees] = useState([]);
-  const [tabs, setTabs] = useState([]); // Dynamic tabs from user roles
+  const [tabs, setTabs] = useState([]);
   const [activeTab, setActiveTab] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
   const createdUrls = useRef([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Format role name for display
   const formatRoleName = (roleName) => {
@@ -21,7 +22,7 @@ export default function Employee() {
       .join(" ");
   };
 
-   const filePreview = (fileOrUrl) => {
+  const filePreview = (fileOrUrl) => {
     if (!fileOrUrl) return null;
     if (fileOrUrl instanceof File) {
       const url = URL.createObjectURL(fileOrUrl);
@@ -31,7 +32,6 @@ export default function Employee() {
     // backend already returns full URL like http://localhost:5000/public/images/...
     return fileOrUrl;
   };
-
 
   // Fetch all users + relational tables
   const fetchAll = async () => {
@@ -278,7 +278,34 @@ export default function Employee() {
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
-      <header className="flex h-14 items-center justify-between bg-white px-6 shadow-sm">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-30">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu size={24} />
+            </button>
+            <div>
+              <h1 className="text-lg font-semibold">Employees</h1>
+              <p className="text-xs text-gray-500">
+                {tabs.length} role(s) • {employees.length} employee(s)
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/signup")}
+            className="flex items-center gap-2 px-3 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm"
+          >
+            <Plus size={16} /> Add
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <header className="hidden lg:flex h-14 items-center justify-between bg-white px-6 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg">
             <PanelRight className="h-5 w-5 text-white" />
@@ -300,14 +327,15 @@ export default function Employee() {
         </div>
       </header>
 
-      <div className="p-6">
-        <div className="rounded-2xl bg-white p-6 shadow-md border border-gray-200">
-          <div className="flex justify-between items-center mb-6">
+      {/* Main Content with Mobile Padding */}
+      <div className="p-4 lg:p-6 pt-20 lg:pt-6">
+        <div className="rounded-2xl bg-white p-4 lg:p-6 shadow-md border border-gray-200">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-800">
                 Employee Directory
               </h2>
-              <p className="text-gray-500">
+              <p className="text-sm lg:text-base text-gray-500">
                 Browse, manage, and recruit employees by role.
               </p>
             </div>
@@ -332,18 +360,18 @@ export default function Employee() {
                 ))}
               </div>
             ) : tabs.length > 0 ? (
-              <div className="flex flex-wrap gap-2 bg-gray-100 p-3 rounded-xl">
+              <div className="flex flex-wrap gap-2 bg-gray-100 p-2 lg:p-3 rounded-xl overflow-x-auto">
                 {tabs.map((tab) => (
                   <button
                     key={tab.original}
                     onClick={() => setActiveTab(tab.original)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                    className={`px-3 py-2 lg:px-4 lg:py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
                       activeTab === tab.original
                         ? "bg-white shadow-sm text-orange-600"
                         : "text-gray-600 hover:bg-gray-200"
                     }`}
                   >
-                    <span>{tab.display}</span>
+                    <span className="text-xs lg:text-sm">{tab.display}</span>
                     <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
                       {tab.count}
                     </span>
@@ -351,8 +379,8 @@ export default function Employee() {
                 ))}
               </div>
             ) : (
-              <div className="text-center p-6 border border-dashed border-gray-300 rounded-xl">
-                <p className="text-gray-500">
+              <div className="text-center p-4 lg:p-6 border border-dashed border-gray-300 rounded-xl">
+                <p className="text-sm lg:text-base text-gray-500">
                   No employees found. Add your first employee!
                 </p>
               </div>
@@ -373,14 +401,14 @@ export default function Employee() {
             <>
               {/* Active Tab Header */}
               <div className="mb-4 px-2">
-                <h3 className="text-lg font-semibold text-gray-800">
+                <h3 className="text-base lg:text-lg font-semibold text-gray-800">
                   {formatRoleName(activeTab)} ({filteredEmployees.length}{" "}
                   employees)
                 </h3>
               </div>
 
-              {/* Table Header */}
-              <div className="grid grid-cols-5 font-semibold text-gray-600 py-3 border-b bg-gray-50 rounded-t-lg px-4">
+              {/* Table Header - Hidden on mobile, visible on desktop */}
+              <div className="hidden lg:grid lg:grid-cols-5 font-semibold text-gray-600 py-3 border-b bg-gray-50 rounded-t-lg px-4">
                 <span>Employee</span>
                 <span>Role</span>
                 <span>Phone</span>
@@ -388,59 +416,127 @@ export default function Employee() {
                 <span>Salary</span>
               </div>
 
-              {filteredEmployees.map((emp) => (
-                <div
-                  key={emp.unique_id}
-                  onClick={() => openEditPanel(emp)}
-                  className="grid grid-cols-5 py-4 items-center border-b hover:bg-gray-50 transition cursor-pointer px-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      {/* FIX THIS IMAGE TAG */}
-                      <img
-                        src={
-                          emp.image ||
-                          emp.photo ||
-                          "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iI0VFRUVFRSIvPjwvc3ZnPg=="
-                        }
-                        alt={emp.name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                        onError={(e) => {
-                          e.target.onerror = null; // CRITICAL: Prevent infinite loop
-                          e.target.style.display = "none";
-                        }}
-                        loading="lazy"
-                      />
-                      {emp.blood_group && (
-                        <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full">
-                          {emp.blood_group}
+              {/* Mobile List View */}
+              <div className="lg:hidden space-y-3">
+                {filteredEmployees.map((emp) => (
+                  <div
+                    key={emp.unique_id}
+                    onClick={() => openEditPanel(emp)}
+                    className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={
+                            emp.image ||
+                            emp.photo ||
+                            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iI0VFRUVFRSIvPjwvc3ZnPg=="
+                          }
+                          alt={emp.name}
+                          className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = "none";
+                          }}
+                          loading="lazy"
+                        />
+                        {emp.blood_group && (
+                          <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full">
+                            {emp.blood_group}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <span className="font-semibold text-gray-800 block truncate">
+                              {emp.name}
+                            </span>
+                            <span className="text-sm text-gray-600 block mt-1">
+                              {emp.displayRole}
+                            </span>
+                          </div>
+                          <span className="font-medium text-green-600 text-sm">
+                            {emp.salary?.package ? `₹${emp.salary.package}` : "-"}
+                          </span>
                         </div>
-                      )}
-                    </div>
-                    <div>
-                      <span className="font-semibold text-gray-800 block">
-                        {emp.name}
-                      </span>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-gray-500">Phone:</span>
+                            <span className="text-gray-700 ml-2 truncate block">
+                              {emp.phone || "-"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">District:</span>
+                            <span className="text-gray-700 ml-2 truncate block">
+                              {emp.work_location?.work_district ||
+                                emp.address?.district ||
+                                "-"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <span className="font-medium">{emp.displayRole}</span>
-                  <span className="text-gray-700">{emp.phone || "-"}</span>
-                  <span className="text-gray-700">
-                    {emp.work_location?.work_district ||
-                      emp.address?.district ||
-                      "-"}
-                  </span>
-                  <span className="font-medium text-green-600">
-                    {emp.salary?.package ? `₹${emp.salary.package}` : "-"}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden lg:block">
+                {filteredEmployees.map((emp) => (
+                  <div
+                    key={emp.unique_id}
+                    onClick={() => openEditPanel(emp)}
+                    className="grid grid-cols-5 py-4 items-center border-b hover:bg-gray-50 transition cursor-pointer px-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <img
+                          src={
+                            emp.image ||
+                            emp.photo ||
+                            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iI0VFRUVFRSIvPjwvc3ZnPg=="
+                          }
+                          alt={emp.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.style.display = "none";
+                          }}
+                          loading="lazy"
+                        />
+                        {emp.blood_group && (
+                          <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full">
+                            {emp.blood_group}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-gray-800 block">
+                          {emp.name}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="font-medium">{emp.displayRole}</span>
+                    <span className="text-gray-700">{emp.phone || "-"}</span>
+                    <span className="text-gray-700">
+                      {emp.work_location?.work_district ||
+                        emp.address?.district ||
+                        "-"}
+                    </span>
+                    <span className="font-medium text-green-600">
+                      {emp.salary?.package ? `₹${emp.salary.package}` : "-"}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </>
           ) : (
-            <div className="text-center py-12">
+            <div className="text-center py-8 lg:py-12">
               <div className="text-gray-400 mb-4">
                 <svg
-                  className="w-16 h-16 mx-auto"
+                  className="w-12 h-12 lg:w-16 lg:h-16 mx-auto"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -457,7 +553,7 @@ export default function Employee() {
               <h3 className="text-lg font-medium text-gray-700 mb-2">
                 No {activeTab ? formatRoleName(activeTab) : "Employees"} Found
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 mb-4 text-sm lg:text-base">
                 {activeTab
                   ? `No employees with role "${formatRoleName(
                       activeTab
@@ -466,7 +562,7 @@ export default function Employee() {
               </p>
               <button
                 onClick={() => navigate("/signup")}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm lg:text-base"
               >
                 <Plus size={16} /> Add New Employee
               </button>
@@ -475,32 +571,32 @@ export default function Employee() {
         </div>
       </div>
 
-      {/* Edit Panel */}
+      {/* Edit Panel - Responsive */}
       {selectedEmployee && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-6 max-h-[90vh] overflow-y-auto border border-gray-200">
-            <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 lg:p-4">
+          <div className="w-full max-w-3xl bg-white rounded-xl lg:rounded-2xl shadow-xl p-4 lg:p-6 max-h-[90vh] overflow-y-auto border border-gray-200">
+            <div className="flex justify-between items-center mb-4 lg:mb-6">
               <div>
-                <h2 className="text-xl font-semibold">Edit Employee</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="text-lg lg:text-xl font-semibold">Edit Employee</h2>
+                <p className="text-xs lg:text-sm text-gray-500">
                   ID: {formData.unique_id}
                 </p>
               </div>
               <button
                 onClick={closeEditPanel}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-1 lg:p-2 hover:bg-gray-100 rounded-lg"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 lg:w-6 lg:h-6" />
               </button>
             </div>
 
             {/* BASIC DETAILS */}
-            <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Basic Details
               </h3>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Name *
@@ -509,7 +605,7 @@ export default function Employee() {
                     name="name"
                     value={formData.name || ""}
                     onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Full Name"
                   />
                 </div>
@@ -522,7 +618,7 @@ export default function Employee() {
                     name="role"
                     value={formData.role || ""}
                     onChange={handleRoleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Employee Role"
                     list="role-suggestions"
                   />
@@ -542,7 +638,7 @@ export default function Employee() {
                     type="email"
                     value={formData.email || ""}
                     onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Email Address"
                   />
                 </div>
@@ -556,7 +652,7 @@ export default function Employee() {
                     type="tel"
                     value={formData.phone || ""}
                     onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Phone Number"
                   />
                 </div>
@@ -569,7 +665,7 @@ export default function Employee() {
                     name="blood_group"
                     value={formData.blood_group || ""}
                     onChange={handleChange}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Blood Group"
                   />
                 </div>
@@ -577,12 +673,12 @@ export default function Employee() {
             </div>
 
             {/* IMAGES SECTION */}
-            <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Profile Images
               </h3>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 {/* Profile Image */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -593,11 +689,11 @@ export default function Employee() {
                       <img
                         src={filePreview(formData.image)}
                         alt="Profile"
-                        className="w-32 h-32 rounded-xl object-cover border shadow-sm mx-auto"
+                        className="w-24 h-24 lg:w-32 lg:h-32 rounded-xl object-cover border shadow-sm mx-auto"
                       />
                     ) : (
-                      <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto">
-                        <span className="text-gray-400">No image</span>
+                      <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto">
+                        <span className="text-gray-400 text-sm">No image</span>
                       </div>
                     )}
                   </div>
@@ -607,7 +703,7 @@ export default function Employee() {
                     onChange={(e) =>
                       handleFileChange("image", e.target.files[0])
                     }
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                   />
                 </div>
 
@@ -621,11 +717,11 @@ export default function Employee() {
                       <img
                         src={filePreview(formData.photo)}
                         alt="Photo"
-                        className="w-32 h-32 rounded-xl object-cover border shadow-sm mx-auto"
+                        className="w-24 h-24 lg:w-32 lg:h-32 rounded-xl object-cover border shadow-sm mx-auto"
                       />
                     ) : (
-                      <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto">
-                        <span className="text-gray-400">No photo</span>
+                      <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center mx-auto">
+                        <span className="text-gray-400 text-sm">No photo</span>
                       </div>
                     )}
                   </div>
@@ -635,21 +731,21 @@ export default function Employee() {
                     onChange={(e) =>
                       handleFileChange("photo", e.target.files[0])
                     }
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                   />
                 </div>
               </div>
             </div>
 
             {/* ADDRESS SECTION */}
-            <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Address Details
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
                 {["state", "district", "mandal", "village", "pincode"].map(
                   (field) => (
-                    <div key={field}>
+                    <div key={field} className={field === "pincode" ? "lg:col-span-2" : ""}>
                       <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
                         {field.replace("_", " ")}
                       </label>
@@ -658,7 +754,7 @@ export default function Employee() {
                         onChange={(e) =>
                           handleNestedChange("address", field, e.target.value)
                         }
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                         placeholder={`Enter ${field}`}
                       />
                     </div>
@@ -668,8 +764,8 @@ export default function Employee() {
             </div>
 
             {/* AADHAR SECTION */}
-            <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Aadhar Details
               </h3>
 
@@ -686,12 +782,12 @@ export default function Employee() {
                       e.target.value
                     )
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
+                  className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4 text-sm lg:text-base"
                   placeholder="Aadhar Number"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Aadhar Front Image
@@ -701,10 +797,10 @@ export default function Employee() {
                       <img
                         src={filePreview(formData.aadhar?.aadhar_front_image)}
                         alt="Aadhar Front"
-                        className="w-full h-48 rounded-xl object-cover border shadow-sm"
+                        className="w-full h-40 lg:h-48 rounded-xl object-cover border shadow-sm"
                       />
                     ) : (
-                      <div className="w-full h-48 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
+                      <div className="w-full h-40 lg:h-48 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
                         <span className="text-gray-400">No image</span>
                       </div>
                     )}
@@ -718,7 +814,7 @@ export default function Employee() {
                         e.target.files[0]
                       )
                     }
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                   />
                 </div>
 
@@ -731,10 +827,10 @@ export default function Employee() {
                       <img
                         src={filePreview(formData.aadhar?.aadhar_back_image)}
                         alt="Aadhar Back"
-                        className="w-full h-48 rounded-xl object-cover border shadow-sm"
+                        className="w-full h-40 lg:h-48 rounded-xl object-cover border shadow-sm"
                       />
                     ) : (
-                      <div className="w-full h-48 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
+                      <div className="w-full h-40 lg:h-48 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
                         <span className="text-gray-400">No image</span>
                       </div>
                     )}
@@ -748,15 +844,15 @@ export default function Employee() {
                         e.target.files[0]
                       )
                     }
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    className="w-full p-2 border border-gray-300 rounded-lg text-sm"
                   />
                 </div>
               </div>
             </div>
 
             {/* SALARY SECTION */}
-            <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Salary Information
               </h3>
               <div>
@@ -768,18 +864,18 @@ export default function Employee() {
                   onChange={(e) =>
                     handleNestedChange("salary", "package", e.target.value)
                   }
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                   placeholder="Enter salary package"
                 />
               </div>
             </div>
 
             {/* BANK SECTION */}
-            <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Bank Information
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
                 {[
                   "bank_name",
                   "account_number",
@@ -788,7 +884,7 @@ export default function Employee() {
                   "phonepe_number",
                   "upi_id",
                 ].map((field) => (
-                  <div key={field}>
+                  <div key={field} className={["account_number", "upi_id"].includes(field) ? "lg:col-span-2" : ""}>
                     <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
                       {field.replace(/_/g, " ")}
                     </label>
@@ -797,7 +893,7 @@ export default function Employee() {
                       onChange={(e) =>
                         handleNestedChange("bank", field, e.target.value)
                       }
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                       placeholder={`Enter ${field.replace(/_/g, " ")}`}
                     />
                   </div>
@@ -806,11 +902,11 @@ export default function Employee() {
             </div>
 
             {/* WORK LOCATION */}
-            <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Work Location
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
                 {[
                   "work_state",
                   "work_district",
@@ -830,7 +926,7 @@ export default function Employee() {
                           e.target.value
                         )
                       }
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                       placeholder={`Enter ${field
                         .replace("work_", "")
                         .replace("_", " ")}`}
@@ -841,11 +937,11 @@ export default function Employee() {
             </div>
 
             {/* VEHICLE INFORMATION */}
-            <div className="space-y-4 mb-6">
-              <h3 className="font-semibold text-lg border-b pb-2">
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Vehicle Information
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Vehicle Type
@@ -859,7 +955,7 @@ export default function Employee() {
                         e.target.value
                       )
                     }
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Vehicle Type"
                   />
                 </div>
@@ -876,7 +972,7 @@ export default function Employee() {
                         e.target.value
                       )
                     }
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="License Plate"
                   />
                 </div>
@@ -884,16 +980,16 @@ export default function Employee() {
             </div>
 
             {/* ACTION BUTTONS */}
-            <div className="flex gap-3 pt-6 border-t">
+            <div className="flex flex-col lg:flex-row gap-3 pt-6 border-t">
               <button
                 onClick={closeEditPanel}
-                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm lg:text-base"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdate}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium text-sm lg:text-base"
               >
                 Save Changes
               </button>

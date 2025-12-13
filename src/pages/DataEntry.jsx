@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, PanelRight } from "lucide-react";
+import { ChevronDown, ChevronUp, PanelRight, Menu } from "lucide-react";
 
 export const DataEntry = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const initialFormState = {
-   state: "",
+    state: "",
     district: "",
     status: "true",
     mandal: "",
@@ -36,6 +38,14 @@ export const DataEntry = () => {
   };
 
   const [form, setForm] = useState(initialFormState);
+  
+  // Store IDs separately from form values
+  const [locationIds, setLocationIds] = useState({
+    stateId: "",
+    districtId: "",
+    mandalId: "",
+    villageId: ""
+  });
 
   // Location states
   const [states, setStates] = useState([]);
@@ -62,33 +72,33 @@ export const DataEntry = () => {
 
   // Fetch districts when state changes
   useEffect(() => {
-    if (form.state) {
-      fetchDistricts(form.state);
+    if (locationIds.stateId) {
+      fetchDistricts(locationIds.stateId);
     } else {
       setDistricts([]);
       setMandals([]);
       setVillages([]);
     }
-  }, [form.state]);
+  }, [locationIds.stateId]);
 
   // Fetch mandals when district changes
   useEffect(() => {
-    if (form.district) {
-      fetchMandals(form.district);
+    if (locationIds.districtId) {
+      fetchMandals(locationIds.districtId);
     } else {
       setMandals([]);
       setVillages([]);
     }
-  }, [form.district]);
+  }, [locationIds.districtId]);
 
   // Fetch villages when mandal changes
   useEffect(() => {
-    if (form.mandal) {
-      fetchVillages(form.mandal);
+    if (locationIds.mandalId) {
+      fetchVillages(locationIds.mandalId);
     } else {
       setVillages([]);
     }
-  }, [form.mandal]);
+  }, [locationIds.mandalId]);
 
   const fetchStates = async () => {
     try {
@@ -189,8 +199,9 @@ export const DataEntry = () => {
   const handleInput = (e) => {
     const { name, value } = e.target;
     
-    // If state changes, reset dependent fields
+    // If state changes
     if (name === "state") {
+      const selectedState = states.find(s => s.name === value);
       setForm(prev => ({ 
         ...prev, 
         [name]: value,
@@ -198,44 +209,68 @@ export const DataEntry = () => {
         mandal: "",
         village: ""
       }));
+      setLocationIds(prev => ({
+        ...prev,
+        stateId: selectedState?.id || "",
+        districtId: "",
+        mandalId: "",
+        villageId: ""
+      }));
     } 
-    // If district changes, reset mandal and village
+    // If district changes
     else if (name === "district") {
+      const selectedDistrict = districts.find(d => d.name === value);
       setForm(prev => ({ 
         ...prev, 
         [name]: value,
         mandal: "",
         village: ""
       }));
+      setLocationIds(prev => ({
+        ...prev,
+        districtId: selectedDistrict?.id || "",
+        mandalId: "",
+        villageId: ""
+      }));
     }
-    // If mandal changes, reset village
+    // If mandal changes
     else if (name === "mandal") {
+      const selectedMandal = mandals.find(m => m.name === value);
       setForm(prev => ({ 
         ...prev, 
         [name]: value,
         village: ""
       }));
+      setLocationIds(prev => ({
+        ...prev,
+        mandalId: selectedMandal?.id || "",
+        villageId: ""
+      }));
     }
-
-    else if ( name === "guntas" ){
-      let val = value;
-
-      if (name === "guntas") {
-        let num = Number(value);
-        if (num > 40) num = 40;
-        if (num < 0) num = 0;
-        val = num;
-      }
-      setForm(prev => ({ ...prev, [name]: val }));
+    // If village changes
+    else if (name === "village") {
+      const selectedVillage = villages.find(v => v.name === value);
+      setForm(prev => ({ ...prev, [name]: value }));
+      setLocationIds(prev => ({
+        ...prev,
+        villageId: selectedVillage?.id || ""
+      }));
     }
-    
+    // Handle guntas field
+    else if (name === "guntas") {
+      let num = Number(value);
+      if (num > 40) num = 40;
+      if (num < 0) num = 0;
+      setForm(prev => ({ ...prev, [name]: num }));
+    }
+    // Handle other fields
     else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSelectButton = (name, value) => {
-    setForm({ ...form, [name]: value });
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   // MULTI PHOTO SELECT
@@ -263,13 +298,14 @@ export const DataEntry = () => {
       const token = localStorage.getItem("token");
       const fd = new FormData();
 
+      // Append all form values (names, not IDs)
       Object.entries(form).forEach(([key, value]) => {
         fd.append(key, value);
       });
 
+      // Append files
       if (passbookPhoto) fd.append("passbook_photo", passbookPhoto);
       if (landBorder) fd.append("land_border", landBorder);
-
       landPhotos.forEach((file) => fd.append("land_photo", file));
       landVideos.forEach((file) => fd.append("land_video", file));
 
@@ -284,6 +320,12 @@ export const DataEntry = () => {
       if (res.ok) {
         alert("Land Entry Saved Successfully: " + data.land_id);
         setForm(initialFormState);
+        setLocationIds({
+          stateId: "",
+          districtId: "",
+          mandalId: "",
+          villageId: ""
+        });
         setPassbookPhoto(null);
         setLandBorder(null);
         setLandPhotos([]);
@@ -291,6 +333,12 @@ export const DataEntry = () => {
       } else {
         alert("Error: " + data.error);
         setForm(initialFormState);
+        setLocationIds({
+          stateId: "",
+          districtId: "",
+          mandalId: "",
+          villageId: ""
+        });
         setPassbookPhoto(null);
         setLandBorder(null);
         setLandPhotos([]);
@@ -303,22 +351,39 @@ export const DataEntry = () => {
   };
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* HEADER */}
-      <header className="flex h-14 items-center justify-between bg-white px-2 shadow-sm">
+      {/* MOBILE HEADER */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-30">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu size={24} />
+            </button>
+            <div>
+              <h1 className="text-lg font-semibold">Data Entry</h1>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* DESKTOP HEADER */}
+      <header className="hidden lg:flex h-14 items-center justify-between bg-white px-6 shadow-sm sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg">
-                            <PanelRight className="h-5 w-5 text-white" />
-                          </div>
-          <h1 className="text-xl font-semibold">Direct Farmer Data Entry</h1>
+            <PanelRight className="h-5 w-5 text-white" />
+          </div>
+          <h1 className="text-xl font-semibold">Data Entry</h1>
         </div>
       </header>
-      <div className="p-4 space-y-6">
-
+      {/* MAIN CONTENT */}
+      <div className="p-4 space-y-6 pt-16 lg:pt-6">
         {/* ------------------ VILLAGE ADDRESS ------------------ */}
         <div className="bg-white rounded-2xl shadow p-4 space-y-3">
           <h2 className="font-semibold text-lg">Village Address</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">State</label>
               <select
@@ -344,7 +409,7 @@ export const DataEntry = () => {
                 name="district"
                 value={form.district}
                 onChange={handleInput}
-                disabled={!form.state || loading.districts}
+                disabled={!locationIds.stateId || loading.districts}
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50 disabled:opacity-50"
               >
                 <option value="">Select District</option>
@@ -359,14 +424,14 @@ export const DataEntry = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Mandal</label>
               <select
                 name="mandal"
                 value={form.mandal}
                 onChange={handleInput}
-                disabled={!form.district || loading.mandals}
+                disabled={!locationIds.districtId || loading.mandals}
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50 disabled:opacity-50"
               >
                 <option value="">Select Mandal</option>
@@ -386,7 +451,7 @@ export const DataEntry = () => {
                 name="village"
                 value={form.village}
                 onChange={handleInput}
-                disabled={!form.mandal || loading.villages}
+                disabled={!locationIds.mandalId || loading.villages}
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50 disabled:opacity-50"
               >
                 <option value="">Select Village</option>
@@ -406,7 +471,7 @@ export const DataEntry = () => {
         <div className="bg-white rounded-2xl shadow p-4 space-y-3">
           <h2 className="font-semibold text-lg">Farmer Details</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Name</label>
               <input
@@ -449,15 +514,15 @@ export const DataEntry = () => {
             ["Land Ownership", "land_ownership", ["Joint", "Single"]],
             ["Ready for Mortgage", "mortgage", ["Yes", "No"]],
           ].map(([label, field, options]) => (
-            <div key={field}>
+            <div key={field} className="mt-2">
               <label className="text-sm font-medium">{label}</label>
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2 flex-wrap">
                 {options.map((v) => (
                   <button
                     key={v}
                     type="button"
                     onClick={() => handleSelectButton(field, v)}
-                    className={`px-4 py-1 rounded-full ${
+                    className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
                       form[field] === v 
                         ? 'bg-green-600 text-white' 
                         : 'bg-green-500 hover:bg-green-600 text-white'
@@ -477,7 +542,7 @@ export const DataEntry = () => {
 
           <div>
             <label className="text-sm font-medium">Land Area</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-2">
               <div>
                 <label className="text-sm font-medium">Acres</label>
                 <input
@@ -490,21 +555,21 @@ export const DataEntry = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium">Guntas</label>
+                <label className="text-sm font-medium">Guntas (0-40)</label>
                 <input
                   type="number"
                   name="guntas"
                   value={form.guntas}
                   onChange={handleInput}
                   max={40}
-                  min= {0}
+                  min={0}
                   className="w-full mt-1 p-2 rounded-xl bg-gray-50"
                 />
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="text-sm font-medium">
                 Price Per Acre in Lakhs
@@ -528,8 +593,8 @@ export const DataEntry = () => {
             </div>
           </div>
 
-          <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Total Price</label>
                 <input
@@ -553,7 +618,7 @@ export const DataEntry = () => {
             ["Shed Details", "shed_details", ["Poultry", "Cow Shed"]],
             ["Fencing", "fencing", ["With Gate", "All Sides", "Partially", "No"]],
           ].map(([label, field, options]) => (
-            <div key={field}>
+            <div key={field} className="mt-3">
               <label className="text-sm font-medium">{label}</label>
               <div className="flex gap-2 mt-2 flex-wrap">
                 {options.map((v) => (
@@ -561,7 +626,7 @@ export const DataEntry = () => {
                     key={v}
                     type="button"
                     onClick={() => handleSelectButton(field, v)}
-                    className={`px-4 py-1 rounded-full ${
+                    className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
                       form[field] === v 
                         ? 'bg-green-600 text-white' 
                         : 'bg-green-500 hover:bg-green-600 text-white'
@@ -591,20 +656,20 @@ export const DataEntry = () => {
           <h2 className="font-semibold text-lg">GPS & Path Tracking</h2>
 
           <label className="text-sm font-medium">Land Entry Point</label>
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-2 flex-col lg:flex-row">
             <input
               name="latitude"
               value={form.latitude}
               onChange={handleInput}
               placeholder="Latitude"
-              className="px-4 py-1 rounded-full bg-gray-100"
+              className="flex-1 px-4 py-2 rounded-full bg-gray-100"
             />
             <input
               name="longitude"
               value={form.longitude}
               onChange={handleInput}
               placeholder="Longitude"
-              className="px-4 py-1 rounded-full bg-gray-100"
+              className="flex-1 px-4 py-2 rounded-full bg-gray-100"
             />
           </div>
         </div>
@@ -630,7 +695,7 @@ export const DataEntry = () => {
                   <img
                     src={URL.createObjectURL(file)}
                     alt={`Land photo ${index + 1}`}
-                    className="w-24 h-24 rounded object-cover"
+                    className="w-20 h-20 lg:w-24 lg:h-24 rounded object-cover"
                   />
                   <button
                     type="button"
@@ -660,7 +725,7 @@ export const DataEntry = () => {
                 <div key={index} className="relative">
                   <video
                     src={URL.createObjectURL(file)}
-                    className="w-24 h-24 rounded object-cover"
+                    className="w-20 h-20 lg:w-24 lg:h-24 rounded object-cover"
                     controls
                   />
                   <button
@@ -678,10 +743,10 @@ export const DataEntry = () => {
       </div>
 
       {/* SAVE BUTTON */}
-      <div className="flex justify-end mt-6 pb-10 px-4">
+      <div className="flex justify-end mt-6 pb-10 px-4 sticky bottom-0 bg-gray-100 pt-4 lg:relative lg:bg-transparent lg:pt-0">
         <button
           onClick={handleSubmit}
-          className="bg-green-500 text-white px-6 py-3 rounded-full shadow-md hover:bg-green-600 transition-all"
+          className="bg-green-500 text-white px-6 py-3 rounded-full shadow-md hover:bg-green-600 transition-all w-full lg:w-auto"
         >
           Save Land Entry
         </button>

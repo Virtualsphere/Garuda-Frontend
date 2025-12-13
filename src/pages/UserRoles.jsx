@@ -9,7 +9,8 @@ import {
   X,
   Trash2,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Menu
 } from "lucide-react";
 
 const API_BASE = "http://72.61.169.226";
@@ -40,7 +41,7 @@ export default function AccessControls() {
     "Locations",
     "Travel Wallet",
     "Land Wallet",
-    "CRM"
+    "CRM",
   ];
 
   const [roles, setRoles] = useState([]);
@@ -52,6 +53,7 @@ export default function AccessControls() {
   const [newRole, setNewRole] = useState({ name: "", description: "" });
   const [error, setError] = useState("");
   const [debug, setDebug] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Fetch all roles from backend
   const fetchRoles = async () => {
@@ -59,14 +61,14 @@ export default function AccessControls() {
       setLoading(true);
       const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE}/admin/roles`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         if (response.status === 403) {
           setError("Access denied. You need admin privileges to view roles.");
@@ -76,37 +78,36 @@ export default function AccessControls() {
         setRoles([]);
         return;
       }
-      
+
       setRoles(data.roles || []);
-      
+
       // Initialize permissions state from database
       const initialPermissions = {};
       const initialExpanded = {};
-      
-      data.roles.forEach(role => {
+
+      data.roles.forEach((role) => {
         // Ensure permissions is an object, not a string
         let rolePermissions = {};
-        
-        if (typeof role.permissions === 'string') {
+
+        if (typeof role.permissions === "string") {
           try {
             rolePermissions = JSON.parse(role.permissions);
           } catch (e) {
             console.error("Error parsing permissions JSON:", e);
             rolePermissions = {};
           }
-        } else if (typeof role.permissions === 'object') {
+        } else if (typeof role.permissions === "object") {
           rolePermissions = role.permissions;
         }
-        
+
         initialPermissions[role.name] = rolePermissions;
         initialExpanded[role.name] = false;
       });
-      
+
       console.log("Initial permissions loaded:", initialPermissions);
       setPermissionsState(initialPermissions);
       setExpandedRoles(initialExpanded);
       setError("");
-      
     } catch (error) {
       console.error("Error fetching roles:", error);
       setError("Network error. Please check your connection.");
@@ -122,28 +123,30 @@ export default function AccessControls() {
   // Toggle permission checkbox - FIXED VERSION
   const togglePermission = (roleName, permissionKey) => {
     console.log(`Toggling ${permissionKey} for ${roleName}`);
-    
-    setPermissionsState(prev => {
+
+    setPermissionsState((prev) => {
       // Create a deep copy of the state
       const newState = JSON.parse(JSON.stringify(prev));
-      
+
       // Ensure the role exists
       if (!newState[roleName]) {
         newState[roleName] = {};
       }
-      
+
       // Get current value (default to false if undefined)
       const currentValue = newState[roleName][permissionKey] || false;
-      
+
       // Toggle the permission
       newState[roleName][permissionKey] = !currentValue;
-      
-      console.log(`Changed ${permissionKey} from ${currentValue} to ${!currentValue}`);
+
+      console.log(
+        `Changed ${permissionKey} from ${currentValue} to ${!currentValue}`
+      );
       console.log("Updated state for", roleName, ":", newState[roleName]);
-      
+
       return newState;
     });
-    
+
     // Update debug message
     setDebug(`Toggled ${permissionKey} for ${roleName}`);
   };
@@ -151,38 +154,40 @@ export default function AccessControls() {
   // Save role permissions to backend
   const saveRolePermissions = async (roleName) => {
     try {
-      setSaving(prev => ({ ...prev, [roleName]: true }));
+      setSaving((prev) => ({ ...prev, [roleName]: true }));
       const token = localStorage.getItem("token");
-      
+
       const permissionsToSave = permissionsState[roleName] || {};
       console.log("Saving permissions for", roleName, ":", permissionsToSave);
-      
-      const response = await fetch(`${API_BASE}/admin/roles/${roleName}/permissions`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          permissions: permissionsToSave
-        })
-      });
-      
+
+      const response = await fetch(
+        `${API_BASE}/admin/roles/${roleName}/permissions`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            permissions: permissionsToSave,
+          }),
+        }
+      );
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         alert(`Error: ${data.error || "Failed to save permissions"}`);
         return;
       }
-      
+
       alert("✅ Permissions saved successfully!");
       setDebug(`Permissions saved for ${roleName}`);
-      
     } catch (error) {
       console.error("Error saving permissions:", error);
       alert("Failed to save permissions. Please try again.");
     } finally {
-      setSaving(prev => ({ ...prev, [roleName]: false }));
+      setSaving((prev) => ({ ...prev, [roleName]: false }));
     }
   };
 
@@ -195,10 +200,10 @@ export default function AccessControls() {
 
     try {
       const token = localStorage.getItem("token");
-      
+
       // Initialize default permissions (all false)
       const defaultPermissions = {};
-      allPermissions.forEach(perm => {
+      allPermissions.forEach((perm) => {
         defaultPermissions[perm] = false;
       });
 
@@ -206,16 +211,16 @@ export default function AccessControls() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: newRole.name,
-          permissions: defaultPermissions
-        })
+          permissions: defaultPermissions,
+        }),
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         alert(`Error: ${data.error || "Failed to add role"}`);
         return;
@@ -225,7 +230,6 @@ export default function AccessControls() {
       setNewRole({ name: "", description: "" });
       fetchRoles();
       alert("✅ Role added successfully!");
-      
     } catch (error) {
       console.error("Error adding role:", error);
       alert("Failed to add role. Please try again.");
@@ -234,7 +238,9 @@ export default function AccessControls() {
 
   // Delete role
   const deleteRole = async (roleName) => {
-    if (!window.confirm(`Are you sure you want to delete "${roleName}" role?`)) {
+    if (
+      !window.confirm(`Are you sure you want to delete "${roleName}" role?`)
+    ) {
       return;
     }
 
@@ -242,14 +248,14 @@ export default function AccessControls() {
       const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE}/admin/roles/${roleName}`, {
         method: "DELETE",
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         alert(`Error: ${data.error || "Failed to delete role"}`);
         return;
@@ -257,7 +263,6 @@ export default function AccessControls() {
 
       fetchRoles();
       alert("✅ Role deleted successfully!");
-      
     } catch (error) {
       console.error("Error deleting role:", error);
       alert("Failed to delete role. Please try again.");
@@ -267,10 +272,25 @@ export default function AccessControls() {
   // CheckCircle component with proper styling
   const CheckCircle = ({ checked }) => {
     return (
-      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${checked ? 'bg-green-500' : 'bg-white border border-gray-300'}`}>
+      <div
+        className={`w-5 h-5 rounded-full flex items-center justify-center ${
+          checked ? "bg-green-500" : "bg-white border border-gray-300"
+        }`}
+      >
         {checked && (
-          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+          <svg
+            className="w-3 h-3 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="3"
+              d="M5 13l4 4L19 7"
+            ></path>
           </svg>
         )}
       </div>
@@ -290,30 +310,61 @@ export default function AccessControls() {
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
-      {/* Header */}
-      <header className="flex h-14 items-center justify-between bg-white px-4 shadow-sm sticky top-0 z-50 mb-4 rounded-md">
-        <div className="flex items-center gap-2">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-30">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu size={24} />
+            </button>
+            <div>
+              <h1 className="text-lg font-semibold">
+                User Roles & Access Control
+              </h1>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowAddRole(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm"
+          >
+            <Plus size={16} /> Add Roles
+          </button>
+        </div>
+      </div>
+      <header className="hidden lg:flex h-14 items-center justify-between bg-white px-6 shadow-sm">
+        <div className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg">
             <PanelRight className="h-5 w-5 text-white" />
           </div>
-          <h1 className="text-xl font-semibold">User Roles & Access Control</h1>
+          <div>
+            <h1 className="text-xl font-semibold">
+              User Roles & Access Control
+            </h1>
+          </div>
         </div>
-        
-        <button 
-          onClick={() => setShowAddRole(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white">
-          <Plus size={16} /> Add Role
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowAddRole(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white"
+          >
+            <Plus size={16} /> Add Role
+          </button>
+        </div>
       </header>
-
       <div className="p-6 space-y-6">
         <div className="bg-white rounded-2xl p-6 shadow">
           {/* Section header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">Role-Based Access Control</h2>
+              <h2 className="text-xl font-semibold">
+                Role-Based Access Control
+              </h2>
               <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                <ShieldCheck size={16} /> Define which pages each user role can access. Changes will apply to all users assigned to that role.
+                <ShieldCheck size={16} /> Define which pages each user role can
+                access. Changes will apply to all users assigned to that role.
               </p>
             </div>
           </div>
@@ -325,7 +376,9 @@ export default function AccessControls() {
                 <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-red-800 font-medium">{error}</p>
-                  <p className="text-red-600 text-sm mt-1">Only admin users can access role management.</p>
+                  <p className="text-red-600 text-sm mt-1">
+                    Only admin users can access role management.
+                  </p>
                 </div>
               </div>
             </div>
@@ -339,19 +392,23 @@ export default function AccessControls() {
               </div>
             ) : (
               <>
-                
                 {roles.map((role) => {
                   const open = expandedRoles[role.name];
                   const rolePerms = permissionsState[role.name] || {};
-                  
+
                   return (
-                    <div key={role.name} className="mt-1 pb-1 border-b last:border-b-0">
+                    <div
+                      key={role.name}
+                      className="mt-1 pb-1 border-b last:border-b-0"
+                    >
                       <div className="flex justify-between items-center">
                         <button
-                          onClick={() => setExpandedRoles(prev => ({
-                            ...prev,
-                            [role.name]: !prev[role.name]
-                          }))}
+                          onClick={() =>
+                            setExpandedRoles((prev) => ({
+                              ...prev,
+                              [role.name]: !prev[role.name],
+                            }))
+                          }
                           className="flex-1 flex justify-between text-left text-lg items-center py-2 hover:bg-gray-50 px-2 rounded"
                         >
                           <div className="flex items-center gap-3">
@@ -359,7 +416,7 @@ export default function AccessControls() {
                           </div>
                           <span>{open ? <ChevronUp /> : <ChevronDown />}</span>
                         </button>
-                        
+
                         {/* Action buttons */}
                         <div className="flex items-center gap-2 ml-4">
                           <button
@@ -367,7 +424,8 @@ export default function AccessControls() {
                             disabled={saving[role.name]}
                             className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm flex items-center gap-1"
                           >
-                            <Save size={14} /> {saving[role.name] ? "Saving..." : "Save"}
+                            <Save size={14} />{" "}
+                            {saving[role.name] ? "Saving..." : "Save"}
                           </button>
                           <button
                             onClick={() => deleteRole(role.name)}
@@ -381,9 +439,11 @@ export default function AccessControls() {
                       {open && (
                         <div className="mt-3 bg-gray-50 p-4 rounded-xl">
                           <div className="mb-4">
-                            <h4 className="font-medium mb-2">Permissions for {role.name}:</h4>
+                            <h4 className="font-medium mb-2">
+                              Permissions for {role.name}:
+                            </h4>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {allPermissions.map((permission) => {
                               const checked = rolePerms[permission] || false;
@@ -391,17 +451,25 @@ export default function AccessControls() {
                                 <div
                                   key={permission}
                                   className={`flex items-center gap-3 text-sm p-3 rounded-lg cursor-pointer transition-all ${
-                                    checked 
-                                      ? 'bg-green-50 border border-green-200 hover:bg-green-100' 
-                                      : 'bg-white border border-gray-200 hover:bg-gray-100'
+                                    checked
+                                      ? "bg-green-50 border border-green-200 hover:bg-green-100"
+                                      : "bg-white border border-gray-200 hover:bg-gray-100"
                                   }`}
                                   onClick={() => {
-                                    console.log(`Clicking ${permission} for ${role.name}`);
+                                    console.log(
+                                      `Clicking ${permission} for ${role.name}`
+                                    );
                                     togglePermission(role.name, permission);
                                   }}
                                 >
                                   <CheckCircle checked={checked} />
-                                  <span className={`font-medium ${checked ? 'text-green-800' : 'text-gray-700'}`}>
+                                  <span
+                                    className={`font-medium ${
+                                      checked
+                                        ? "text-green-800"
+                                        : "text-gray-700"
+                                    }`}
+                                  >
                                     {permission}
                                   </span>
                                   <span className="ml-auto text-xs text-gray-500">
@@ -411,13 +479,25 @@ export default function AccessControls() {
                               );
                             })}
                           </div>
-                          
+
                           {/* Current state display */}
                           <div className="mt-4 p-3 bg-gray-100 rounded-lg">
                             <div className="text-sm text-gray-600">
-                              <span className="font-medium">Current state:</span>{" "}
-                              {Object.keys(rolePerms).filter(k => rolePerms[k]).length} permissions enabled,{" "}
-                              {Object.keys(rolePerms).filter(k => !rolePerms[k]).length} permissions disabled
+                              <span className="font-medium">
+                                Current state:
+                              </span>{" "}
+                              {
+                                Object.keys(rolePerms).filter(
+                                  (k) => rolePerms[k]
+                                ).length
+                              }{" "}
+                              permissions enabled,{" "}
+                              {
+                                Object.keys(rolePerms).filter(
+                                  (k) => !rolePerms[k]
+                                ).length
+                              }{" "}
+                              permissions disabled
                             </div>
                           </div>
                         </div>
@@ -444,7 +524,7 @@ export default function AccessControls() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -453,7 +533,9 @@ export default function AccessControls() {
                 <input
                   type="text"
                   value={newRole.name}
-                  onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                  onChange={(e) =>
+                    setNewRole({ ...newRole, name: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Marketing Manager"
                 />

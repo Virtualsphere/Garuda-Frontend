@@ -16,6 +16,7 @@ import {
   Shield,
   Star,
   Filter,
+  Menu
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -43,6 +44,7 @@ export default function LandVerification() {
   const [existingLandVideos, setExistingLandVideos] = useState([]);
   const [existingPassbookUrl, setExistingPassbookUrl] = useState(null);
   const [existingLandBorderUrl, setExistingLandBorderUrl] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const API_BASE = "http://72.61.169.226";
   const getToken = () => localStorage.getItem("token") || "";
@@ -323,8 +325,49 @@ export default function LandVerification() {
       value={{ verificationChecks, handleVerifyClick }}
     >
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-30">
+          <div className="flex items-center justify-between p-4">
+            <div className="container mx-auto px-2 py-2">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <Menu size={24} />
+                </button>
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight">
+                    Land Verification Portal
+                  </h1>
+                </div>
+              </div>
+
+              {isBuyerSelecting && (
+                <div className="flex items-center gap-3">
+                  <div className="hidden md:block bg-white/10 px-4 py-2 rounded-full">
+                    <span className="text-sm font-medium">
+                      Buyer ID: {state.buyer_id}
+                    </span>
+                  </div>
+                  <button
+                    onClick={addToWishlist}
+                    className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold group"
+                  >
+                    <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+                    Add to Wishlist
+                    {selectedLand.length > 0 && (
+                      <span className="ml-2 bg-white text-orange-600 px-2 py-1 rounded-full text-xs font-bold">
+                        {selectedLand.length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         {/* Enhanced Header */}
-        <header className="sticky top-0 z-50 bg-gradient-to-r from-white shadow-lg">
+        <header className="hidden lg:flex h-14 items-center justify-between bg-white px-6 shadow-sm">
           <div className="container mx-auto px-2 py-2">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">

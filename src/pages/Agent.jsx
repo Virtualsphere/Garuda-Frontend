@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AgentForm } from "./AgentForm";
-import { PanelRight, UserPlus, Search, Filter, X, Plus, Edit, Trash2, Eye } from "lucide-react";
+import { PanelRight, UserPlus, Search, Filter, X, Plus, Edit, Trash2, Eye, Menu } from "lucide-react";
 
 export const Agent = () => {
   const [agents, setAgents] = useState([]);
@@ -20,6 +20,7 @@ export const Agent = () => {
   const [mandals, setMandals] = useState([]);
   const [villages, setVillages] = useState([]);
   const [totalAgents, setTotalAgents] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigate = useNavigate();
   const API_URL = "http://72.61.169.226/admin";
@@ -166,8 +167,31 @@ export const Agent = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
-      {/* Header */}
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between bg-white px-6 shadow-sm border-b border-gray-200 mb-8">
+        <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-30">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <Menu size={24} />
+              </button>
+              <div>
+                <h1 className="text-lg font-semibold">
+                  Agent List
+                </h1>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm"
+            >
+              <UserPlus size={16} /> Add New Agent
+            </button>
+          </div>
+        </div>
+        {/* Header */}
+        <header className="hidden lg:flex h-14 items-center justify-between bg-white px-6 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg">
             <PanelRight className="h-5 w-5 text-white" />

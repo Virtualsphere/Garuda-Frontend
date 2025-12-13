@@ -16,7 +16,7 @@ import {
   FiChevronDown,
   FiChevronUp
 } from "react-icons/fi";
-import { PanelRight } from "lucide-react";
+import { PanelRight, Menu } from "lucide-react";
 
 export const TravelWallet = () => {
   const [travelData, setTravelData] = useState([]);
@@ -24,6 +24,7 @@ export const TravelWallet = () => {
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchTravelWallet();
@@ -114,7 +115,24 @@ export const TravelWallet = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <header className="flex h-14 items-center justify-between bg-white px-2 shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-30">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu size={24} />
+            </button>
+            <div>
+              <h1 className="text-lg font-semibold">
+                Travel Wallet
+              </h1>
+            </div>
+          </div>
+        </div>
+      </div>
+      <header className="hidden lg:flex h-14 items-center justify-between bg-white px-6 shadow-sm">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg">
                     <PanelRight className="h-5 w-5 text-white" />

@@ -16,7 +16,9 @@ import {
   ChevronRight,
   ChevronDown,
   Edit,
+  Menu,
   Trash2,
+  X as XIcon
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { locationApi } from "../api/LocationApi";
@@ -34,14 +36,84 @@ export const Location = () => {
 
   const [activeTab, setActiveTab] = useState("States");
   const [isAdding, setIsAdding] = useState(false);
-  const [viewMode, setViewMode] = useState("cards"); // cards or table
+  const [viewMode, setViewMode] = useState("cards");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Mobile tab selector
+  const [mobileTabOpen, setMobileTabOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Toaster position="top-right" />
 
-      {/* HEADER */}
-      <header className="sticky top-0 z-10 flex h-16 items-center justify-between bg-white px-6 shadow-sm border-b border-gray-200">
+      {/* MOBILE HEADER */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-40 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu size={24} className="text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-800">
+                Location Management
+              </h1>
+              <p className="text-xs text-gray-500">
+                Manage geographical hierarchy
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsAdding(!isAdding)}
+            className="flex items-center gap-1 sm:gap-2 px-3 py-2 rounded-xl shadow-sm bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white text-sm font-medium"
+          >
+            <PlusCircle size={16} /> 
+            <span className="hidden sm:inline">Add New</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+        </div>
+
+        {/* Mobile Tab Selector */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={() => setMobileTabOpen(!mobileTabOpen)}
+            className="w-full flex items-center justify-between p-3 bg-gray-100 rounded-xl"
+          >
+            <div className="flex items-center gap-2">
+              {tabs.find(tab => tab.name === activeTab)?.icon}
+              <span className="font-medium text-gray-800">{activeTab}</span>
+            </div>
+            <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${mobileTabOpen ? 'rotate-180' : ''}`} />
+          </button>
+          
+          {mobileTabOpen && (
+            <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-lg">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.name}
+                  onClick={() => {
+                    setActiveTab(tab.name);
+                    setMobileTabOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 px-4 py-3 border-b border-gray-100 last:border-b-0 ${
+                    activeTab === tab.name
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* DESKTOP HEADER */}
+      <header className="hidden lg:flex h-14 items-center justify-between bg-white px-6 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg">
             <PanelRight className="h-5 w-5 text-white" />
@@ -64,14 +136,14 @@ export const Location = () => {
         </button>
       </header>
 
-      <div className="p-6">
+      <div className="pt-20 lg:p-6 p-6 sm:p-6">
         {/* MAIN CONTENT CARD */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl border border-gray-100 overflow-hidden">
           {/* HEADER SECTION */}
-          <div className="p-8 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+          <div className="hidden lg:block p-8 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
               <div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                <h2 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
                   Geographical Hierarchy
                 </h2>
                 <p className="text-gray-600">
@@ -146,13 +218,13 @@ export const Location = () => {
               </div>
             </div>
 
-            {/* TAB SELECTOR */}
+            {/* DESKTOP TAB SELECTOR */}
             <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
               {tabs.map((tab) => (
                 <button
                   key={tab.name}
                   onClick={() => setActiveTab(tab.name)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-4 lg:px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap text-sm lg:text-base ${
                     activeTab === tab.name
                       ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -165,8 +237,51 @@ export const Location = () => {
             </div>
           </div>
 
+          {/* MOBILE VIEW TOGGLE */}
+          <div className="lg:hidden p-4 border-b border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-gray-800">Geographical Hierarchy</h2>
+                <p className="text-sm text-gray-600">Manage locations in the system</p>
+              </div>
+              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
+                <button
+                  onClick={() => setViewMode("cards")}
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === "cards"
+                      ? "bg-white text-green-600 shadow-sm"
+                      : "text-gray-600"
+                  }`}
+                  title="Cards View"
+                >
+                  <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
+                    <div className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}></div>
+                    <div className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}></div>
+                    <div className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}></div>
+                    <div className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}></div>
+                  </div>
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === "table"
+                      ? "bg-white text-green-600 shadow-sm"
+                      : "text-gray-600"
+                  }`}
+                  title="Table View"
+                >
+                  <div className="w-4 h-4">
+                    <div className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"} mb-1`}></div>
+                    <div className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"} mb-1`}></div>
+                    <div className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"}`}></div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* CONTENT SECTION */}
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             {activeTab === "States" && (
               <StatesPage
                 viewMode={viewMode}
@@ -234,31 +349,31 @@ function PageHeader({
   onSearchChange,
 }) {
   return (
-    <div className="mb-8">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+    <div className="mb-6 lg:mb-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 lg:mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-800">{title}</h2>
+          <p className="text-gray-600 text-sm lg:text-base mt-1">
             Manage and organize {title.toLowerCase()} in the system
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* SEARCH BAR */}
-          <div className="relative">
+          <div className="relative flex-1 sm:flex-none">
             <input
               type="text"
               value={searchValue}
               onChange={onSearchChange}
               placeholder={`Search ${title.toLowerCase()}...`}
-              className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none w-full lg:w-64 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
             />
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           </div>
 
           <button
             onClick={onAddClick}
-            className="group flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-4 py-2.5 rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
+            className="group flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-4 py-2.5 rounded-xl font-medium shadow-md hover:shadow-lg transition-all text-sm lg:text-base"
           >
             <PlusCircle className="h-4 w-4" />
             <span>Add New</span>
@@ -274,23 +389,6 @@ function PageHeader({
     </div>
   );
 }
-
-const fetchMandals = async (districtId) => {
-  setLoading(true);
-  try {
-    const data = await locationApi.getMandalsByDistrict(districtId);
-    // Parse mandal names if they're stored as JSON strings
-    const parsedData = data.map(mandal => ({
-      ...mandal,
-      name: parseJsonName(mandal.name)
-    }));
-    setMandals(parsedData);
-  } catch (error) {
-    toast.error("Failed to load mandals");
-  } finally {
-    setLoading(false);
-  }
-};
 
 // Helper function to parse JSON string names
 const parseJsonName = (name) => {
@@ -387,7 +485,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
       />
 
       {isAdding && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
+        <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl lg:rounded-2xl border border-emerald-100">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-emerald-800 text-lg">
               Add New State(s)
@@ -403,7 +501,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newStates.map((state, index) => (
-                <div key={index} className="flex items-center gap-3">
+                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="flex-1">
                     <div className="relative">
                       <input
@@ -417,7 +515,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
                           )
                         }
                         placeholder="State Code"
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                         maxLength="2"
                         required
                       />
@@ -434,7 +532,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
                         handleStateChange(index, "name", e.target.value)
                       }
                       placeholder="State Name"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
                     />
                   </div>
@@ -442,7 +540,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
                     <button
                       type="button"
                       onClick={() => handleRemoveStateField(index)}
-                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors self-center"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -451,29 +549,29 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
               <button
                 type="button"
                 onClick={handleAddStateField}
-                className="flex items-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors text-sm lg:text-base"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>Add Another</span>
               </button>
-              <div className="ml-auto flex gap-3">
+              <div className="sm:ml-auto flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
                     setNewStates([{ code: "", name: "" }]);
                   }}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm lg:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
                 >
                   Save State(s)
                 </button>
@@ -484,19 +582,19 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Loading states data...</p>
+        <div className="flex flex-col items-center justify-center py-8 lg:py-12">
+          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
+          <p className="text-gray-600 text-sm lg:text-base">Loading states data...</p>
         </div>
       ) : filteredStates.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Globe className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Globe className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             No states found
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 text-sm lg:text-base mb-4 lg:mb-6">
             {searchQuery
               ? "Try a different search"
               : "Add your first state to get started"}
@@ -504,7 +602,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
           {!searchQuery && (
             <button
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
             >
               <PlusCircle className="h-4 w-4" />
               Add First State
@@ -512,20 +610,20 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
           )}
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredStates.map((state) => (
             <CardItem key={state.id} item={state} type="state" />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full">
+          <table className="w-full min-w-[300px]">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   State Code
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   State Name
                 </th>
               </tr>
@@ -536,15 +634,15 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
                   key={state.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="p-4">
-                    <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg">
-                      <span className="font-bold text-emerald-700">
+                  <td className="p-3 lg:p-4">
+                    <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg">
+                      <span className="font-bold text-emerald-700 text-sm lg:text-base">
                         {state.code}
                       </span>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <h4 className="font-semibold text-gray-800">
+                  <td className="p-3 lg:p-4">
+                    <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
                       {state.name}
                     </h4>
                   </td>
@@ -664,17 +762,17 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
       />
 
       {/* STATE SELECTOR */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200">
+      <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-gray-50 to-white rounded-xl lg:rounded-2xl border border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <Globe className="h-5 w-5 text-gray-500" />
           <h3 className="font-semibold text-gray-700">Select State</h3>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 lg:gap-3">
           {states.map((state) => (
             <button
               key={state.id}
               onClick={() => setSelectedState(state.id)}
-              className={`p-4 rounded-xl border transition-all ${
+              className={`p-3 lg:p-4 rounded-xl border transition-all text-sm lg:text-base ${
                 selectedState === state.id
                   ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white border-emerald-500 shadow-md"
                   : "bg-white border-gray-300 hover:border-emerald-300 hover:bg-emerald-50"
@@ -682,7 +780,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
             >
               <div className="text-center">
                 <div
-                  className={`text-lg font-bold ${
+                  className={`font-bold text-sm lg:text-lg ${
                     selectedState === state.id
                       ? "text-white"
                       : "text-emerald-700"
@@ -691,11 +789,11 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
                   {state.code}
                 </div>
                 <div
-                  className={`text-sm mt-1 ${
+                  className={`mt-1 text-xs lg:text-sm ${
                     selectedState === state.id
                       ? "text-emerald-100"
                       : "text-gray-600"
-                  }`}
+                  } truncate`}
                 >
                   {state.name}
                 </div>
@@ -706,9 +804,9 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
       </div>
 
       {isAdding && selectedState && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
+        <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl lg:rounded-2xl border border-emerald-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-emerald-800 text-lg">
+            <h3 className="font-bold text-emerald-800 text-sm lg:text-lg">
               Add District(s) to {selectedStateName}
             </h3>
             <button
@@ -722,7 +820,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newDistricts.map((district, index) => (
-                <div key={index} className="flex items-center gap-3">
+                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="flex-1 relative">
                     <input
                       type="text"
@@ -731,7 +829,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
                         handleDistrictChange(index, e.target.value)
                       }
                       placeholder="District Name"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
                     />
                     <div className="absolute right-3 top-3">
@@ -744,7 +842,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
                     <button
                       type="button"
                       onClick={() => handleRemoveDistrictField(index)}
-                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors self-center"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -753,29 +851,29 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
               <button
                 type="button"
                 onClick={handleAddDistrictField}
-                className="flex items-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors text-sm lg:text-base"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>Add Another</span>
               </button>
-              <div className="ml-auto flex gap-3">
+              <div className="sm:ml-auto flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
                     setNewDistricts([""]);
                   }}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm lg:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
                 >
                   Save District(s)
                 </button>
@@ -786,31 +884,31 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
       )}
 
       {!selectedState ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Globe className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Globe className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             No state selected
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-sm lg:text-base">
             Please select a state to view districts
           </p>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Loading districts...</p>
+        <div className="flex flex-col items-center justify-center py-8 lg:py-12">
+          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
+          <p className="text-gray-600 text-sm lg:text-base">Loading districts...</p>
         </div>
       ) : filteredDistricts.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Landmark className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Landmark className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             No districts found
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 text-sm lg:text-base mb-4 lg:mb-6">
             {searchQuery
               ? "Try a different search"
               : `No districts found for ${selectedStateName}`}
@@ -818,7 +916,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
           {!searchQuery && (
             <button
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
             >
               <PlusCircle className="h-4 w-4" />
               Add First District
@@ -826,20 +924,20 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
           )}
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredDistricts.map((district) => (
             <CardItem key={district.id} item={district} type="district" />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full">
+          <table className="w-full min-w-[300px]">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District Code
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District Name
                 </th>
               </tr>
@@ -850,15 +948,15 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
                   key={district.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="p-4">
-                    <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
-                      <span className="font-bold text-blue-700">
+                  <td className="p-3 lg:p-4">
+                    <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
+                      <span className="font-bold text-blue-700 text-sm lg:text-base">
                         {district.code}
                       </span>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <h4 className="font-semibold text-gray-800">
+                  <td className="p-3 lg:p-4">
+                    <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
                       {district.name}
                     </h4>
                   </td>
@@ -1005,13 +1103,13 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
       />
 
       {/* LOCATION SELECTOR */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200">
+      <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-gray-50 to-white rounded-xl lg:rounded-2xl border border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <Filter className="h-5 w-5 text-gray-500" />
           <h3 className="font-semibold text-gray-700">Select Location</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               State
@@ -1019,7 +1117,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
             >
               <option value="">Select a state</option>
               {states.map((state) => (
@@ -1038,7 +1136,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
               disabled={!selectedState}
-              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
+              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base ${
                 !selectedState ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -1054,9 +1152,9 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
       </div>
 
       {isAdding && selectedDistrict && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
+        <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl lg:rounded-2xl border border-emerald-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-emerald-800 text-lg">
+            <h3 className="font-bold text-emerald-800 text-sm lg:text-lg">
               Add Sector(s) to {selectedDistrictName}
             </h3>
             <button
@@ -1070,7 +1168,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newSectors.map((sector, index) => (
-                <div key={index} className="flex items-center gap-3">
+                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="flex-1">
                     <input
                       type="text"
@@ -1083,7 +1181,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
                         )
                       }
                       placeholder="Sector Code"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       maxLength="10"
                       required
                     />
@@ -1096,7 +1194,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
                         handleSectorChange(index, "name", e.target.value)
                       }
                       placeholder="Sector Name"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
                     />
                   </div>
@@ -1104,7 +1202,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
                     <button
                       type="button"
                       onClick={() => handleRemoveSectorField(index)}
-                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors self-center"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -1113,29 +1211,29 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
               <button
                 type="button"
                 onClick={handleAddSectorField}
-                className="flex items-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors text-sm lg:text-base"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>Add Another</span>
               </button>
-              <div className="ml-auto flex gap-3">
+              <div className="sm:ml-auto flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
                     setNewSectors([{ code: "", name: "" }]);
                   }}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm lg:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
                 >
                   Save Sector(s)
                 </button>
@@ -1146,31 +1244,31 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
       )}
 
       {!selectedDistrict ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Target className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Target className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             Select a district
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-sm lg:text-base">
             Please select a state and district to view sectors
           </p>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Loading sectors...</p>
+        <div className="flex flex-col items-center justify-center py-8 lg:py-12">
+          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
+          <p className="text-gray-600 text-sm lg:text-base">Loading sectors...</p>
         </div>
       ) : filteredSectors.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Target className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Target className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             No sectors found
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 text-sm lg:text-base mb-4 lg:mb-6">
             {searchQuery
               ? "Try a different search"
               : `No sectors found for ${selectedDistrictName}`}
@@ -1178,7 +1276,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
           {!searchQuery && (
             <button
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
             >
               <PlusCircle className="h-4 w-4" />
               Add First Sector
@@ -1186,20 +1284,20 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
           )}
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredSectors.map((sector) => (
             <CardItem key={sector.id} item={sector} type="sector" />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full">
+          <table className="w-full min-w-[300px]">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Sector Code
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Sector Name
                 </th>
               </tr>
@@ -1210,15 +1308,15 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
                   key={sector.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="p-4">
-                    <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg">
-                      <span className="font-bold text-purple-700">
+                  <td className="p-3 lg:p-4">
+                    <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg">
+                      <span className="font-bold text-purple-700 text-sm lg:text-base">
                         {sector.code}
                       </span>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <h4 className="font-semibold text-gray-800">
+                  <td className="p-3 lg:p-4">
+                    <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
                       {sector.name}
                     </h4>
                   </td>
@@ -1292,20 +1390,20 @@ function CardItem({ item, type }) {
 
   return (
     <div
-      className={`group border ${styles.border} rounded-2xl p-6 bg-gradient-to-r ${styles.bg} hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+      className={`group border ${styles.border} rounded-xl lg:rounded-2xl p-4 lg:p-6 bg-gradient-to-r ${styles.bg} hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3 lg:mb-4">
         <div className="flex items-center gap-3">
-          <div className={`p-2.5 ${styles.text} bg-white rounded-xl`}>
+          <div className={`p-2 lg:p-2.5 ${styles.text} bg-white rounded-lg lg:rounded-xl`}>
             {styles.icon}
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-gray-800 group-hover:text-emerald-600 transition-colors">
+          <div className="min-w-0">
+            <h3 className="text-base lg:text-lg font-bold text-gray-800 group-hover:text-emerald-600 transition-colors truncate">
               {displayName}
             </h3>
             {item.code && (
               <div className="flex items-center gap-2 mt-1">
-                <span className={`text-sm font-medium ${styles.text}`}>
+                <span className={`text-xs lg:text-sm font-medium ${styles.text}`}>
                   Code: {item.code}
                 </span>
               </div>
@@ -1451,13 +1549,13 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
       />
 
       {/* LOCATION SELECTOR */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200">
+      <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-gray-50 to-white rounded-xl lg:rounded-2xl border border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <Filter className="h-5 w-5 text-gray-500" />
           <h3 className="font-semibold text-gray-700">Select Location</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               State
@@ -1465,7 +1563,7 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
             >
               <option value="">Select a state</option>
               {states.map((state) => (
@@ -1484,7 +1582,7 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
               disabled={!selectedState}
-              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
+              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base ${
                 !selectedState ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -1500,9 +1598,9 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
       </div>
 
       {isAdding && selectedDistrict && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
+        <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl lg:rounded-2xl border border-emerald-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-emerald-800 text-lg">
+            <h3 className="font-bold text-emerald-800 text-sm lg:text-lg">
               Add Town(s) to {selectedDistrictName}
             </h3>
             <button
@@ -1516,14 +1614,14 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newTowns.map((town, index) => (
-                <div key={index} className="flex items-center gap-3">
+                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="flex-1">
                     <input
                       type="text"
                       value={town}
                       onChange={(e) => handleTownChange(index, e.target.value)}
                       placeholder="Town Name"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
                     />
                   </div>
@@ -1531,7 +1629,7 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
                     <button
                       type="button"
                       onClick={() => handleRemoveTownField(index)}
-                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors self-center"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -1540,29 +1638,29 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
               <button
                 type="button"
                 onClick={handleAddTownField}
-                className="flex items-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors text-sm lg:text-base"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>Add Another</span>
               </button>
-              <div className="ml-auto flex gap-3">
+              <div className="sm:ml-auto flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
                     setNewTowns([""]);
                   }}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm lg:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
                 >
                   Save Town(s)
                 </button>
@@ -1573,31 +1671,31 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
       )}
 
       {!selectedDistrict ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Building className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Building className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             Select a district
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-sm lg:text-base">
             Please select a state and district to view towns
           </p>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Loading towns...</p>
+        <div className="flex flex-col items-center justify-center py-8 lg:py-12">
+          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
+          <p className="text-gray-600 text-sm lg:text-base">Loading towns...</p>
         </div>
       ) : filteredTowns.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Building className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Building className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             No towns found
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 text-sm lg:text-base mb-4 lg:mb-6">
             {searchQuery
               ? "Try a different search"
               : `No towns found for ${selectedDistrictName}`}
@@ -1605,7 +1703,7 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
           {!searchQuery && (
             <button
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
             >
               <PlusCircle className="h-4 w-4" />
               Add First Town
@@ -1613,20 +1711,20 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
           )}
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredTowns.map((town) => (
             <CardItem key={town.id} item={town} type="town" />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full">
+          <table className="w-full min-w-[300px]">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Town Name
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District
                 </th>
               </tr>
@@ -1637,18 +1735,18 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
                   key={town.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="p-4">
+                  <td className="p-3 lg:p-4">
                     <div className="flex items-center gap-3">
-                      <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg">
-                        <Building className="h-5 w-5 text-amber-600" />
+                      <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg">
+                        <Building className="h-4 w-4 lg:h-5 lg:w-5 text-amber-600" />
                       </div>
-                      <h4 className="font-semibold text-gray-800">
+                      <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
                         {town.name}
                       </h4>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <span className="text-gray-600">{selectedDistrictName}</span>
+                  <td className="p-3 lg:p-4">
+                    <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
                   </td>
                 </tr>
               ))}
@@ -1789,13 +1887,13 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
       />
 
       {/* LOCATION SELECTOR */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200">
+      <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-gray-50 to-white rounded-xl lg:rounded-2xl border border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <Filter className="h-5 w-5 text-gray-500" />
           <h3 className="font-semibold text-gray-700">Select Location</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               State
@@ -1803,7 +1901,7 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
             >
               <option value="">Select a state</option>
               {states.map((state) => (
@@ -1822,7 +1920,7 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
               disabled={!selectedState}
-              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
+              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base ${
                 !selectedState ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -1838,9 +1936,9 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
       </div>
 
       {isAdding && selectedDistrict && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
+        <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl lg:rounded-2xl border border-emerald-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-emerald-800 text-lg">
+            <h3 className="font-bold text-emerald-800 text-sm lg:text-lg">
               Add Mandal(s) to {selectedDistrictName}
             </h3>
             <button
@@ -1854,14 +1952,14 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newMandals.map((mandal, index) => (
-                <div key={index} className="flex items-center gap-3">
+                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="flex-1">
                     <input
                       type="text"
                       value={mandal}
                       onChange={(e) => handleMandalChange(index, e.target.value)}
                       placeholder="Mandal Name"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
                     />
                   </div>
@@ -1869,7 +1967,7 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
                     <button
                       type="button"
                       onClick={() => handleRemoveMandalField(index)}
-                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors self-center"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -1878,29 +1976,29 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
               <button
                 type="button"
                 onClick={handleAddMandalField}
-                className="flex items-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors text-sm lg:text-base"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>Add Another</span>
               </button>
-              <div className="ml-auto flex gap-3">
+              <div className="sm:ml-auto flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
                     setNewMandals([""]);
                   }}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm lg:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
                 >
                   Save Mandal(s)
                 </button>
@@ -1911,31 +2009,31 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
       )}
 
       {!selectedDistrict ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Navigation className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Navigation className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             Select a district
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-sm lg:text-base">
             Please select a state and district to view mandals
           </p>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Loading mandals...</p>
+        <div className="flex flex-col items-center justify-center py-8 lg:py-12">
+          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
+          <p className="text-gray-600 text-sm lg:text-base">Loading mandals...</p>
         </div>
       ) : filteredMandals.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Navigation className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Navigation className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             No mandals found
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 text-sm lg:text-base mb-4 lg:mb-6">
             {searchQuery
               ? "Try a different search"
               : `No mandals found for ${selectedDistrictName}`}
@@ -1943,7 +2041,7 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
           {!searchQuery && (
             <button
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
             >
               <PlusCircle className="h-4 w-4" />
               Add First Mandal
@@ -1951,20 +2049,20 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
           )}
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredMandals.map((mandal) => (
             <CardItem key={mandal.id} item={mandal} type="mandal" />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full">
+          <table className="w-full min-w-[300px]">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Mandal Name
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District
                 </th>
               </tr>
@@ -1975,18 +2073,18 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
                   key={mandal.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="p-4">
+                  <td className="p-3 lg:p-4">
                     <div className="flex items-center gap-3">
-                      <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg">
-                        <Navigation className="h-5 w-5 text-indigo-600" />
+                      <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg">
+                        <Navigation className="h-4 w-4 lg:h-5 lg:w-5 text-indigo-600" />
                       </div>
-                      <h4 className="font-semibold text-gray-800">
+                      <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
                         {mandal.name}
                       </h4>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <span className="text-gray-600">{selectedDistrictName}</span>
+                  <td className="p-3 lg:p-4">
+                    <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
                   </td>
                 </tr>
               ))}
@@ -2163,13 +2261,13 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
       />
 
       {/* LOCATION SELECTOR */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200">
+      <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-gray-50 to-white rounded-xl lg:rounded-2xl border border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <Filter className="h-5 w-5 text-gray-500" />
           <h3 className="font-semibold text-gray-700">Select Location</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               State
@@ -2177,7 +2275,7 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
             >
               <option value="">Select a state</option>
               {states.map((state) => (
@@ -2196,7 +2294,7 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
               disabled={!selectedState}
-              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
+              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base ${
                 !selectedState ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -2217,7 +2315,7 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
               value={selectedMandal}
               onChange={(e) => setSelectedMandal(e.target.value)}
               disabled={!selectedDistrict}
-              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
+              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base ${
                 !selectedDistrict ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -2233,9 +2331,9 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
       </div>
 
       {isAdding && selectedMandal && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
+        <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl lg:rounded-2xl border border-emerald-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-emerald-800 text-lg">
+            <h3 className="font-bold text-emerald-800 text-sm lg:text-lg">
               Add Village(s) to {selectedMandalName}
             </h3>
             <button
@@ -2249,14 +2347,14 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newVillages.map((village, index) => (
-                <div key={index} className="flex items-center gap-3">
+                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="flex-1">
                     <input
                       type="text"
                       value={village}
                       onChange={(e) => handleVillageChange(index, e.target.value)}
                       placeholder="Village Name"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
                     />
                   </div>
@@ -2264,7 +2362,7 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
                     <button
                       type="button"
                       onClick={() => handleRemoveVillageField(index)}
-                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors self-center"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -2273,29 +2371,29 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
               <button
                 type="button"
                 onClick={handleAddVillageField}
-                className="flex items-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors text-sm lg:text-base"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>Add Another</span>
               </button>
-              <div className="ml-auto flex gap-3">
+              <div className="sm:ml-auto flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
                     setNewVillages([""]);
                   }}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm lg:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
                 >
                   Save Village(s)
                 </button>
@@ -2306,31 +2404,31 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
       )}
 
       {!selectedMandal ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Home className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Home className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             Select a mandal
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-sm lg:text-base">
             Please select a state, district, and mandal to view villages
           </p>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Loading villages...</p>
+        <div className="flex flex-col items-center justify-center py-8 lg:py-12">
+          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
+          <p className="text-gray-600 text-sm lg:text-base">Loading villages...</p>
         </div>
       ) : filteredVillages.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Home className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Home className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             No villages found
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 text-sm lg:text-base mb-4 lg:mb-6">
             {searchQuery
               ? "Try a different search"
               : `No villages found for ${selectedMandalName}`}
@@ -2338,7 +2436,7 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
           {!searchQuery && (
             <button
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
             >
               <PlusCircle className="h-4 w-4" />
               Add First Village
@@ -2346,23 +2444,23 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
           )}
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredVillages.map((village) => (
             <CardItem key={village.id} item={village} type="village" />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full">
+          <table className="w-full min-w-[300px]">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Village Name
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Mandal
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District
                 </th>
               </tr>
@@ -2373,21 +2471,21 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
                   key={village.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="p-4">
+                  <td className="p-3 lg:p-4">
                     <div className="flex items-center gap-3">
-                      <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg">
-                        <Home className="h-5 w-5 text-rose-600" />
+                      <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg">
+                        <Home className="h-4 w-4 lg:h-5 lg:w-5 text-rose-600" />
                       </div>
-                      <h4 className="font-semibold text-gray-800">
+                      <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
                         {village.name}
                       </h4>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <span className="text-gray-600">{selectedMandalName}</span>
+                  <td className="p-3 lg:p-4">
+                    <span className="text-gray-600 text-sm lg:text-base">{selectedMandalName}</span>
                   </td>
-                  <td className="p-4">
-                    <span className="text-gray-600">{selectedDistrictName}</span>
+                  <td className="p-3 lg:p-4">
+                    <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
                   </td>
                 </tr>
               ))}
@@ -2559,13 +2657,13 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
       />
 
       {/* LOCATION SELECTOR */}
-      <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200">
+      <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-gray-50 to-white rounded-xl lg:rounded-2xl border border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <Filter className="h-5 w-5 text-gray-500" />
           <h3 className="font-semibold text-gray-700">Select Location</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               State
@@ -2573,7 +2671,7 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
             >
               <option value="">Select a state</option>
               {states.map((state) => (
@@ -2592,7 +2690,7 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
               disabled={!selectedState}
-              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
+              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base ${
                 !selectedState ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -2613,7 +2711,7 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
               value={selectedSector}
               onChange={(e) => setSelectedSector(e.target.value)}
               disabled={!selectedDistrict}
-              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all ${
+              className={`w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base ${
                 !selectedDistrict ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -2629,9 +2727,9 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
       </div>
 
       {isAdding && selectedSector && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-2xl border border-emerald-100">
+        <div className="mb-6 lg:mb-8 p-4 sm:p-6 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl lg:rounded-2xl border border-emerald-100">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-emerald-800 text-lg">
+            <h3 className="font-bold text-emerald-800 text-sm lg:text-lg">
               Add Village(s) to {selectedSectorName}
             </h3>
             <button
@@ -2645,14 +2743,14 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newVillages.map((village, index) => (
-                <div key={index} className="flex items-center gap-3">
+                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="flex-1">
                     <input
                       type="text"
                       value={village}
                       onChange={(e) => handleVillageChange(index, e.target.value)}
                       placeholder="Village Name"
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
                     />
                   </div>
@@ -2660,7 +2758,7 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
                     <button
                       type="button"
                       onClick={() => handleRemoveVillageField(index)}
-                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors self-center"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -2669,29 +2767,29 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6 pt-4 border-t border-emerald-200">
               <button
                 type="button"
                 onClick={handleAddVillageField}
-                className="flex items-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 transition-colors text-sm lg:text-base"
               >
                 <PlusCircle className="h-4 w-4" />
                 <span>Add Another</span>
               </button>
-              <div className="ml-auto flex gap-3">
+              <div className="sm:ml-auto flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
                     setNewVillages([""]);
                   }}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm lg:text-base"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
                 >
                   Save Village(s)
                 </button>
@@ -2702,31 +2800,31 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
       )}
 
       {!selectedSector ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Users className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Users className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             Select a sector
           </h3>
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-sm lg:text-base">
             Please select a state, district, and sector to view villages
           </p>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-gray-600">Loading villages...</p>
+        <div className="flex flex-col items-center justify-center py-8 lg:py-12">
+          <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
+          <p className="text-gray-600 text-sm lg:text-base">Loading villages...</p>
         </div>
       ) : filteredVillages.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Users className="h-12 w-12 text-gray-400" />
+        <div className="text-center py-8 lg:py-12">
+          <div className="mx-auto w-16 h-16 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-3 lg:mb-4">
+            <Users className="h-8 w-8 lg:h-12 lg:w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-700 mb-1 lg:mb-2">
             No villages found
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-gray-500 text-sm lg:text-base mb-4 lg:mb-6">
             {searchQuery
               ? "Try a different search"
               : `No villages found for ${selectedSectorName}`}
@@ -2734,7 +2832,7 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
           {!searchQuery && (
             <button
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl font-medium hover:shadow-lg transition-all text-sm lg:text-base"
             >
               <PlusCircle className="h-4 w-4" />
               Add First Village
@@ -2742,23 +2840,23 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
           )}
         </div>
       ) : viewMode === "cards" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredVillages.map((village) => (
             <CardItem key={village.id} item={village} type="village" />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full">
+          <table className="w-full min-w-[300px]">
             <thead>
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100">
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Village Name
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Sector
                 </th>
-                <th className="p-4 text-left text-sm font-semibold text-gray-700">
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District
                 </th>
               </tr>
@@ -2769,21 +2867,21 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
                   key={village.id}
                   className="hover:bg-gray-50 transition-colors"
                 >
-                  <td className="p-4">
+                  <td className="p-3 lg:p-4">
                     <div className="flex items-center gap-3">
-                      <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg">
-                        <Users className="h-5 w-5 text-teal-600" />
+                      <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg">
+                        <Users className="h-4 w-4 lg:h-5 lg:w-5 text-teal-600" />
                       </div>
-                      <h4 className="font-semibold text-gray-800">
+                      <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
                         {village.name}
                       </h4>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <span className="text-gray-600">{selectedSectorName}</span>
+                  <td className="p-3 lg:p-4">
+                    <span className="text-gray-600 text-sm lg:text-base">{selectedSectorName}</span>
                   </td>
-                  <td className="p-4">
-                    <span className="text-gray-600">{selectedDistrictName}</span>
+                  <td className="p-3 lg:p-4">
+                    <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
                   </td>
                 </tr>
               ))}
