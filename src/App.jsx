@@ -23,6 +23,9 @@ import { AgentForm } from './pages/AgentForm';
 import { LandWallet } from './pages/LandWallet';
 import { LandDetails } from './pages/LandDetails';
 import { UpdateLandModal } from './pages/UpdateLandModal';
+import { PhysicalVerificationWallet } from './pages/PhysicalVerificationWallet';
+import { UpdatePhysicalVerificationModal } from './pages/UpdatePhysicalVerificationModal';
+import GarudaMap from './pages/GarudaMap';
 
 function App() {
 
@@ -51,6 +54,9 @@ function App() {
           <Route path="land/wallet" element={<LandWallet />} />
           <Route path="updateLand/wallet" element={<LandDetails />} />
           <Route path="land/model" element={<UpdateLandModal />} />
+          <Route path="physical/verification/wallet" element={<PhysicalVerificationWallet />} />
+          <Route path="physical/verification/model" element={<UpdatePhysicalVerificationModal />} />
+          <Route path="map" element={<GarudaMap />} />
         </Route>
         <Route index element={<Signin />} />
       </Routes>

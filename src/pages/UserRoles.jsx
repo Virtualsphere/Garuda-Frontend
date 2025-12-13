@@ -41,6 +41,7 @@ export default function AccessControls() {
     "Locations",
     "Travel Wallet",
     "Land Wallet",
+    "Physical Verification Wallet",
     "CRM",
   ];
 
