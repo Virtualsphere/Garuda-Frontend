@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { PanelRight, X, Plus, RefreshCw, Menu } from "lucide-react";
+import { PanelRight, X, Plus, RefreshCw, Menu, UserPlus, Trash2, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Employee() {
@@ -12,6 +12,26 @@ export default function Employee() {
   const [loading, setLoading] = useState(true);
   const createdUrls = useRef([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Signup form state
+  const [showSignupForm, setShowSignupForm] = useState(false);
+  const [signupData, setSignupData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    role: "",
+    agree: false,
+  });
+  const [roles, setRoles] = useState([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
+  const [signupError, setSignupError] = useState("");
+  const [signupLoading, setSignupLoading] = useState(false);
+  
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Format role name for display
   const formatRoleName = (roleName) => {
@@ -103,8 +123,46 @@ export default function Employee() {
     }
   };
 
+  // Fetch roles for signup form
+  const fetchRoles = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://72.61.169.226/admin/roles", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log("Fetched roles:", data.roles);
+        setRoles(data.roles || []);
+        
+        // If roles are fetched, set default role to first one if exists
+        if (data.roles && data.roles.length > 0) {
+          setSignupData(prev => ({
+            ...prev,
+            role: data.roles[0].name // Keep original case
+          }));
+        }
+      } else {
+        setSignupError(data.error || "Failed to load roles");
+        console.error("Error fetching roles:", data.error);
+      }
+    } catch (err) {
+      console.error("Network error fetching roles:", err);
+      setSignupError("Network error. Please check your connection.");
+    } finally {
+      setRolesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAll();
+    fetchRoles();
 
     // Cleanup on unmount
     return () => {
@@ -134,6 +192,137 @@ export default function Employee() {
     createdUrls.current = [];
     setSelectedEmployee(null);
     setFormData({});
+  };
+
+  // Open delete confirmation
+  const openDeleteConfirm = (emp) => {
+    setEmployeeToDelete(emp);
+    setShowDeleteConfirm(true);
+  };
+
+  // Close delete confirmation
+  const closeDeleteConfirm = () => {
+    setShowDeleteConfirm(false);
+    setEmployeeToDelete(null);
+  };
+
+  // Delete employee function - UPDATED to use route parameter
+  const deleteEmployee = async () => {
+    if (!employeeToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      // Using route parameter format: /admin/personal/detial/:uniqueId
+      const response = await fetch(`http://72.61.169.226/admin/personal/detial/${employeeToDelete.unique_id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        }
+        // No need for body since unique_id is in the URL
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Employee deleted successfully!");
+        
+        // Close confirmation modal
+        closeDeleteConfirm();
+        
+        // Refresh employee list
+        fetchAll();
+      } else {
+        alert(`Error: ${data.error || "Failed to delete employee"}`);
+        console.error("Delete error:", data);
+      }
+    } catch (err) {
+      console.error("Network error deleting employee:", err);
+      alert("Network error. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Open signup form
+  const openSignupForm = () => {
+    setShowSignupForm(true);
+    // Refresh roles when opening signup form
+    fetchRoles();
+  };
+
+  // Close signup form
+  const closeSignupForm = () => {
+    setShowSignupForm(false);
+    setSignupData({
+      name: "",
+      email: "",
+      phone: "",
+      password: "",
+      role: roles.length > 0 ? roles[0].name : "",
+      agree: false,
+    });
+    setSignupError("");
+  };
+
+  // Handle signup form changes
+  const handleSignupChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setSignupData({
+      ...signupData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
+
+  // Handle signup submission
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!signupData.agree) {
+      alert("Please agree to the Terms & Conditions");
+      return;
+    }
+
+    const { name, email, phone, password, role } = signupData;
+
+    setSignupLoading(true);
+    
+    try {
+      const response = await fetch("http://72.61.169.226/api/create-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          phone, 
+          password, 
+          role: role // Send exact role name
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Registration successful!");
+        console.log("Registered user:", data.user);
+        
+        // Reset form and close
+        closeSignupForm();
+        
+        // Refresh employee list
+        fetchAll();
+      } else {
+        alert(`Error: ${data.error || "Registration failed"}`);
+      }
+    } catch (err) {
+      console.error("Network error:", err);
+      alert("Network error. Please try again.");
+    } finally {
+      setSignupLoading(false);
+    }
   };
 
   // Update nested object fields
@@ -296,7 +485,7 @@ export default function Employee() {
             </div>
           </div>
           <button
-            onClick={() => navigate("/signup")}
+            onClick={openSignupForm}
             className="flex items-center gap-2 px-3 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm"
           >
             <Plus size={16} /> Add
@@ -319,7 +508,7 @@ export default function Employee() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/signup")}
+            onClick={openSignupForm}
             className="flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white"
           >
             <Plus size={16} /> Add User
@@ -408,12 +597,13 @@ export default function Employee() {
               </div>
 
               {/* Table Header - Hidden on mobile, visible on desktop */}
-              <div className="hidden lg:grid lg:grid-cols-5 font-semibold text-gray-600 py-3 border-b bg-gray-50 rounded-t-lg px-4">
+              <div className="hidden lg:grid lg:grid-cols-6 font-semibold text-gray-600 py-3 border-b bg-gray-50 rounded-t-lg px-4">
                 <span>Employee</span>
                 <span>Role</span>
                 <span>Phone</span>
                 <span>District</span>
                 <span>Salary</span>
+                <span>Actions</span>
               </div>
 
               {/* Mobile List View */}
@@ -421,8 +611,7 @@ export default function Employee() {
                 {filteredEmployees.map((emp) => (
                   <div
                     key={emp.unique_id}
-                    onClick={() => openEditPanel(emp)}
-                    className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start gap-3">
                       <div className="relative flex-shrink-0">
@@ -460,7 +649,7 @@ export default function Employee() {
                             {emp.salary?.package ? `₹${emp.salary.package}` : "-"}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                           <div>
                             <span className="text-gray-500">Phone:</span>
                             <span className="text-gray-700 ml-2 truncate block">
@@ -476,6 +665,22 @@ export default function Employee() {
                             </span>
                           </div>
                         </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditPanel(emp)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
+                          >
+                            <Edit size={14} />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => openDeleteConfirm(emp)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -487,8 +692,7 @@ export default function Employee() {
                 {filteredEmployees.map((emp) => (
                   <div
                     key={emp.unique_id}
-                    onClick={() => openEditPanel(emp)}
-                    className="grid grid-cols-5 py-4 items-center border-b hover:bg-gray-50 transition cursor-pointer px-4"
+                    className="grid grid-cols-6 py-4 items-center border-b hover:bg-gray-50 transition px-4"
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">
@@ -516,6 +720,9 @@ export default function Employee() {
                         <span className="font-semibold text-gray-800 block">
                           {emp.name}
                         </span>
+                        <span className="text-xs text-gray-500">
+                          ID: {emp.unique_id}
+                        </span>
                       </div>
                     </div>
                     <span className="font-medium">{emp.displayRole}</span>
@@ -528,6 +735,24 @@ export default function Employee() {
                     <span className="font-medium text-green-600">
                       {emp.salary?.package ? `₹${emp.salary.package}` : "-"}
                     </span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openEditPanel(emp)}
+                        className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
+                        title="Edit Employee"
+                      >
+                        <Edit size={14} />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => openDeleteConfirm(emp)}
+                        className="flex items-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+                        title="Delete Employee"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -561,7 +786,7 @@ export default function Employee() {
                   : "No employees found in the system."}
               </p>
               <button
-                onClick={() => navigate("/signup")}
+                onClick={openSignupForm}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm lg:text-base"
               >
                 <Plus size={16} /> Add New Employee
@@ -994,6 +1219,280 @@ export default function Employee() {
                 Save Changes
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && employeeToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 lg:p-8 border border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl lg:text-2xl font-bold text-red-600">
+                  Delete Employee
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  This action cannot be undone.
+                </p>
+              </div>
+              <button
+                onClick={closeDeleteConfirm}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+                disabled={deleteLoading}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className="flex items-center gap-4 p-4 bg-red-50 rounded-lg mb-4">
+                <div className="relative">
+                  <img
+                    src={
+                      employeeToDelete.image ||
+                      employeeToDelete.photo ||
+                      "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyMCIgZmlsbD0iI0VFRUVFRSIvPjwvc3ZnPg=="
+                    }
+                    alt={employeeToDelete.name}
+                    className="w-16 h-16 rounded-full object-cover border-2 border-red-200"
+                  />
+                  {employeeToDelete.blood_group && (
+                    <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full">
+                      {employeeToDelete.blood_group}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg text-gray-800">
+                    {employeeToDelete.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {employeeToDelete.displayRole}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    ID: {employeeToDelete.unique_id}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {employeeToDelete.email}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-yellow-600 mt-0.5">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-yellow-700 font-medium">
+                      Warning: This will permanently delete:
+                    </p>
+                    <ul className="text-sm text-yellow-600 mt-1 space-y-1">
+                      <li>• Employee profile and all associated data</li>
+                      <li>• Address, Aadhar, salary, and bank information</li>
+                      <li>• Work location and vehicle details</li>
+                      <li>• All related records from the database</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-3 pt-6 border-t">
+              <button
+                onClick={closeDeleteConfirm}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteEmployee}
+                disabled={deleteLoading}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {deleteLoading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    Delete Employee
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Signup Form Modal */}
+      {showSignupForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 lg:p-8 max-h-[90vh] overflow-y-auto border border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl lg:text-2xl font-bold text-emerald-700">
+                  Create Account
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  New here? Signing up is easy. It only takes a few steps.
+                </p>
+              </div>
+              <button
+                onClick={closeSignupForm}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSignupSubmit} className="space-y-5">
+              <div>
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Full Name"
+                  value={signupData.name}
+                  onChange={handleSignupChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 text-sm lg:text-base"
+                  required
+                />
+              </div>
+
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  value={signupData.email}
+                  onChange={handleSignupChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 text-sm lg:text-base"
+                  required
+                />
+              </div>
+
+              <div>
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone Number"
+                  value={signupData.phone}
+                  onChange={handleSignupChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 text-sm lg:text-base"
+                  required
+                />
+              </div>
+
+              <div>
+                <div className="mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Role
+                  </label>
+                  {signupError && (
+                    <div className="text-red-500 text-sm mb-2 p-2 bg-red-50 rounded">
+                      {signupError}
+                    </div>
+                  )}
+                </div>
+                
+                {rolesLoading ? (
+                  <div className="flex items-center justify-center p-3 border border-gray-300 rounded-lg bg-gray-50">
+                    <svg className="animate-spin h-5 w-5 mr-3 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-gray-600">Loading roles...</span>
+                  </div>
+                ) : roles.length === 0 ? (
+                  <div className="text-center p-3 border border-yellow-300 rounded-lg bg-yellow-50">
+                    <p className="text-yellow-700 text-sm">
+                      No roles found. Please create roles first in Access Controls.
+                    </p>
+                  </div>
+                ) : (
+                  <select
+                    name="role"
+                    value={signupData.role}
+                    onChange={handleSignupChange}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 bg-white text-sm lg:text-base"
+                    required
+                  >
+                    <option value="">-- Select a Role --</option>
+                    {roles.map((role) => (
+                      <option 
+                        key={role.id || role.name} 
+                        value={role.name}
+                        title={role.description || "No description"}
+                      >
+                        {role.name}
+                        {role.description && ` - ${role.description}`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                
+                {roles.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-500">
+                    {roles.length} role(s) loaded from database
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={signupData.password}
+                  onChange={handleSignupChange}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 text-sm lg:text-base"
+                  required
+                  minLength="6"
+                />
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="agree"
+                  name="agree"
+                  checked={signupData.agree}
+                  onChange={handleSignupChange}
+                  className="mt-1 h-5 w-5 text-emerald-600 focus:ring-emerald-500 rounded transition duration-200"
+                  required
+                />
+                <label htmlFor="agree" className="text-gray-600 text-sm">
+                  I agree to all Terms & Conditions and Privacy Policy
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                disabled={signupLoading || rolesLoading || !signupData.role}
+                className={`w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold py-3 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition duration-300 transform hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${(signupLoading || rolesLoading || !signupData.role) ? 'opacity-70 cursor-not-allowed' : ''} text-sm lg:text-base`}
+              >
+                {signupLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 mr-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  "CREATE ACCOUNT"
+                )}
+              </button>
+            </form>
           </div>
         </div>
       )}
