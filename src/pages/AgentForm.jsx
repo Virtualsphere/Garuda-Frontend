@@ -556,7 +556,7 @@ export const AgentForm = ({ agent, onClose, onSuccess }) => {
 
         {/* Deposit */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Calculated Deposit (¥)</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Calculated Deposit</h3>
           <div className="flex items-center space-x-4">
             <div className="flex-1">
               <input

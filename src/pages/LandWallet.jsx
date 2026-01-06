@@ -257,9 +257,6 @@ export const LandWallet = () => {
                     {formatAmount(getCurrentData().reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0))}
                   </p>
                 </div>
-                <div className="bg-emerald-50 p-3 rounded-lg">
-                  <FiDollarSign className="text-emerald-500 text-xl" />
-                </div>
               </div>
             </div>
             
