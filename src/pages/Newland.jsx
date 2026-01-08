@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { PanelRight, Menu, X } from "lucide-react";
+import { PanelRight, Menu } from "lucide-react";
 
 export default function NewLand() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -23,9 +23,9 @@ export default function NewLand() {
     price_per_acre: "",
     total_land_price: "",
     land_type: "",
-    water_source: "",
-    garden: "",
-    shed_details: "",
+    water_source: [], // Changed to array
+    garden: [], // Changed to array
+    shed_details: [], // Changed to array
     farm_pond: "",
     residental: "",
     fencing: "",
@@ -273,6 +273,18 @@ export default function NewLand() {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+  // NEW: Handle multi-select toggle for array fields
+  const handleMultiSelectToggle = (field, option) => {
+    setForm(prev => {
+      const currentArray = prev[field] || [];
+      const newArray = currentArray.includes(option)
+        ? currentArray.filter(item => item !== option)
+        : [...currentArray, option];
+      
+      return { ...prev, [field]: newArray };
+    });
+  };
+
   // MULTI PHOTO SELECT
   const addPhotos = (e) => {
     const files = Array.from(e.target.files);
@@ -300,7 +312,16 @@ export default function NewLand() {
 
       // Append all form values (names, not IDs)
       Object.entries(form).forEach(([key, value]) => {
-        fd.append(key, value);
+        // Handle array fields - join with comma and space
+        if (Array.isArray(value)) {
+          if (value.length > 0) {
+            fd.append(key, value.join(', '));
+          } else {
+            fd.append(key, ''); // Send empty string if no selection
+          }
+        } else {
+          fd.append(key, value);
+        }
       });
 
       // Append files
@@ -349,6 +370,57 @@ export default function NewLand() {
       alert("Failed to submit land entry");
     }
   };
+
+  // Helper function to render multi-select field
+  const renderMultiSelectField = (label, field, options) => (
+    <div key={field} className="mt-3">
+      <label className="text-sm font-medium">{label}</label>
+      <div className="flex gap-2 mt-2 flex-wrap">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => handleMultiSelectToggle(field, option)}
+            className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
+              form[field]?.includes(option)
+                ? 'bg-green-600 text-white' 
+                : 'bg-green-500 hover:bg-green-600 text-white'
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      <div className="mt-1">
+        <span className="text-xs text-gray-500">
+          Selected: {form[field]?.length > 0 ? form[field].join(', ') : 'None'}
+        </span>
+      </div>
+    </div>
+  );
+
+  // Helper function to render single-select field
+  const renderSingleSelectField = (label, field, options) => (
+    <div key={field} className="mt-3">
+      <label className="text-sm font-medium">{label}</label>
+      <div className="flex gap-2 mt-2 flex-wrap">
+        {options.map((v) => (
+          <button
+            key={v}
+            type="button"
+            onClick={() => handleSelectButton(field, v)}
+            className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
+              form[field] === v 
+                ? 'bg-green-600 text-white' 
+                : 'bg-green-500 hover:bg-green-600 text-white'
+            }`}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -516,25 +588,7 @@ export default function NewLand() {
             ["Land Ownership", "land_ownership", ["Joint", "Single"]],
             ["Ready for Mortgage", "mortgage", ["Yes", "No"]],
           ].map(([label, field, options]) => (
-            <div key={field} className="mt-2">
-              <label className="text-sm font-medium">{label}</label>
-              <div className="flex gap-2 mt-2 flex-wrap">
-                {options.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => handleSelectButton(field, v)}
-                    className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
-                      form[field] === v 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-green-500 hover:bg-green-600 text-white'
-                    }`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
+            renderSingleSelectField(label, field, options)
           ))}
         </div>
 
@@ -610,47 +664,21 @@ export default function NewLand() {
             </div>
           </div>
 
-          {/* Select fields */}
-          {[
-            ["Land Type", "land_type", ["Red", "Black", "Sand"]],
-            ["Water Source", "water_source", ["Canal", "Bores", "Cheruvu", "Rain Water Only"]],
-            ["Farm Pond", "farm_pond", ["Yes", "No"]],
-            ["Garden", "garden", ["Mango", "Coconut", "Guava", "Sapota"]],
-            ["Residential", "residental", ["Farm House", "RCC Home", "Asbestos Shelter", "Hut"]],
-            ["Shed Details", "shed_details", ["Poultry", "Cow Shed"]],
-            ["Fencing", "fencing", ["With Gate", "All Sides", "Partially", "No"]],
-          ].map(([label, field, options]) => (
-            <div key={field} className="mt-3">
-              <label className="text-sm font-medium">{label}</label>
-              <div className="flex gap-2 mt-2 flex-wrap">
-                {options.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => handleSelectButton(field, v)}
-                    className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
-                      form[field] === v 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-green-500 hover:bg-green-600 text-white'
-                    }`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-
-              {/* Other input */}
-              {field === "garden" && (
-                <input
-                  name="garden"
-                  value={form.garden}
-                  onChange={handleInput}
-                  placeholder="Other..."
-                  className="w-full mt-2 p-2 rounded-xl bg-gray-50"
-                />
-              )}
-            </div>
-          ))}
+          {/* Select fields - Updated for multi-select */}
+          {renderSingleSelectField("Land Type", "land_type", ["Red", "Black", "Sand"])}
+          
+          {/* Multi-select fields */}
+          {renderMultiSelectField("Water Source", "water_source", ["Canal", "Bores", "Cheruvu", "Rain Water Only"])}
+          
+          {renderSingleSelectField("Farm Pond", "farm_pond", ["Yes", "No"])}
+          
+          {renderMultiSelectField("Garden", "garden", ["Mango", "Coconut", "Guava", "Sapota"])}
+          
+          {renderSingleSelectField("Residential", "residental", ["Farm House", "RCC Home", "Asbestos Shelter", "Hut"])}
+          
+          {renderMultiSelectField("Shed Details", "shed_details", ["Poultry", "Cow Shed"])}
+          
+          {renderSingleSelectField("Fencing", "fencing", ["With Gate", "All Sides", "Partially", "No"])}
         </div>
 
         {/* ------------------ GPS DETAILS ------------------ */}

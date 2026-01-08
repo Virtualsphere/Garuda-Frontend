@@ -16,7 +16,7 @@ import {
   Shield,
   Star,
   Filter,
-  Menu
+  Menu,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -33,7 +33,11 @@ export default function LandVerification() {
   const isBuyerSelecting = !!state?.buyer_id;
 
   // Form / edit states
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    water_source: [],
+    garden: [],
+    shed_details: []
+  });
   const [passbookPhoto, setPassbookPhoto] = useState(null);
   const [landBorder, setLandBorder] = useState(null);
   const [landPhotos, setLandPhotos] = useState([]);
@@ -192,9 +196,15 @@ export default function LandVerification() {
         price_per_acre: land.land_details.price_per_acre,
         total_land_price: land.land_details.total_land_price,
         land_type: land.land_details.land_type,
-        water_source: land.land_details.water_source,
-        garden: land.land_details.garden,
-        shed_details: land.land_details.shed_details,
+        water_source: Array.isArray(land.land_details.water_source) 
+          ? land.land_details.water_source 
+          : land.land_details.water_source?.split(',').map(item => item.trim()).filter(Boolean) || [],
+        garden: Array.isArray(land.land_details.garden) 
+          ? land.land_details.garden 
+          : land.land_details.garden?.split(',').map(item => item.trim()).filter(Boolean) || [],
+        shed_details: Array.isArray(land.land_details.shed_details) 
+          ? land.land_details.shed_details 
+          : land.land_details.shed_details?.split(',').map(item => item.trim()).filter(Boolean) || [],
         farm_pond: land.land_details.farm_pond,
         residental: land.land_details.residental,
         fencing: land.land_details.fencing,
@@ -251,7 +261,18 @@ export default function LandVerification() {
   };
 
   const handleSelectButton = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      // Handle array fields differently
+      if (
+        field === "water_source" ||
+        field === "garden" ||
+        field === "shed_details"
+      ) {
+        return { ...prev, [field]: value };
+      }
+      // For single selection fields
+      return { ...prev, [field]: value };
+    });
   };
 
   const addPhotos = (e) => {
@@ -291,7 +312,13 @@ export default function LandVerification() {
 
       Object.keys(formData).forEach((k) => {
         const v = formData[k];
-        fd.append(k, typeof v === "object" ? JSON.stringify(v) : String(v));
+        // Handle array fields specially
+        if (Array.isArray(v)) {
+          // Join array with comma and space for backend
+          fd.append(k, v.join(', '));
+        } else {
+          fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v || ''));
+        }
       });
 
       fd.append("verification", verificationStatus);
@@ -536,7 +563,7 @@ export default function LandVerification() {
                 <thead>
                   <tr className="bg-gradient-to-r from-emerald-50 to-teal-50">
                     {isBuyerSelecting && (
-                      <th className="text-left p-6 text-gray-700 font-semibold">
+                      <th className="text-left p-7 text-gray-700 font-semibold">
                         <div className="flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -558,22 +585,25 @@ export default function LandVerification() {
                         </div>
                       </th>
                     )}
-                    <th className="text-left p-6 text-gray-700 font-semibold">
+                    <th className="text-left p-7 text-gray-700 font-semibold">
                       Details
                     </th>
-                    <th className="text-left p-6 text-gray-700 font-semibold">
+                    <th className="text-left p-7 text-gray-700 font-semibold">
                       Location
                     </th>
-                    <th className="text-left p-6 text-gray-700 font-semibold">
+                    <th className="text-left p-7 text-gray-700 font-semibold">
+                      User Detail
+                    </th>
+                    <th className="text-left p-7 text-gray-700 font-semibold">
                       Land Info
                     </th>
-                    <th className="text-left p-6 text-gray-700 font-semibold">
+                    <th className="text-left p-7 text-gray-700 font-semibold">
                       Pricing
                     </th>
-                    <th className="text-left p-6 text-gray-700 font-semibold">
+                    <th className="text-left p-7 text-gray-700 font-semibold">
                       Land Code
                     </th>
-                    <th className="text-left p-6 text-gray-700 font-semibold">
+                    <th className="text-left p-7 text-gray-700 font-semibold">
                       Status
                     </th>
                   </tr>
@@ -591,7 +621,7 @@ export default function LandVerification() {
                         onClick={() => toggleRow(index)}
                       >
                         {isBuyerSelecting && (
-                          <td className="p-6">
+                          <td className="p-7">
                             <div className="flex items-center gap-3">
                               <input
                                 type="checkbox"
@@ -610,7 +640,7 @@ export default function LandVerification() {
                           </td>
                         )}
 
-                        <td className="p-6">
+                        <td className="p-7">
                           <button className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
                             {openRow === index ? (
                               <>
@@ -630,7 +660,7 @@ export default function LandVerification() {
                           </button>
                         </td>
 
-                        <td className="p-6">
+                        <td className="p-7">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 text-gray-700">
                               <MapPin className="w-4 h-4 text-gray-400" />
@@ -644,7 +674,21 @@ export default function LandVerification() {
                           </div>
                         </td>
 
-                        <td className="p-6">
+                        <td className="p-7">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-gray-700">
+                              <MapPin className="w-4 h-4 text-gray-400" />
+                              <span className="font-medium">
+                                {item.user_detail?.user_name || "-"}
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {item.user_detail?.user_role || "-"}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td className="p-7">
                           <div className="space-y-1">
                             <div className="font-medium text-gray-700">
                               {item.land_details?.land_area || "-"} Acres
@@ -656,7 +700,7 @@ export default function LandVerification() {
                           </div>
                         </td>
 
-                        <td className="p-6">
+                        <td className="p-7">
                           <div className="space-y-1">
                             <div className="font-medium text-gray-700">
                               ₹
@@ -671,7 +715,7 @@ export default function LandVerification() {
                           </div>
                         </td>
 
-                        <td className="p-6">
+                        <td className="p-7">
                           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full">
                             <span className="font-mono font-medium text-gray-700">
                               {item.land_id || "-"}
@@ -679,7 +723,7 @@ export default function LandVerification() {
                           </div>
                         </td>
 
-                        <td className="p-6">
+                        <td className="p-7">
                           <span
                             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${getStatusColor(
                               item.land_location?.verification
@@ -696,7 +740,7 @@ export default function LandVerification() {
                       {openRow === index && (
                         <tr>
                           <td
-                            colSpan={isBuyerSelecting ? 7 : 6}
+                            colSpan={isBuyerSelecting ? 8 : 7}
                             className="p-0"
                           >
                             <div className="px-8 py-6 bg-gradient-to-b from-white to-gray-50">
@@ -1041,16 +1085,29 @@ export default function LandVerification() {
                                                 "No",
                                               ],
                                             ],
-                                          ].map(([label, field, options]) => (
-                                            <QuickSelectField
-                                              key={field}
-                                              label={label}
-                                              field={field}
-                                              options={options}
-                                              value={formData[field]}
-                                              onChange={handleSelectButton}
-                                            />
-                                          ))}
+                                          ].map(([label, field, options]) =>
+                                            field === "water_source" ||
+                                            field === "garden" ||
+                                            field === "shed_details" ? (
+                                              <MultiSelectField
+                                                key={field}
+                                                label={label}
+                                                field={field}
+                                                options={options}
+                                                value={formData[field] || []}
+                                                onChange={handleSelectButton}
+                                              />
+                                            ) : (
+                                              <QuickSelectField
+                                                key={field}
+                                                label={label}
+                                                field={field}
+                                                options={options}
+                                                value={formData[field]}
+                                                onChange={handleSelectButton}
+                                              />
+                                            )
+                                          )}
                                         </div>
                                       </div>
                                     </div>
@@ -1197,6 +1254,18 @@ function VerificationButtons({ field }) {
 }
 
 function QuickSelectField({ label, field, options, value, onChange }) {
+  const { verificationChecks, handleVerifyClick } =
+    useContext(VerificationContext);
+
+  // Don't render for multi-select fields
+  if (
+    field === "water_source" ||
+    field === "garden" ||
+    field === "shed_details"
+  ) {
+    return null;
+  }
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1217,6 +1286,49 @@ function QuickSelectField({ label, field, options, value, onChange }) {
             {option}
           </button>
         ))}
+      </div>
+      <VerificationButtons field={field} />
+    </div>
+  );
+}
+
+function MultiSelectField({ label, field, options, value = [], onChange }) {
+  const { verificationChecks, handleVerifyClick } =
+    useContext(VerificationContext);
+
+  const handleToggle = (option) => {
+    const newValue = value.includes(option)
+      ? value.filter((item) => item !== option)
+      : [...value, option];
+
+    onChange(field, newValue);
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label}
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => handleToggle(option)}
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              value.includes(option)
+                ? "bg-emerald-500 text-white shadow-sm"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-xs text-gray-500">
+          Selected: {value.length > 0 ? value.join(", ") : "None"}
+        </span>
       </div>
       <VerificationButtons field={field} />
     </div>

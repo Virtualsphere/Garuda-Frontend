@@ -49,7 +49,7 @@ export default function Employee() {
       createdUrls.current.push(url);
       return url;
     }
-    // backend already returns full URL like http://localhost:5000/public/images/...
+    // backend already returns full URL like http://72.61.169.226/public/images/...
     return fileOrUrl;
   };
 
