@@ -425,6 +425,18 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
     }
   };
 
+  const handleDeleteState = async (stateId) => {
+    if (!window.confirm("Are you sure you want to delete this state?")) {
+        return;
+    }
+    try {
+      await locationApi.deleteState(stateId);
+      setStates(states.filter(state => state.id !== stateId));
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const handleAddStateField = () => {
     setNewStates([...newStates, { code: "", name: "" }]);
   };
@@ -612,7 +624,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredStates.map((state) => (
-            <CardItem key={state.id} item={state} type="state" />
+            <CardItem key={state.id} item={state} type="state" onDelete={handleDeleteState}/>
           ))}
         </div>
       ) : (
@@ -626,33 +638,100 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
                 <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   State Name
                 </th>
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredStates.map((state) => (
-                <tr
-                  key={state.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="p-3 lg:p-4">
-                    <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg">
-                      <span className="font-bold text-emerald-700 text-sm lg:text-base">
-                        {state.code}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-3 lg:p-4">
-                    <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
-                      {state.name}
-                    </h4>
-                  </td>
-                </tr>
+                  <TableRow 
+                    key={state.id} 
+                    item={state} 
+                    type="state" 
+                    onDelete={handleDeleteState}
+                  />
               ))}
             </tbody>
           </table>
         </div>
       )}
     </div>
+  );
+}
+
+function TableRow({ item, type, onDelete }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete this ${type}?`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await onDelete(item.id);
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+    } catch (error) {
+      toast.error(error.message || `Failed to delete ${type}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const getTypeStyles = (type) => {
+    switch (type) {
+      case "state":
+        return { bg: "from-emerald-50 to-green-50", text: "text-emerald-700" };
+      case "district":
+        return { bg: "from-blue-50 to-cyan-50", text: "text-blue-700" };
+      case "sector":
+        return { bg: "from-purple-50 to-violet-50", text: "text-purple-700" };
+      case "town":
+        return { bg: "from-amber-50 to-orange-50", text: "text-amber-700" };
+      case "mandal":
+        return { bg: "from-indigo-50 to-blue-50", text: "text-indigo-700" };
+      case "village":
+        return { bg: "from-rose-50 to-pink-50", text: "text-rose-700" };
+      default:
+        return { bg: "from-gray-50 to-gray-100", text: "text-gray-700" };
+    }
+  };
+
+  const styles = getTypeStyles(type);
+  const displayName = parseJsonName(item.name);
+
+  return (
+    <tr className="hover:bg-gray-50 transition-colors">
+      <td className="p-3 lg:p-4">
+        {item.code && (
+          <div className={`inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r ${styles.bg} rounded-lg`}>
+            <span className={`font-bold ${styles.text} text-sm lg:text-base`}>
+              {item.code}
+            </span>
+          </div>
+        )}
+      </td>
+      <td className="p-3 lg:p-4">
+        <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
+          {displayName}
+        </h4>
+      </td>
+      <td className="p-3 lg:p-4">
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title={`Delete ${type}`}
+        >
+          {isDeleting ? (
+            <div className="h-4 w-4 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin"></div>
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
+        </button>
+      </td>
+    </tr>
   );
 }
 
@@ -673,6 +752,18 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
       fetchDistricts(selectedState);
     }
   }, [selectedState]);
+
+  const handleDeleteDistrict = async (districtId) => {
+    if (!window.confirm("Are you sure you want to delete this district?")) {
+        return;
+    }
+    try {
+      await locationApi.deleteDistrict(districtId);
+      setDistricts(districts.filter(district => district.id !== districtId));
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const fetchStates = async () => {
     try {
@@ -926,7 +1017,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredDistricts.map((district) => (
-            <CardItem key={district.id} item={district} type="district" />
+            <CardItem key={district.id} item={district} type="district" onDelete={handleDeleteDistrict}/>
           ))}
         </div>
       ) : (
@@ -944,23 +1035,12 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredDistricts.map((district) => (
-                <tr
-                  key={district.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="p-3 lg:p-4">
-                    <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
-                      <span className="font-bold text-blue-700 text-sm lg:text-base">
-                        {district.code}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-3 lg:p-4">
-                    <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
-                      {district.name}
-                    </h4>
-                  </td>
-                </tr>
+                <TableRow 
+                  key={district.id} 
+                  item={district} 
+                  type="district" 
+                  onDelete={handleDeleteDistrict}
+                />
               ))}
             </tbody>
           </table>
@@ -1000,6 +1080,18 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
       setSectors([]);
     }
   }, [selectedDistrict]);
+
+  const handleDeleteSector = async (sectorId) => {
+    if (!window.confirm("Are you sure you want to delete this sector?")) {
+        return;
+    }
+    try {
+      await locationApi.deleteSector(sectorId);
+      setSectors(sectors.filter(sector => sector.id !== sectorId));
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const fetchStates = async () => {
     try {
@@ -1286,7 +1378,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredSectors.map((sector) => (
-            <CardItem key={sector.id} item={sector} type="sector" />
+            <CardItem key={sector.id} item={sector} type="sector" onDelete={handleDeleteSector}/>
           ))}
         </div>
       ) : (
@@ -1300,27 +1392,19 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
                 <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   Sector Name
                 </th>
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredSectors.map((sector) => (
-                <tr
-                  key={sector.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="p-3 lg:p-4">
-                    <div className="inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg">
-                      <span className="font-bold text-purple-700 text-sm lg:text-base">
-                        {sector.code}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-3 lg:p-4">
-                    <h4 className="font-semibold text-gray-800 text-sm lg:text-base">
-                      {sector.name}
-                    </h4>
-                  </td>
-                </tr>
+                <TableRow 
+                  key={sector.id} 
+                  item={sector} 
+                  type="sector" 
+                  onDelete={handleDeleteSector}
+                />
               ))}
             </tbody>
           </table>
@@ -1330,7 +1414,21 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
   );
 }
 
-function CardItem({ item, type }) {
+function CardItem({ item, type, onDelete }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete(item.id);
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+    } catch (error) {
+      toast.error(error.message || `Failed to delete ${type}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const getTypeStyles = (type) => {
     switch (type) {
       case "state":
@@ -1410,6 +1508,18 @@ function CardItem({ item, type }) {
             )}
           </div>
         </div>
+        <button
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          title={`Delete ${type}`}
+        >
+          {isDeleting ? (
+            <div className="h-4 w-4 border-2 border-gray-300 border-t-red-500 rounded-full animate-spin"></div>
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
+        </button>
       </div>
     </div>
   );
@@ -1455,6 +1565,20 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
       }
     } catch (error) {
       toast.error("Failed to load states");
+    }
+  };
+
+  const handleDeleteTown = async (townId) => {
+    if (!window.confirm("Are you sure you want to delete this town?")) {
+      return;
+    }
+    
+    try {
+      await locationApi.deleteTown(townId);
+      toast.success("Town deleted successfully");
+      setTowns(towns.filter(town => town.id !== townId));
+    } catch (error) {
+      toast.error(error.message || "Failed to delete town");
     }
   };
 
@@ -1713,7 +1837,7 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredTowns.map((town) => (
-            <CardItem key={town.id} item={town} type="town" />
+            <CardItem key={town.id} item={town} type="town" onDelete={handleDeleteTown}/>
           ))}
         </div>
       ) : (
@@ -1726,6 +1850,9 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
                 </th>
                 <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District
+                </th>
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -1747,6 +1874,15 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
                   </td>
                   <td className="p-3 lg:p-4">
                     <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
+                  </td>
+                  <td className="p-3 lg:p-4">
+                    <button
+                      onClick={() => handleDeleteTown(town.id)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete town"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -1788,6 +1924,20 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
       setMandals([]);
     }
   }, [selectedDistrict]);
+
+  const handleDeleteMandal = async (mandalId) => {
+    if (!window.confirm("Are you sure you want to delete this mandal?")) {
+      return;
+    }
+    
+    try {
+      await locationApi.deleteMandal(mandalId);
+      toast.success("mandal deleted successfully");
+      setMandals(mandals.filter(mandal => mandal.id !== mandalId));
+    } catch (error) {
+      toast.error(error.message || "Failed to delete mandal");
+    }
+  };
 
   const fetchStates = async () => {
     try {
@@ -2051,7 +2201,7 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredMandals.map((mandal) => (
-            <CardItem key={mandal.id} item={mandal} type="mandal" />
+            <CardItem key={mandal.id} item={mandal} type="mandal" onDelete={handleDeleteMandal}/>
           ))}
         </div>
       ) : (
@@ -2064,6 +2214,9 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
                 </th>
                 <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District
+                </th>
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -2085,6 +2238,15 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
                   </td>
                   <td className="p-3 lg:p-4">
                     <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
+                  </td>
+                  <td className="p-3 lg:p-4">
+                    <button
+                      onClick={() => handleDeleteMandal(mandal.id)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete mandal"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -2139,6 +2301,20 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
       setVillages([]);
     }
   }, [selectedMandal]);
+
+  const handleDeleteVillagesByMandal = async (villageId) => {
+    if (!window.confirm("Are you sure you want to delete this village?")) {
+      return;
+    }
+    
+    try {
+      await locationApi.deleteVillage(villageId);
+      toast.success("Village deleted successfully");
+      setVillages(villages.filter(village => village.id !== villageId));
+    } catch (error) {
+      toast.error(error.message || "Failed to delete village");
+    }
+  };
 
   const fetchStates = async () => {
     try {
@@ -2446,7 +2622,7 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredVillages.map((village) => (
-            <CardItem key={village.id} item={village} type="village" />
+            <CardItem key={village.id} item={village} type="village" onDelete={handleDeleteVillagesByMandal}/>
           ))}
         </div>
       ) : (
@@ -2462,6 +2638,9 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
                 </th>
                 <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District
+                </th>
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -2486,6 +2665,15 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
                   </td>
                   <td className="p-3 lg:p-4">
                     <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
+                  </td>
+                  <td className="p-3 lg:p-4">
+                    <button
+                      onClick={() => handleDeleteVillagesByMandal(village.id)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete village"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -2541,6 +2729,20 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
     }
   }, [selectedSector]);
 
+  const handleDeleteVillagesBySector = async (villageId) => {
+    if (!window.confirm("Are you sure you want to delete this village?")) {
+      return;
+    }
+    
+    try {
+      await locationApi.deleteVillage(villageId);
+      toast.success("Village deleted successfully");
+      setVillages(villages.filter(village => village.id !== villageId));
+    } catch (error) {
+      toast.error(error.message || "Failed to delete village");
+    }
+  };
+
   const fetchStates = async () => {
     try {
       const data = await locationApi.getStates();
@@ -2552,6 +2754,8 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
       toast.error("Failed to load states");
     }
   };
+
+
 
   const fetchDistricts = async (stateId) => {
     try {
@@ -2842,7 +3046,7 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredVillages.map((village) => (
-            <CardItem key={village.id} item={village} type="village" />
+            <CardItem key={village.id} item={village} type="village" onDelete={handleDeleteVillagesBySector}/>
           ))}
         </div>
       ) : (
@@ -2858,6 +3062,9 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
                 </th>
                 <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
                   District
+                </th>
+                <th className="p-3 lg:p-4 text-left text-sm font-semibold text-gray-700">
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -2882,6 +3089,15 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
                   </td>
                   <td className="p-3 lg:p-4">
                     <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
+                  </td>
+                  <td className="p-3 lg:p-4">
+                    <button
+                      onClick={() => handleDeleteVillagesBySector(village.id)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete village"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </td>
                 </tr>
               ))}

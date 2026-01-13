@@ -8,18 +8,44 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiDownload,
-  FiMaximize2
+  FiMaximize2,
+  FiX
 } from "react-icons/fi";
 
 export const SessionDetails = ({ data }) => {
   const [expandedImages, setExpandedImages] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [expandedEndSessions, setExpandedEndSessions] = useState(false);
 
-  const calculateDistance = () => {
-    if (data.starting_km && data.end_km) {
-      return (parseFloat(data.end_km) - parseFloat(data.starting_km)).toFixed(1);
+  // Calculate total transport charges from all end sessions
+  const calculateTotalCharges = () => {
+    if (data.end_sessions && data.end_sessions.length > 0) {
+      return data.end_sessions.reduce((total, session) => 
+        total + (parseFloat(session.transport_charges) || 0), 0);
     }
-    return "N/A";
+    return data.transport_charges || 0;
+  };
+
+  // Calculate total distance for all end sessions
+  const calculateTotalDistance = () => {
+    if (!data.starting_km || !data.end_sessions || data.end_sessions.length === 0) {
+      return "N/A";
+    }
+    
+    // For multiple end sessions, you might want to show total distance
+    // or handle it differently based on your business logic
+    return `${data.starting_km} - ${data.end_sessions.map(es => es.end_km).join(", ")}`;
+  };
+
+  // Get all ticket images from all end sessions
+  const getAllTicketImages = () => {
+    if (!data.end_sessions || data.end_sessions.length === 0) {
+      return data.ticket_image || [];
+    }
+    
+    return data.end_sessions.flatMap(session => 
+      session.ticket_image || []
+    );
   };
 
   const formatTime = (time) => {
@@ -35,6 +61,9 @@ export const SessionDetails = ({ data }) => {
     link.click();
     document.body.removeChild(link);
   };
+
+  const totalCharges = calculateTotalCharges();
+  const allTicketImages = getAllTicketImages();
 
   return (
     <>
@@ -78,11 +107,18 @@ export const SessionDetails = ({ data }) => {
               </div>
               <div>
                 <h4 className="text-lg font-bold text-gray-800">Session Details</h4>
-                <p className="text-sm text-gray-600">ID: {data.session_id || "N/A"}</p>
+                <p className="text-sm text-gray-600">Session ID: {data.session_id || "N/A"}</p>
               </div>
             </div>
-            <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
-              Distance: {calculateDistance()} KM
+            <div className="flex items-center space-x-3">
+              {data.end_sessions && data.end_sessions.length > 0 && (
+                <div className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  {data.end_sessions.length} End Session{data.end_sessions.length > 1 ? 's' : ''}
+                </div>
+              )}
+              <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
+                Distance: {calculateTotalDistance()}
+              </div>
             </div>
           </div>
         </div>
@@ -90,23 +126,39 @@ export const SessionDetails = ({ data }) => {
         {/* Stats Grid */}
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Timeline Section */}
+            {/* Starting Session Details */}
             <div className="space-y-6">
-              {/* Kilometer Section */}
-              <div>
-                <h5 className="font-semibold text-gray-700 mb-4 flex items-center">
-                  <FiNavigation className="mr-2 text-blue-500" />
-                  Kilometer Reading
+              <div className="bg-gradient-to-r from-green-50 to-white rounded-xl p-5 border border-green-100">
+                <h5 className="font-semibold text-gray-700 mb-3 flex items-center">
+                  <FiClock className="mr-2 text-green-500" />
+                  Starting Session
                 </h5>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-sm text-gray-500 mb-1">Start KM</p>
-                    <p className="text-xl font-bold text-gray-800">{data.starting_km || "N/A"}</p>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Date</p>
+                      <p className="font-medium">{data.date || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Starting Time</p>
+                      <p className="font-medium">{formatTime(data.starting_time)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Starting KM</p>
+                      <p className="text-xl font-bold text-gray-800">{data.starting_km || "N/A"}</p>
+                    </div>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-sm text-gray-500 mb-1">End KM</p>
-                    <p className="text-xl font-bold text-gray-800">{data.end_km || "N/A"}</p>
-                  </div>
+                  
+                  {data.starting_image && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-2">Starting Image</p>
+                      <img 
+                        src={data.starting_image} 
+                        alt="Starting"
+                        className="h-32 w-32 object-cover rounded-lg border"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -116,43 +168,93 @@ export const SessionDetails = ({ data }) => {
               <div className="bg-gradient-to-r from-blue-50 to-white rounded-xl p-5 border border-blue-100">
                 <h5 className="font-semibold text-gray-700 mb-3 flex items-center">
                   <FiDollarSign className="mr-2 text-green-500" />
-                  Charges
+                  Total Charges
                 </h5>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Transport Charges</p>
+                    <p className="text-sm text-gray-500">Total Transport Charges</p>
                     <p className="text-3xl font-bold text-gray-800 mt-1">
-                      ₹{data.transport_charges || "0"}
+                      ₹{totalCharges}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">Per KM Rate</p>
-                    <p className="text-lg font-semibold text-gray-800">
-                      ₹{(parseFloat(data.transport_charges || 0) / parseFloat(calculateDistance()) || 0).toFixed(2)}/km
-                    </p>
+                    <p className="text-sm text-gray-500">From {data.end_sessions?.length || 0} end session(s)</p>
                   </div>
                 </div>
               </div>
 
-              {/* Additional Info */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <h5 className="font-semibold text-gray-700 mb-2">Additional Information</h5>
-                <div className="space-y-2 text-sm">
-                  <p><span className="text-gray-500">Date:</span> <span className="font-medium">{data.date || "N/A"}</span></p>
+              {/* End Sessions Summary */}
+              {data.end_sessions && data.end_sessions.length > 0 && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="font-semibold text-gray-700">End Sessions</h5>
+                    <button
+                      onClick={() => setExpandedEndSessions(!expandedEndSessions)}
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center"
+                    >
+                      {expandedEndSessions ? 'Show Less' : 'Show All'}
+                      {expandedEndSessions ? <FiChevronUp className="ml-1" /> : <FiChevronDown className="ml-1" />}
+                    </button>
+                  </div>
+                  
+                  {!expandedEndSessions ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-sm text-gray-500">Last End Time</p>
+                        <p className="font-medium">{formatTime(data.end_sessions[data.end_sessions.length - 1].end_time)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Last End KM</p>
+                        <p className="font-medium">{data.end_sessions[data.end_sessions.length - 1].end_km}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {data.end_sessions.map((session, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-3 bg-white">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-medium text-sm">End Session #{index + 1}</span>
+                            <span className="text-sm text-gray-500">{formatTime(session.end_time)}</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <p className="text-gray-500">End KM</p>
+                              <p className="font-medium">{session.end_km}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500">Charges</p>
+                              <p className="font-medium">₹{session.transport_charges || "0"}</p>
+                            </div>
+                          </div>
+                          
+                          {session.end_image && (
+                            <div className="mt-2">
+                              <p className="text-xs text-gray-500 mb-1">End Image</p>
+                              <img 
+                                src={session.end_image} 
+                                alt={`End session ${index + 1}`}
+                                className="h-20 w-20 object-cover rounded border"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Ticket Images */}
-          {data.ticket_image?.length > 0 && (
+          {/* All Ticket Images */}
+          {allTicketImages.length > 0 && (
             <div className="mt-8 pt-6 border-t border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
                   <FiImage className="mr-2 text-purple-500" />
-                  <h5 className="font-semibold text-gray-700">Ticket Images</h5>
+                  <h5 className="font-semibold text-gray-700">All Ticket Images</h5>
                   <span className="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
-                    {data.ticket_image.length} {data.ticket_image.length === 1 ? 'image' : 'images'}
+                    {allTicketImages.length} {allTicketImages.length === 1 ? 'image' : 'images'}
                   </span>
                 </div>
                 <button
@@ -165,7 +267,7 @@ export const SessionDetails = ({ data }) => {
               </div>
 
               <div className={`grid gap-4 ${expandedImages ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'}`}>
-                {data.ticket_image.map((img, i) => (
+                {allTicketImages.map((img, i) => (
                   <div key={i} className="relative group">
                     <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white">
                       <img

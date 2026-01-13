@@ -25,8 +25,12 @@ import { LandDetails } from './pages/LandDetails';
 import { UpdateLandModal } from './pages/UpdateLandModal';
 import { PhysicalVerificationWallet } from './pages/PhysicalVerificationWallet';
 import { UpdatePhysicalVerificationModal } from './pages/UpdatePhysicalVerificationModal';
+import { WishlistView } from './pages/WishListView';
+import { Report } from './pages/Report';
 import GarudaMap from './pages/GarudaMap';
-
+import { Banner } from './pages/Banner';
+import { Review } from './pages/Review';
+import { Notification } from './pages/Notification';
 function App() {
 
   return (
@@ -56,6 +60,11 @@ function App() {
           <Route path="land/model" element={<UpdateLandModal />} />
           <Route path="physical/verification/wallet" element={<PhysicalVerificationWallet />} />
           <Route path="physical/verification/model" element={<UpdatePhysicalVerificationModal />} />
+          <Route path="wishlist-view" element={<WishlistView />} />
+          <Route path="report" element={<Report />} />
+          <Route path="banner" element={<Banner />} />
+          <Route path="review" element={<Review />} />
+          <Route path="notification" element={<Notification />} />
           <Route path="map" element={<GarudaMap />} />
         </Route>
         <Route index element={<Signin />} />

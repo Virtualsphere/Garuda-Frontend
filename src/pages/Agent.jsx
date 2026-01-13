@@ -431,18 +431,11 @@ export const Agent = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => handleViewDetails(agent.agent_id)}
-                            className="inline-flex items-center px-3 py-1.5 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Manage
-                          </button>
-                          <button
                             onClick={() => handleEditAgent(agent)}
                             className="inline-flex items-center px-3 py-1.5 border border-yellow-600 text-yellow-600 rounded-lg hover:bg-yellow-50 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 transition-colors"
                           >
                             <Edit className="w-4 h-4 mr-1" />
-                            Edit
+                            Manage
                           </button>
                           <button
                             onClick={() => handleDeleteAgent(agent.agent_id)}

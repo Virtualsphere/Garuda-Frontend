@@ -239,5 +239,77 @@ export const locationApi = {
       })
     });
     return handleResponse(response);
-  }
+  },
+
+  deleteState: async (stateId) => {
+    const response = await fetch(`${API_BASE_URL}/state/${stateId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete state');
+    }
+    return response.json();
+  },
+
+  deleteDistrict: async (districtId) => {
+    const response = await fetch(`${API_BASE_URL}/district/${districtId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete district');
+    }
+    return response.json();
+  },
+
+  deleteSector: async (sectorId) => {
+    const response = await fetch(`${API_BASE_URL}/sector/${sectorId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete sector');
+    }
+    return response.json();
+  },
+
+  deleteMandal: async (mandalId) => {
+    const response = await fetch(`${API_BASE_URL}/mandal/${mandalId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete mandal');
+    }
+    return response.json();
+  },
+
+  deleteTown: async (townId) => {
+    const response = await fetch(`${API_BASE_URL}/town/${townId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete town');
+    }
+    return response.json();
+  },
+
+  deleteVillage: async (villageId) => {
+    const response = await fetch(`${API_BASE_URL}/village/${villageId}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete village');
+    }
+    return response.json();
+  },
 };

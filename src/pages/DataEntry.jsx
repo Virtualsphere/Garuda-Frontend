@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, PanelRight, Menu } from "lucide-react";
 
 export const DataEntry = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+
   const initialFormState = {
     state: "",
     district: "",
@@ -37,14 +37,17 @@ export const DataEntry = () => {
     siblings_involve_in_dispute: "",
   };
 
+  const [visitorName, setVisitorName] = useState("");
+  const [visitorPhone, setVisitorPhone] = useState("");
+  const [visitorStatus, setVisitorStatus] = useState("Interested");
+  const [visitors, setVisitors] = useState([]);
   const [form, setForm] = useState(initialFormState);
-  
-  // Store IDs separately from form values
+
   const [locationIds, setLocationIds] = useState({
     stateId: "",
     districtId: "",
     mandalId: "",
-    villageId: ""
+    villageId: "",
   });
 
   // Location states
@@ -56,7 +59,7 @@ export const DataEntry = () => {
     states: false,
     districts: false,
     mandals: false,
-    villages: false
+    villages: false,
   });
 
   // FILE STATES
@@ -102,15 +105,15 @@ export const DataEntry = () => {
 
   const fetchStates = async () => {
     try {
-      setLoading(prev => ({ ...prev, states: true }));
+      setLoading((prev) => ({ ...prev, states: true }));
       const token = localStorage.getItem("token");
       const res = await fetch("http://72.61.169.226/admin/states", {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         setStates(data);
@@ -120,21 +123,24 @@ export const DataEntry = () => {
     } catch (error) {
       console.error("Error fetching states:", error);
     } finally {
-      setLoading(prev => ({ ...prev, states: false }));
+      setLoading((prev) => ({ ...prev, states: false }));
     }
   };
 
   const fetchDistricts = async (stateId) => {
     try {
-      setLoading(prev => ({ ...prev, districts: true }));
+      setLoading((prev) => ({ ...prev, districts: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/states/${stateId}/districts`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/states/${stateId}/districts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setDistricts(data);
@@ -144,21 +150,24 @@ export const DataEntry = () => {
     } catch (error) {
       console.error("Error fetching districts:", error);
     } finally {
-      setLoading(prev => ({ ...prev, districts: false }));
+      setLoading((prev) => ({ ...prev, districts: false }));
     }
   };
 
   const fetchMandals = async (districtId) => {
     try {
-      setLoading(prev => ({ ...prev, mandals: true }));
+      setLoading((prev) => ({ ...prev, mandals: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/mandals`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/districts/${districtId}/mandals`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setMandals(data);
@@ -168,21 +177,24 @@ export const DataEntry = () => {
     } catch (error) {
       console.error("Error fetching mandals:", error);
     } finally {
-      setLoading(prev => ({ ...prev, mandals: false }));
+      setLoading((prev) => ({ ...prev, mandals: false }));
     }
   };
 
   const fetchVillages = async (mandalId) => {
     try {
-      setLoading(prev => ({ ...prev, villages: true }));
+      setLoading((prev) => ({ ...prev, villages: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/mandals/${mandalId}/villages`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/mandals/${mandalId}/villages`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setVillages(data);
@@ -192,68 +204,68 @@ export const DataEntry = () => {
     } catch (error) {
       console.error("Error fetching villages:", error);
     } finally {
-      setLoading(prev => ({ ...prev, villages: false }));
+      setLoading((prev) => ({ ...prev, villages: false }));
     }
   };
 
   const handleInput = (e) => {
     const { name, value } = e.target;
-    
+
     // If state changes
     if (name === "state") {
-      const selectedState = states.find(s => s.name === value);
-      setForm(prev => ({ 
-        ...prev, 
+      const selectedState = states.find((s) => s.name === value);
+      setForm((prev) => ({
+        ...prev,
         [name]: value,
         district: "",
         mandal: "",
-        village: ""
+        village: "",
       }));
-      setLocationIds(prev => ({
+      setLocationIds((prev) => ({
         ...prev,
         stateId: selectedState?.id || "",
         districtId: "",
         mandalId: "",
-        villageId: ""
+        villageId: "",
       }));
-    } 
+    }
     // If district changes
     else if (name === "district") {
-      const selectedDistrict = districts.find(d => d.name === value);
-      setForm(prev => ({ 
-        ...prev, 
+      const selectedDistrict = districts.find((d) => d.name === value);
+      setForm((prev) => ({
+        ...prev,
         [name]: value,
         mandal: "",
-        village: ""
+        village: "",
       }));
-      setLocationIds(prev => ({
+      setLocationIds((prev) => ({
         ...prev,
         districtId: selectedDistrict?.id || "",
         mandalId: "",
-        villageId: ""
+        villageId: "",
       }));
     }
     // If mandal changes
     else if (name === "mandal") {
-      const selectedMandal = mandals.find(m => m.name === value);
-      setForm(prev => ({ 
-        ...prev, 
+      const selectedMandal = mandals.find((m) => m.name === value);
+      setForm((prev) => ({
+        ...prev,
         [name]: value,
-        village: ""
+        village: "",
       }));
-      setLocationIds(prev => ({
+      setLocationIds((prev) => ({
         ...prev,
         mandalId: selectedMandal?.id || "",
-        villageId: ""
+        villageId: "",
       }));
     }
     // If village changes
     else if (name === "village") {
-      const selectedVillage = villages.find(v => v.name === value);
-      setForm(prev => ({ ...prev, [name]: value }));
-      setLocationIds(prev => ({
+      const selectedVillage = villages.find((v) => v.name === value);
+      setForm((prev) => ({ ...prev, [name]: value }));
+      setLocationIds((prev) => ({
         ...prev,
-        villageId: selectedVillage?.id || ""
+        villageId: selectedVillage?.id || "",
       }));
     }
     // Handle guntas field
@@ -261,26 +273,26 @@ export const DataEntry = () => {
       let num = Number(value);
       if (num > 40) num = 40;
       if (num < 0) num = 0;
-      setForm(prev => ({ ...prev, [name]: num }));
+      setForm((prev) => ({ ...prev, [name]: num }));
     }
     // Handle other fields
     else {
-      setForm(prev => ({ ...prev, [name]: value }));
+      setForm((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const handleSelectButton = (name, value) => {
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // NEW: Handle multi-select toggle for array fields
   const handleMultiSelectToggle = (field, option) => {
-    setForm(prev => {
+    setForm((prev) => {
       const currentArray = prev[field] || [];
       const newArray = currentArray.includes(option)
-        ? currentArray.filter(item => item !== option)
+        ? currentArray.filter((item) => item !== option)
         : [...currentArray, option];
-      
+
       return { ...prev, [field]: newArray };
     });
   };
@@ -315,9 +327,9 @@ export const DataEntry = () => {
         // Handle array fields - join with comma and space
         if (Array.isArray(value)) {
           if (value.length > 0) {
-            fd.append(key, value.join(', '));
+            fd.append(key, value.join(", "));
           } else {
-            fd.append(key, ''); // Send empty string if no selection
+            fd.append(key, ""); // Send empty string if no selection
           }
         } else {
           fd.append(key, value);
@@ -345,7 +357,7 @@ export const DataEntry = () => {
           stateId: "",
           districtId: "",
           mandalId: "",
-          villageId: ""
+          villageId: "",
         });
         setPassbookPhoto(null);
         setLandBorder(null);
@@ -358,7 +370,7 @@ export const DataEntry = () => {
           stateId: "",
           districtId: "",
           mandalId: "",
-          villageId: ""
+          villageId: "",
         });
         setPassbookPhoto(null);
         setLandBorder(null);
@@ -383,8 +395,8 @@ export const DataEntry = () => {
             onClick={() => handleMultiSelectToggle(field, option)}
             className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
               form[field]?.includes(option)
-                ? 'bg-green-600 text-white' 
-                : 'bg-green-500 hover:bg-green-600 text-white'
+                ? "bg-green-600 text-white"
+                : "bg-green-500 hover:bg-green-600 text-white"
             }`}
           >
             {option}
@@ -393,7 +405,7 @@ export const DataEntry = () => {
       </div>
       <div className="mt-1">
         <span className="text-xs text-gray-500">
-          Selected: {form[field]?.length > 0 ? form[field].join(', ') : 'None'}
+          Selected: {form[field]?.length > 0 ? form[field].join(", ") : "None"}
         </span>
       </div>
     </div>
@@ -410,9 +422,9 @@ export const DataEntry = () => {
             type="button"
             onClick={() => handleSelectButton(field, v)}
             className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
-              form[field] === v 
-                ? 'bg-green-600 text-white' 
-                : 'bg-green-500 hover:bg-green-600 text-white'
+              form[field] === v
+                ? "bg-green-600 text-white"
+                : "bg-green-500 hover:bg-green-600 text-white"
             }`}
           >
             {v}
@@ -466,13 +478,15 @@ export const DataEntry = () => {
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50 disabled:opacity-50"
               >
                 <option value="">Select State</option>
-                {states.map(state => (
+                {states.map((state) => (
                   <option key={state.id} value={state.name}>
                     {state.name}
                   </option>
                 ))}
               </select>
-              {loading.states && <p className="text-xs text-gray-500 mt-1">Loading states...</p>}
+              {loading.states && (
+                <p className="text-xs text-gray-500 mt-1">Loading states...</p>
+              )}
             </div>
 
             <div>
@@ -485,14 +499,22 @@ export const DataEntry = () => {
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50 disabled:opacity-50"
               >
                 <option value="">Select District</option>
-                {districts.map(district => (
+                {districts.map((district) => (
                   <option key={district.id} value={district.name}>
                     {district.name}
                   </option>
                 ))}
               </select>
-              {loading.districts && <p className="text-xs text-gray-500 mt-1">Loading districts...</p>}
-              {!form.state && <p className="text-xs text-gray-500 mt-1">Please select a state first</p>}
+              {loading.districts && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Loading districts...
+                </p>
+              )}
+              {!form.state && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Please select a state first
+                </p>
+              )}
             </div>
           </div>
 
@@ -507,14 +529,20 @@ export const DataEntry = () => {
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50 disabled:opacity-50"
               >
                 <option value="">Select Mandal</option>
-                {mandals.map(mandal => (
+                {mandals.map((mandal) => (
                   <option key={mandal.id} value={mandal.name}>
                     {mandal.name}
                   </option>
                 ))}
               </select>
-              {loading.mandals && <p className="text-xs text-gray-500 mt-1">Loading mandals...</p>}
-              {!form.district && <p className="text-xs text-gray-500 mt-1">Please select a district first</p>}
+              {loading.mandals && (
+                <p className="text-xs text-gray-500 mt-1">Loading mandals...</p>
+              )}
+              {!form.district && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Please select a district first
+                </p>
+              )}
             </div>
 
             <div>
@@ -527,14 +555,22 @@ export const DataEntry = () => {
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50 disabled:opacity-50"
               >
                 <option value="">Select Village</option>
-                {villages.map(village => (
+                {villages.map((village) => (
                   <option key={village.id} value={village.name}>
                     {village.name}
                   </option>
                 ))}
               </select>
-              {loading.villages && <p className="text-xs text-gray-500 mt-1">Loading villages...</p>}
-              {!form.mandal && <p className="text-xs text-gray-500 mt-1">Please select a mandal first</p>}
+              {loading.villages && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Loading villages...
+                </p>
+              )}
+              {!form.mandal && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Please select a mandal first
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -585,9 +621,31 @@ export const DataEntry = () => {
             ["Nature", "nature", ["Polite", "Medium", "Rude"]],
             ["Land Ownership", "land_ownership", ["Joint", "Single"]],
             ["Ready for Mortgage", "mortgage", ["Yes", "No"]],
-          ].map(([label, field, options]) => (
+          ].map(([label, field, options]) =>
             renderSingleSelectField(label, field, options)
-          ))}
+          )}
+        </div>
+
+        {/* ------------------ DISTPUTE DETAILS ------------------ */}
+        <div className="bg-white rounded-2xl shadow p-4 space-y-3">
+          <h2 className="font-semibold text-lg">Dispute Details</h2>
+
+          {renderSingleSelectField("Dispute Type", "dispute_type", [
+            "Boundary",
+            "Ownership",
+            "Family",
+            "Other",
+            "Budhan",
+            "Land Sealing",
+            "Electric Poles",
+            "Canal Planning",
+          ])}
+
+          {renderSingleSelectField(
+            "Siblings Involved in Dispute",
+            "siblings_involve_in_dispute",
+            ["Yes", "No"]
+          )}
         </div>
 
         {/* ------------------ LAND DETAILS ------------------ */}
@@ -663,20 +721,47 @@ export const DataEntry = () => {
           </div>
 
           {/* Select fields - Updated for multi-select */}
-          {renderSingleSelectField("Land Type", "land_type", ["Red", "Black", "Sand"])}
-          
+          {renderSingleSelectField("Land Type", "land_type", [
+            "Red",
+            "Black",
+            "Sand",
+          ])}
+
           {/* Multi-select fields */}
-          {renderMultiSelectField("Water Source", "water_source", ["Canal", "Bores", "Cheruvu", "Rain Water Only"])}
-          
+          {renderMultiSelectField("Water Source", "water_source", [
+            "Canal",
+            "Bores",
+            "Cheruvu",
+            "Rain Water Only",
+          ])}
+
           {renderSingleSelectField("Farm Pond", "farm_pond", ["Yes", "No"])}
-          
-          {renderMultiSelectField("Garden", "garden", ["Mango", "Coconut", "Guava", "Sapota"])}
-          
-          {renderSingleSelectField("Residential", "residental", ["Farm House", "RCC Home", "Asbestos Shelter", "Hut"])}
-          
-          {renderMultiSelectField("Shed Details", "shed_details", ["Poultry", "Cow Shed"])}
-          
-          {renderSingleSelectField("Fencing", "fencing", ["With Gate", "All Sides", "Partially", "No"])}
+
+          {renderMultiSelectField("Garden", "garden", [
+            "Mango",
+            "Coconut",
+            "Guava",
+            "Sapota",
+          ])}
+
+          {renderSingleSelectField("Residential", "residental", [
+            "Farm House",
+            "RCC Home",
+            "Asbestos Shelter",
+            "Hut",
+          ])}
+
+          {renderMultiSelectField("Shed Details", "shed_details", [
+            "Poultry",
+            "Cow Shed",
+          ])}
+
+          {renderSingleSelectField("Fencing", "fencing", [
+            "With Gate",
+            "All Sides",
+            "Partially",
+            "No",
+          ])}
         </div>
 
         {/* ------------------ GPS DETAILS ------------------ */}
@@ -807,7 +892,27 @@ export const DataEntry = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
+              <label className="text-sm font-medium">
+                Suggested Farmer Phone
+              </label>
+              <input
+                type="text"
+                className="w-full mt-1 p-2 rounded-xl bg-gray-50"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div>
               <label className="text-sm font-medium">Suggested Village</label>
+              <input
+                type="text"
+                className="w-full mt-1 p-2 rounded-xl bg-gray-50"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div>
+              <label className="text-sm font-medium">Suggested Mandal</label>
               <input
                 type="text"
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50"
@@ -843,12 +948,25 @@ export const DataEntry = () => {
 
           {/* Certification Willingness */}
           <div className="space-y-1">
-            <label className="text-gray-700 text-sm">
-              Certification Willingness
-            </label>
-            <select className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400">
-              <option>Thinking</option>
-            </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-gray-700 text-sm">
+                  Certification Willingness
+                </label>
+                <select className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400">
+                  <option>Thinking</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-gray-700 text-sm">
+                  Certification location
+                </label>
+                <input
+                  type="type"
+                  className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Board Duration */}
@@ -884,38 +1002,6 @@ export const DataEntry = () => {
             </button>
           </div>
         </div>
-        <div className="bg-red-50 p-6 rounded-2xl shadow-sm space-y-4 mt-6">
-          <h2 className="text-lg font-semibold text-red-700">
-            Verification Status
-          </h2>
-          <h3 className="text-sm font-semibold text-red-600">
-            Telecaller Verification
-          </h3>
-
-          <div className="space-y-1">
-            <label className="text-gray-700 text-sm">Verified By</label>
-            <input
-              type="text"
-              defaultValue="Suresh Kumar"
-              className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-gray-700 text-sm">
-              Date of Verification
-            </label>
-            <input
-              type="date"
-              defaultValue="2023-05-10"
-              className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-            />
-          </div>
-
-          <button className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-300 hover:bg-gray-100 active:scale-95 transition">
-            <span>↻</span> Request Re-check
-          </button>
-        </div>
 
         {/* Visitor Details */}
         <div className="bg-red-50 p-6 rounded-2xl shadow-sm space-y-4 mt-6">
@@ -928,6 +1014,8 @@ export const DataEntry = () => {
               <label className="text-gray-700 text-sm">Visitor Name</label>
               <input
                 type="text"
+                value={visitorName}
+                onChange={(e) => setVisitorName(e.target.value)}
                 className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
               />
             </div>
@@ -936,26 +1024,72 @@ export const DataEntry = () => {
               <label className="text-gray-700 text-sm">Visitor Phone</label>
               <input
                 type="text"
+                value={visitorPhone}
+                onChange={(e) => setVisitorPhone(e.target.value)}
                 className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
               />
             </div>
+
+            <div className="flex-1 space-y-1">
+              <label className="text-gray-700 text-sm">Visitor Status</label>
+              <select
+                value={visitorStatus}
+                onChange={(e) => setVisitorStatus(e.target.value)}
+                className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+              >
+                <option>Interested</option>
+                <option>Not Interested</option>
+                <option>Follow up</option>
+              </select>
+            </div>
           </div>
+
+          <button
+            onClick={() => {
+              if (!visitorName || !visitorPhone) return;
+
+              const newVisitor = {
+                date: new Date().toISOString().split("T")[0],
+                name: visitorName,
+                phone: visitorPhone,
+                status: visitorStatus,
+              };
+
+              setVisitors([...visitors, newVisitor]);
+              setVisitorName("");
+              setVisitorPhone("");
+              setVisitorStatus("Interested");
+            }}
+            className="bg-orange-500 text-white px-4 py-2 rounded-full text-sm"
+          >
+            + Add Visitor
+          </button>
 
           <h3 className="text-sm font-semibold text-gray-700 pt-4">
             Previous Visitors
           </h3>
-          <table className="w-full text-sm border-t border-gray-300 pt-2">
+          <table className="w-full text-sm border-t mt-2">
             <thead>
-              <tr className="text-gray-600">
-                <th className="py-2 text-left">Date</th>
-                <th className="py-2 text-left">Name</th>
+              <tr>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="py-2">2024-05-20</td>
-                <td className="py-2">Potential Buyer Corp</td>
-              </tr>
+              {visitors.map((v, i) => (
+                <tr key={i} className="border-b">
+                  <td>{v.date}</td>
+                  <td>{v.name}</td>
+                  <td>{v.phone}</td>
+                  <td>
+                    <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs">
+                      {v.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

@@ -17,6 +17,7 @@ import {
   Star,
   Filter,
   Menu,
+  Trash2,
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -293,6 +294,46 @@ export default function LandVerification() {
 
   const removeVideo = (index) => {
     setLandVideos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const deleteLand = async (landId) => {
+    if (!window.confirm("Are you sure you want to delete this land? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const token = getToken();
+      const url = `http://72.61.169.226/admin/land/data/${encodeURIComponent(landId)}`;
+      
+      await axios.delete(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      alert("Land deleted successfully!");
+      
+      // Remove the land from state
+      setLands(prevLands => prevLands.filter(land => land.land_id !== landId));
+      
+      // Remove from selectedLand if present
+      setSelectedLand(prev => prev.filter(id => id !== landId));
+      
+      // Close the row if it's open
+      if (openRow !== null) {
+        const landInRow = filteredLands[openRow];
+        if (landInRow && landInRow.land_id === landId) {
+          setOpenRow(null);
+        }
+      }
+      
+      // Refresh the lands list
+      await fetchLand();
+    } catch (error) {
+      console.error("Error deleting land:", error);
+      const msg = error.response?.data?.message || error.message || "Failed to delete land";
+      alert(`Delete failed: ${msg}`);
+    }
   };
 
   const updateLand = async () => {
@@ -586,7 +627,7 @@ export default function LandVerification() {
                       </th>
                     )}
                     <th className="text-left p-7 text-gray-700 font-semibold">
-                      Details
+                      Actions
                     </th>
                     <th className="text-left p-7 text-gray-700 font-semibold">
                       Location
@@ -641,23 +682,36 @@ export default function LandVerification() {
                         )}
 
                         <td className="p-7">
-                          <button className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700">
-                            {openRow === index ? (
-                              <>
-                                <ChevronUp className="w-5 h-5" />
-                                <span className="font-medium">
-                                  Hide Details
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <ChevronDown className="w-5 h-5" />
-                                <span className="font-medium">
-                                  View Details
-                                </span>
-                              </>
-                            )}
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <button
+                              className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700"
+                              onClick={() => toggleRow(index)}
+                            >
+                              {openRow === index ? (
+                                <>
+                                  <ChevronUp className="w-5 h-5" />
+                                  <span className="font-medium">Hide</span>
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronDown className="w-5 h-5" />
+                                  <span className="font-medium">View</span>
+                                </>
+                              )}
+                            </button>
+                            
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteLand(item.land_id);
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 transition-colors"
+                              title="Delete this land"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
                         </td>
 
                         <td className="p-7">
@@ -762,6 +816,13 @@ export default function LandVerification() {
                                       className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                                     >
                                       Close
+                                    </button>
+                                    <button
+                                      onClick={() => deleteLand(formData.land_id)}
+                                      className="px-4 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 rounded-lg transition-colors flex items-center gap-2"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                      Delete Land
                                     </button>
                                   </div>
                                 </div>
@@ -921,6 +982,54 @@ export default function LandVerification() {
                                             [
                                               "Mortgage",
                                               "mortgage",
+                                              ["Yes", "No"],
+                                            ],
+                                          ].map(([label, field, options]) => (
+                                            <QuickSelectField
+                                              key={field}
+                                              label={label}
+                                              field={field}
+                                              options={options}
+                                              value={formData[field]}
+                                              onChange={handleSelectButton}
+                                            />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Farmer Details Card */}
+                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                      <div className="flex items-center gap-3 mb-4">
+                                        <div className="p-2 bg-blue-50 rounded-lg">
+                                          <User className="w-5 h-5 text-blue-600" />
+                                        </div>
+                                        <h4 className="text-lg font-semibold text-gray-800">
+                                          Dispute Details
+                                        </h4>
+                                      </div>
+
+                                      <div className="space-y-4">
+                                        {/* Quick Select Buttons */}
+                                        <div className="space-y-3">
+                                          {[
+                                            [
+                                              "Dispute Type",
+                                              "dispute_type",
+                                              [
+                                                "Boundary",
+                                                "Ownership",
+                                                "Family",
+                                                "Other",
+                                                "Budhan",
+                                                "Land Sealing",
+                                                "Electric Poles",
+                                                "Canal Planning",
+                                              ],
+                                            ],
+                                            [
+                                              "Siblings Involved in Dispute",
+                                              "siblings_involve_in_dispute",
                                               ["Yes", "No"],
                                             ],
                                           ].map(([label, field, options]) => (

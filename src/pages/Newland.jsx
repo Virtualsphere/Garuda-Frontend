@@ -592,6 +592,16 @@ export default function NewLand() {
           ))}
         </div>
 
+        {/* ------------------ DISTPUTE DETAILS ------------------ */}
+        <div className="bg-white rounded-2xl shadow p-4 space-y-3">
+          <h2 className="font-semibold text-lg">Dispute Details</h2>
+
+          {renderSingleSelectField("Dispute Type", "dispute_type", ["Boundary", "Ownership", "Family", "Other", "Budhan", "Land Sealing", "Electric Poles", "Canal Planning"])}
+          
+          {renderSingleSelectField("Siblings Involved in Dispute", "siblings_involve_in_dispute", ["Yes", "No"])}
+          
+        </div>
+
         {/* ------------------ LAND DETAILS ------------------ */}
         <div className="bg-white rounded-2xl shadow p-4 space-y-3">
           <h2 className="font-semibold text-lg">Land Details</h2>

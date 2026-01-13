@@ -43,6 +43,10 @@ export default function AccessControls() {
     "Land Wallet",
     "Physical Verification Wallet",
     "CRM",
+    "Report",
+    "Banner",
+    "Review",
+    "Notification",
   ];
 
   const [roles, setRoles] = useState([]);

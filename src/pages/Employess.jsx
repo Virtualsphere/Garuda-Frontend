@@ -33,6 +33,15 @@ export default function Employee() {
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Add this state variable after other state declarations
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+
   // Format role name for display
   const formatRoleName = (roleName) => {
     if (!roleName) return "Unknown";
@@ -88,6 +97,9 @@ export default function Employee() {
         vehicle:
           data.vehicle_information?.find((x) => x.unique_id === u.unique_id) ||
           {},
+        personal_assignment:
+          data.personal_assignment?.find((x) => x.unique_id === u.unique_id) ||
+          {},
       }));
 
       setEmployees(merged);
@@ -120,6 +132,87 @@ export default function Employee() {
       alert("Failed to load employees. Please check your connection.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Open password change form
+  const openPasswordForm = () => {
+    setShowPasswordForm(true);
+    setPasswordData({
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setPasswordError("");
+  };
+
+  // Close password change form
+  const closePasswordForm = () => {
+    setShowPasswordForm(false);
+    setPasswordData({
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setPasswordError("");
+  };
+
+  // Handle password form changes
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Update employee password
+  const updateEmployeePassword = async () => {
+    const { newPassword, confirmPassword } = passwordData;
+    
+    // Validation
+    if (!newPassword || !confirmPassword) {
+      setPasswordError("Both password fields are required");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters long");
+      return;
+    }
+    
+    setPasswordLoading(true);
+    setPasswordError("");
+    
+    try {
+      const response = await fetch("http://72.61.169.226/admin/update/password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          unique_id: formData.unique_id,
+          newPassword: newPassword
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert("Password updated successfully!");
+        closePasswordForm();
+      } else {
+        setPasswordError(data.error || "Failed to update password");
+      }
+    } catch (err) {
+      console.error("Password update error:", err);
+      setPasswordError("Network error. Please try again.");
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -365,17 +458,17 @@ export default function Employee() {
     fd.append("unique_id", formData.unique_id);
 
     // Basic user fields
-    ["name", "email", "phone", "blood_group", "role"].forEach((k) =>
+    ["name", "email", "phone", "blood_group", "role", "join_date"].forEach((k) =>
       fd.append(k, formData[k] ?? "")
     );
 
     // Address fields
     if (formData.address) {
-      ["state", "district", "mandal", "village", "pincode"].forEach((k) =>
+      ["state", "district", "mandal", "village", "pincode", "near_town_1", "near_town_2", "near_town_3"].forEach((k) =>
         fd.append(k, formData.address[k] ?? "")
       );
     } else {
-      ["state", "district", "mandal", "village", "pincode"].forEach((k) =>
+      ["state", "district", "mandal", "village", "pincode", "near_town_1", "near_town_2", "near_town_3"].forEach((k) =>
         fd.append(k, "")
       );
     }
@@ -404,6 +497,10 @@ export default function Employee() {
     // Vehicle
     ["vehicle_type", "license_plate"].forEach((k) =>
       fd.append(k, formData.vehicle?.[k] ?? "")
+    );
+
+    ["report_to", "assigned_employee"].forEach((k) =>
+      fd.append(k, formData.personal_assignment?.[k] ?? "")
     );
 
     // Files
@@ -894,6 +991,19 @@ export default function Employee() {
                     placeholder="Blood Group"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Join Date
+                  </label>
+                  <input
+                    name="join_date"
+                    type="date"
+                    value={formData.join_date || ""}
+                    onChange={handleChange}
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                  />
+                </div>
               </div>
             </div>
 
@@ -981,6 +1091,24 @@ export default function Employee() {
                         }
                         className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                         placeholder={`Enter ${field}`}
+                      />
+                    </div>
+                  )
+                )}
+
+                {["near_town_1", "near_town_2", "near_town_3"].map(
+                  (field) => (
+                    <div key={field}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                        {field.replace("_", " ")}
+                      </label>
+                      <input
+                        value={formData.address?.[field] || ""}
+                        onChange={(e) =>
+                          handleNestedChange("address", field, e.target.value)
+                        }
+                        className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                        placeholder={`Enter ${field.replace("_", " ")}`}
                       />
                     </div>
                   )
@@ -1204,6 +1332,41 @@ export default function Employee() {
               </div>
             </div>
 
+            {/* PERSONAL ASSIGNMENT SECTION - ADDED NEW SECTION */}
+            <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
+              <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
+                Personal Assignment
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Report To
+                  </label>
+                  <input
+                    value={formData.personal_assignment?.report_to || ""}
+                    onChange={(e) =>
+                      handleNestedChange("personal_assignment", "report_to", e.target.value)
+                    }
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                    placeholder="Person to report to"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Assigned Employee
+                  </label>
+                  <input
+                    value={formData.personal_assignment?.assigned_employee || ""}
+                    onChange={(e) =>
+                      handleNestedChange("personal_assignment", "assigned_employee", e.target.value)
+                    }
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                    placeholder="Assigned employee"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* ACTION BUTTONS */}
             <div className="flex flex-col lg:flex-row gap-3 pt-6 border-t">
               <button
@@ -1212,12 +1375,130 @@ export default function Employee() {
               >
                 Cancel
               </button>
+              {formData.role !== "admin" && (
+                <button
+                  onClick={openPasswordForm}
+                  type="button"
+                  className="flex-1 px-4 py-3 border border-yellow-500 text-yellow-600 bg-yellow-50 hover:bg-yellow-100 rounded-lg font-medium text-sm lg:text-base transition-colors"
+                >
+                  Change Password
+                </button>
+              )}
               <button
                 onClick={handleUpdate}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium text-sm lg:text-base"
               >
                 Save Changes
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Change Modal */}
+      {showPasswordForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 lg:p-8 border border-gray-200">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl lg:text-2xl font-bold text-blue-600">
+                  Change Password
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Set a new password for {formData.name || "this employee"}
+                </p>
+              </div>
+              <button
+                onClick={closePasswordForm}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+                disabled={passwordLoading}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter new password"
+                  required
+                  minLength="6"
+                  disabled={passwordLoading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Confirm new password"
+                  required
+                  minLength="6"
+                  disabled={passwordLoading}
+                />
+              </div>
+
+              {passwordError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{passwordError}</p>
+                </div>
+              )}
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-yellow-600 mt-0.5">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm text-yellow-700">
+                      The password will be updated immediately. Employee will need to use this new password for future logins.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={closePasswordForm}
+                  disabled={passwordLoading}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={updateEmployeePassword}
+                  disabled={passwordLoading}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {passwordLoading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

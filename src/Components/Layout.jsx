@@ -93,6 +93,10 @@ export default function Layout() {
         { icon: List, name: "Travel Wallet", path: "/travel/wallet", key: "Travel Wallet" },
         { icon: List, name: "Land Wallet", path: "/land/wallet", key: "Land Wallet" },
         { icon: List, name: "Physical Verification Wallet", path: "/physical/verification/wallet", key: "Physical Verification Wallet" },
+        { icon: List, name: "Report", path: "/report", key: "Report" },
+        { icon: List, name: "Banner", path: "/banner", key: "Banner" },
+        { icon: List, name: "Review", path: "/review", key: "Review" },
+        { icon: List, name: "Notification", path: "/notification", key: "Notification" },
       ],
     },
     {
