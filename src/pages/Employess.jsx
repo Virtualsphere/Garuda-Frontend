@@ -27,13 +27,52 @@ export default function Employee() {
   const [rolesLoading, setRolesLoading] = useState(true);
   const [signupError, setSignupError] = useState("");
   const [signupLoading, setSignupLoading] = useState(false);
+
+  // Location states for HOME ADDRESS
+  const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [mandals, setMandals] = useState([]);
+  const [villages, setVillages] = useState([]);
+  const [homeLocationLoading, setHomeLocationLoading] = useState({
+    states: false,
+    districts: false,
+    mandals: false,
+    villages: false
+  });
+
+  // Location states for WORK LOCATION
+  const [workStates, setWorkStates] = useState([]);
+  const [workDistricts, setWorkDistricts] = useState([]);
+  const [workMandals, setWorkMandals] = useState([]);
+  const [workVillages, setWorkVillages] = useState([]);
+  const [workLocationLoading, setWorkLocationLoading] = useState({
+    states: false,
+    districts: false,
+    mandals: false,
+    villages: false
+  });
+
+  // To store IDs (for fetching dependent dropdowns)
+  const [homeLocationIds, setHomeLocationIds] = useState({
+    stateId: "",
+    districtId: "",
+    mandalId: "",
+    villageId: ""
+  });
+
+  const [workLocationIds, setWorkLocationIds] = useState({
+    stateId: "",
+    districtId: "",
+    mandalId: "",
+    villageId: ""
+  });
   
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Add this state variable after other state declarations
+  // Password form state
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordData, setPasswordData] = useState({
     newPassword: "",
@@ -132,6 +171,223 @@ export default function Employee() {
       alert("Failed to load employees. Please check your connection.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ========== LOCATION FETCH FUNCTIONS ==========
+
+  // Fetch all states (used for both home and work locations)
+  const fetchStates = async () => {
+    try {
+      setHomeLocationLoading(prev => ({ ...prev, states: true }));
+      setWorkLocationLoading(prev => ({ ...prev, states: true }));
+      
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://72.61.169.226/admin/states", {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setStates(data);
+        setWorkStates(data); // Same states for both locations
+      } else {
+        console.error("Failed to fetch states");
+      }
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    } finally {
+      setHomeLocationLoading(prev => ({ ...prev, states: false }));
+      setWorkLocationLoading(prev => ({ ...prev, states: false }));
+    }
+  };
+
+  // HOME ADDRESS: Fetch districts based on stateId
+  const fetchDistricts = async (stateId) => {
+    if (!stateId) {
+      setDistricts([]);
+      setMandals([]);
+      setVillages([]);
+      return;
+    }
+    
+    try {
+      setHomeLocationLoading(prev => ({ ...prev, districts: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/states/${stateId}/districts`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setDistricts(data);
+      } else {
+        console.error("Failed to fetch districts");
+      }
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+    } finally {
+      setHomeLocationLoading(prev => ({ ...prev, districts: false }));
+    }
+  };
+
+  // HOME ADDRESS: Fetch mandals based on districtId
+  const fetchMandals = async (districtId) => {
+    if (!districtId) {
+      setMandals([]);
+      setVillages([]);
+      return;
+    }
+    
+    try {
+      setHomeLocationLoading(prev => ({ ...prev, mandals: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/mandals`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setMandals(data);
+      } else {
+        console.error("Failed to fetch mandals");
+      }
+    } catch (error) {
+      console.error("Error fetching mandals:", error);
+    } finally {
+      setHomeLocationLoading(prev => ({ ...prev, mandals: false }));
+    }
+  };
+
+  // HOME ADDRESS: Fetch villages based on mandalId
+  const fetchVillages = async (mandalId) => {
+    if (!mandalId) {
+      setVillages([]);
+      return;
+    }
+    
+    try {
+      setHomeLocationLoading(prev => ({ ...prev, villages: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/mandals/${mandalId}/villages`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setVillages(data);
+      } else {
+        console.error("Failed to fetch villages");
+      }
+    } catch (error) {
+      console.error("Error fetching villages:", error);
+    } finally {
+      setHomeLocationLoading(prev => ({ ...prev, villages: false }));
+    }
+  };
+
+  // WORK LOCATION: Fetch districts based on stateId
+  const fetchWorkDistricts = async (stateId) => {
+    if (!stateId) {
+      setWorkDistricts([]);
+      setWorkMandals([]);
+      setWorkVillages([]);
+      return;
+    }
+    
+    try {
+      setWorkLocationLoading(prev => ({ ...prev, districts: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/states/${stateId}/districts`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setWorkDistricts(data);
+      } else {
+        console.error("Failed to fetch work districts");
+      }
+    } catch (error) {
+      console.error("Error fetching work districts:", error);
+    } finally {
+      setWorkLocationLoading(prev => ({ ...prev, districts: false }));
+    }
+  };
+
+  // WORK LOCATION: Fetch mandals based on districtId
+  const fetchWorkMandals = async (districtId) => {
+    if (!districtId) {
+      setWorkMandals([]);
+      setWorkVillages([]);
+      return;
+    }
+    
+    try {
+      setWorkLocationLoading(prev => ({ ...prev, mandals: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/mandals`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setWorkMandals(data);
+      } else {
+        console.error("Failed to fetch work mandals");
+      }
+    } catch (error) {
+      console.error("Error fetching work mandals:", error);
+    } finally {
+      setWorkLocationLoading(prev => ({ ...prev, mandals: false }));
+    }
+  };
+
+  // WORK LOCATION: Fetch villages based on mandalId
+  const fetchWorkVillages = async (mandalId) => {
+    if (!mandalId) {
+      setWorkVillages([]);
+      return;
+    }
+    
+    try {
+      setWorkLocationLoading(prev => ({ ...prev, villages: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/mandals/${mandalId}/villages`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setWorkVillages(data);
+      } else {
+        console.error("Failed to fetch work villages");
+      }
+    } catch (error) {
+      console.error("Error fetching work villages:", error);
+    } finally {
+      setWorkLocationLoading(prev => ({ ...prev, villages: false }));
     }
   };
 
@@ -256,6 +512,7 @@ export default function Employee() {
   useEffect(() => {
     fetchAll();
     fetchRoles();
+    fetchStates();
 
     // Cleanup on unmount
     return () => {
@@ -273,6 +530,88 @@ export default function Employee() {
     setSelectedEmployee(emp);
     const copy = JSON.parse(JSON.stringify(emp));
     setFormData(copy);
+    
+    // Reset location IDs
+    setHomeLocationIds({
+      stateId: "",
+      districtId: "",
+      mandalId: "",
+      villageId: ""
+    });
+    
+    setWorkLocationIds({
+      stateId: "",
+      districtId: "",
+      mandalId: "",
+      villageId: ""
+    });
+    
+    // If employee has home address, try to find and set IDs
+    if (emp.address?.state) {
+      const currentState = states.find(s => s.name === emp.address.state);
+      if (currentState) {
+        setHomeLocationIds(prev => ({ ...prev, stateId: currentState.id }));
+        fetchDistricts(currentState.id).then(() => {
+          // After districts are fetched, try to find district ID
+          if (emp.address?.district) {
+            const currentDistrict = districts.find(d => d.name === emp.address.district);
+            if (currentDistrict) {
+              setHomeLocationIds(prev => ({ ...prev, districtId: currentDistrict.id }));
+              fetchMandals(currentDistrict.id).then(() => {
+                // After mandals are fetched, try to find mandal ID
+                if (emp.address?.mandal) {
+                  const currentMandal = mandals.find(m => m.name === emp.address.mandal);
+                  if (currentMandal) {
+                    setHomeLocationIds(prev => ({ ...prev, mandalId: currentMandal.id }));
+                    fetchVillages(currentMandal.id).then(() => {
+                      // After villages are fetched, try to find village ID
+                      if (emp.address?.village) {
+                        const currentVillage = villages.find(v => v.name === emp.address.village);
+                        if (currentVillage) {
+                          setHomeLocationIds(prev => ({ ...prev, villageId: currentVillage.id }));
+                        }
+                      }
+                    });
+                  }
+                }
+              });
+            }
+          }
+        });
+      }
+    }
+    
+    // If employee has work location, try to find and set IDs
+    if (emp.work_location?.work_state) {
+      const currentWorkState = workStates.find(s => s.name === emp.work_location.work_state);
+      if (currentWorkState) {
+        setWorkLocationIds(prev => ({ ...prev, stateId: currentWorkState.id }));
+        fetchWorkDistricts(currentWorkState.id).then(() => {
+          if (emp.work_location?.work_district) {
+            const currentWorkDistrict = workDistricts.find(d => d.name === emp.work_location.work_district);
+            if (currentWorkDistrict) {
+              setWorkLocationIds(prev => ({ ...prev, districtId: currentWorkDistrict.id }));
+              fetchWorkMandals(currentWorkDistrict.id).then(() => {
+                if (emp.work_location?.work_mandal) {
+                  const currentWorkMandal = workMandals.find(m => m.name === emp.work_location.work_mandal);
+                  if (currentWorkMandal) {
+                    setWorkLocationIds(prev => ({ ...prev, mandalId: currentWorkMandal.id }));
+                    fetchWorkVillages(currentWorkMandal.id).then(() => {
+                      if (emp.work_location?.work_village) {
+                        const currentWorkVillage = workVillages.find(v => v.name === emp.work_location.work_village);
+                        if (currentWorkVillage) {
+                          setWorkLocationIds(prev => ({ ...prev, villageId: currentWorkVillage.id }));
+                        }
+                      }
+                    });
+                  }
+                }
+              });
+            }
+          }
+        });
+      }
+    }
   };
 
   // Close edit panel
@@ -365,6 +704,121 @@ export default function Employee() {
       ...signupData,
       [name]: type === "checkbox" ? checked : value,
     });
+  };
+
+  // Handle HOME location change
+  const handleHomeLocationChange = async (type, value, id) => {
+    const updates = { [type]: value };
+    const idUpdates = { [`${type}Id`]: id };
+    
+    // Cascade clearing for dependent fields
+    if (type === "state") {
+      updates.district = "";
+      updates.mandal = "";
+      updates.village = "";
+      idUpdates.districtId = "";
+      idUpdates.mandalId = "";
+      idUpdates.villageId = "";
+      setDistricts([]);
+      setMandals([]);
+      setVillages([]);
+      
+      if (id) {
+        await fetchDistricts(id);
+      }
+    } else if (type === "district") {
+      updates.mandal = "";
+      updates.village = "";
+      idUpdates.mandalId = "";
+      idUpdates.villageId = "";
+      setMandals([]);
+      setVillages([]);
+      
+      if (id) {
+        await fetchMandals(id);
+      }
+    } else if (type === "mandal") {
+      updates.village = "";
+      idUpdates.villageId = "";
+      setVillages([]);
+      
+      if (id) {
+        await fetchVillages(id);
+      }
+    }
+    
+    // Update form data
+    setFormData(prev => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        ...updates
+      }
+    }));
+    
+    // Update location IDs
+    setHomeLocationIds(prev => ({
+      ...prev,
+      ...idUpdates
+    }));
+  };
+
+  // Handle WORK location change
+  const handleWorkLocationChange = async (type, value, id) => {
+    const fieldName = type.replace("work_", "");
+    const updates = { [type]: value };
+    const idUpdates = { [`${fieldName}Id`]: id };
+    
+    // Cascade clearing for dependent fields
+    if (type === "work_state") {
+      updates.work_district = "";
+      updates.work_mandal = "";
+      updates.work_village = "";
+      idUpdates.districtId = "";
+      idUpdates.mandalId = "";
+      idUpdates.villageId = "";
+      setWorkDistricts([]);
+      setWorkMandals([]);
+      setWorkVillages([]);
+      
+      if (id) {
+        await fetchWorkDistricts(id);
+      }
+    } else if (type === "work_district") {
+      updates.work_mandal = "";
+      updates.work_village = "";
+      idUpdates.mandalId = "";
+      idUpdates.villageId = "";
+      setWorkMandals([]);
+      setWorkVillages([]);
+      
+      if (id) {
+        await fetchWorkMandals(id);
+      }
+    } else if (type === "work_mandal") {
+      updates.work_village = "";
+      idUpdates.villageId = "";
+      setWorkVillages([]);
+      
+      if (id) {
+        await fetchWorkVillages(id);
+      }
+    }
+    
+    // Update form data
+    setFormData(prev => ({
+      ...prev,
+      work_location: {
+        ...prev.work_location,
+        ...updates
+      }
+    }));
+    
+    // Update location IDs
+    setWorkLocationIds(prev => ({
+      ...prev,
+      ...idUpdates
+    }));
   };
 
   // Handle signup submission
@@ -561,6 +1015,30 @@ export default function Employee() {
       );
     }
   };
+
+  // Helper function to render location dropdown
+  const renderLocationDropdown = (label, value, onChange, options, loading, disabled, helpText) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label}
+      </label>
+      <select
+        value={value || ""}
+        onChange={onChange}
+        disabled={disabled || loading}
+        className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:opacity-50"
+      >
+        <option value="">Select {label}</option>
+        {options.map((option) => (
+          <option key={option.id} value={option.name}>
+            {option.name}
+          </option>
+        ))}
+      </select>
+      {loading && <p className="text-xs text-gray-500 mt-1">Loading...</p>}
+      {helpText && <p className="text-xs text-gray-500 mt-1">{helpText}</p>}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
@@ -1072,30 +1550,85 @@ export default function Employee() {
               </div>
             </div>
 
-            {/* ADDRESS SECTION */}
+            {/* ADDRESS SECTION - UPDATED WITH DROPDOWNS */}
             <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
               <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Address Details
               </h3>
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
-                {["state", "district", "mandal", "village", "pincode"].map(
-                  (field) => (
-                    <div key={field} className={field === "pincode" ? "lg:col-span-2" : ""}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                        {field.replace("_", " ")}
-                      </label>
-                      <input
-                        value={formData.address?.[field] || ""}
-                        onChange={(e) =>
-                          handleNestedChange("address", field, e.target.value)
-                        }
-                        className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                        placeholder={`Enter ${field}`}
-                      />
-                    </div>
-                  )
+                {/* State Dropdown */}
+                {renderLocationDropdown(
+                  "State",
+                  formData.address?.state || "",
+                  (e) => {
+                    const selectedState = states.find(s => s.name === e.target.value);
+                    handleHomeLocationChange("state", e.target.value, selectedState?.id);
+                  },
+                  states,
+                  homeLocationLoading.states,
+                  false,
+                  ""
                 )}
 
+                {/* District Dropdown */}
+                {renderLocationDropdown(
+                  "District",
+                  formData.address?.district || "",
+                  (e) => {
+                    const selectedDistrict = districts.find(d => d.name === e.target.value);
+                    handleHomeLocationChange("district", e.target.value, selectedDistrict?.id);
+                  },
+                  districts,
+                  homeLocationLoading.districts,
+                  !homeLocationIds.stateId,
+                  !formData.address?.state ? "Please select a state first" : ""
+                )}
+
+                {/* Mandal Dropdown */}
+                {renderLocationDropdown(
+                  "Mandal",
+                  formData.address?.mandal || "",
+                  (e) => {
+                    const selectedMandal = mandals.find(m => m.name === e.target.value);
+                    handleHomeLocationChange("mandal", e.target.value, selectedMandal?.id);
+                  },
+                  mandals,
+                  homeLocationLoading.mandals,
+                  !homeLocationIds.districtId,
+                  !formData.address?.district ? "Please select a district first" : ""
+                )}
+
+                {/* Village Dropdown */}
+                {renderLocationDropdown(
+                  "Village",
+                  formData.address?.village || "",
+                  (e) => {
+                    const selectedVillage = villages.find(v => v.name === e.target.value);
+                    handleHomeLocationChange("village", e.target.value, selectedVillage?.id);
+                  },
+                  villages,
+                  homeLocationLoading.villages,
+                  !homeLocationIds.mandalId,
+                  !formData.address?.mandal ? "Please select a mandal first" : ""
+                )}
+
+                {/* Pincode (remains as input) */}
+                <div className="lg:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Pincode
+                  </label>
+                  <input
+                    value={formData.address?.pincode || ""}
+                    onChange={(e) =>
+                      handleNestedChange("address", "pincode", e.target.value)
+                    }
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                    placeholder="Enter Pincode"
+                  />
+                </div>
+
+                {/* Near Towns (remain as inputs) */}
                 {["near_town_1", "near_town_2", "near_town_3"].map(
                   (field) => (
                     <div key={field}>
@@ -1254,38 +1787,102 @@ export default function Employee() {
               </div>
             </div>
 
-            {/* WORK LOCATION */}
+            {/* WORK LOCATION - UPDATED WITH DROPDOWNS */}
             <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
               <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Work Location
               </h3>
+              
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
-                {[
-                  "work_state",
-                  "work_district",
-                  "work_mandal",
-                  "work_village",
-                ].map((field) => (
-                  <div key={field}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                      {field.replace("work_", "").replace("_", " ")}
-                    </label>
-                    <input
-                      value={formData.work_location?.[field] || ""}
-                      onChange={(e) =>
-                        handleNestedChange(
-                          "work_location",
-                          field,
-                          e.target.value
-                        )
-                      }
-                      className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                      placeholder={`Enter ${field
-                        .replace("work_", "")
-                        .replace("_", " ")}`}
-                    />
-                  </div>
-                ))}
+                {/* Work State Dropdown */}
+                {renderLocationDropdown(
+                  "State",
+                  formData.work_location?.work_state || "",
+                  (e) => {
+                    const selectedState = workStates.find(s => s.name === e.target.value);
+                    handleWorkLocationChange("work_state", e.target.value, selectedState?.id);
+                  },
+                  workStates,
+                  workLocationLoading.states,
+                  false,
+                  ""
+                )}
+
+                {/* Work District Dropdown */}
+                {renderLocationDropdown(
+                  "District",
+                  formData.work_location?.work_district || "",
+                  (e) => {
+                    const selectedDistrict = workDistricts.find(d => d.name === e.target.value);
+                    handleWorkLocationChange("work_district", e.target.value, selectedDistrict?.id);
+                  },
+                  workDistricts,
+                  workLocationLoading.districts,
+                  !workLocationIds.stateId,
+                  !formData.work_location?.work_state ? "Please select a state first" : ""
+                )}
+
+                {/* Work Mandal Dropdown */}
+                {renderLocationDropdown(
+                  "Mandal",
+                  formData.work_location?.work_mandal || "",
+                  (e) => {
+                    const selectedMandal = workMandals.find(m => m.name === e.target.value);
+                    handleWorkLocationChange("work_mandal", e.target.value, selectedMandal?.id);
+                  },
+                  workMandals,
+                  workLocationLoading.mandals,
+                  !workLocationIds.districtId,
+                  !formData.work_location?.work_district ? "Please select a district first" : ""
+                )}
+
+                {/* Work Village Dropdown */}
+                {renderLocationDropdown(
+                  "Village",
+                  formData.work_location?.work_village || "",
+                  (e) => {
+                    const selectedVillage = workVillages.find(v => v.name === e.target.value);
+                    handleWorkLocationChange("work_village", e.target.value, selectedVillage?.id);
+                  },
+                  workVillages,
+                  workLocationLoading.villages,
+                  !workLocationIds.mandalId,
+                  !formData.work_location?.work_mandal ? "Please select a mandal first" : ""
+                )}
+              </div>
+              
+              {/* Optional: "Same as Home Address" checkbox */}
+              <div className="flex items-center mt-4">
+                <input
+                  type="checkbox"
+                  id="sameAsHome"
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      // Copy home address to work location
+                      setFormData(prev => ({
+                        ...prev,
+                        work_location: {
+                          ...prev.work_location,
+                          work_state: prev.address?.state || "",
+                          work_district: prev.address?.district || "",
+                          work_mandal: prev.address?.mandal || "",
+                          work_village: prev.address?.village || ""
+                        }
+                      }));
+                      // Also update work location IDs
+                      setWorkLocationIds({
+                        stateId: homeLocationIds.stateId,
+                        districtId: homeLocationIds.districtId,
+                        mandalId: homeLocationIds.mandalId,
+                        villageId: homeLocationIds.villageId
+                      });
+                    }
+                  }}
+                  className="mr-2 h-4 w-4"
+                />
+                <label htmlFor="sameAsHome" className="text-sm text-gray-600">
+                  Same as home address
+                </label>
               </div>
             </div>
 
@@ -1332,7 +1929,7 @@ export default function Employee() {
               </div>
             </div>
 
-            {/* PERSONAL ASSIGNMENT SECTION - ADDED NEW SECTION */}
+            {/* PERSONAL ASSIGNMENT SECTION */}
             <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
               <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Personal Assignment

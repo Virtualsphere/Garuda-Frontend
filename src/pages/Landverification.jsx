@@ -18,6 +18,8 @@ import {
   Filter,
   Menu,
   Trash2,
+  Navigation,
+  Target
 } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -43,12 +45,14 @@ export default function LandVerification() {
   const [landBorder, setLandBorder] = useState(null);
   const [landPhotos, setLandPhotos] = useState([]);
   const [landVideos, setLandVideos] = useState([]);
+  const [borderPhotos, setBorderPhotos] = useState([]);
 
   // Previews from backend
   const [existingLandPhotos, setExistingLandPhotos] = useState([]);
   const [existingLandVideos, setExistingLandVideos] = useState([]);
   const [existingPassbookUrl, setExistingPassbookUrl] = useState(null);
   const [existingLandBorderUrl, setExistingLandBorderUrl] = useState(null);
+  const [existingBorderPhotos, setExistingBorderPhotos] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const API_BASE = "http://72.61.169.226";
@@ -169,6 +173,13 @@ export default function LandVerification() {
   const populateForm = (land) => {
     if (!land) return;
 
+    const visitors = (land.office_work?.visitors || []).map(visitor => ({
+      date: visitor.visit_date,
+      name: visitor.visitor_name,
+      phone: visitor.visitor_phone,
+      status: visitor.visitor_status
+    }));
+
     const flattened = {
       land_id: land.land_id,
       ...((land.land_location && {
@@ -178,8 +189,9 @@ export default function LandVerification() {
         village: land.land_location.village,
         location: land.land_location.location,
         status: land.land_location.status,
-      }) ||
-        {}),
+        verification: land.land_location.verification,
+        unique_id: land.land_location.unique_id,
+      }) || {}),
       ...((land.farmer_details && {
         name: land.farmer_details.name,
         phone: land.farmer_details.phone,
@@ -189,8 +201,7 @@ export default function LandVerification() {
         nature: land.farmer_details.nature,
         land_ownership: land.farmer_details.land_ownership,
         mortgage: land.farmer_details.mortgage,
-      }) ||
-        {}),
+      }) || {}),
       ...((land.land_details && {
         land_area: land.land_details.land_area,
         guntas: land.land_details.guntas,
@@ -209,21 +220,34 @@ export default function LandVerification() {
         farm_pond: land.land_details.farm_pond,
         residental: land.land_details.residental,
         fencing: land.land_details.fencing,
-      }) ||
-        {}),
+      }) || {}),
       ...((land.gps_tracking && {
         road_path: land.gps_tracking.road_path,
         latitude: land.gps_tracking.latitude,
         longitude: land.gps_tracking.longitude,
-      }) ||
-        {}),
+      }) || {}),
       ...((land.dispute_details && {
         dispute_type: land.dispute_details.dispute_type,
-        siblings_involve_in_dispute:
-          land.dispute_details.siblings_involve_in_dispute,
+        siblings_involve_in_dispute: land.dispute_details.siblings_involve_in_dispute,
         path_to_land: land.dispute_details.path_to_land,
-      }) ||
-        {}),
+      }) || {}),
+      ...((land.office_work && {
+        suggested_farmer_name: land.office_work.suggested_farmer_name,
+        suggested_farmer_phone: land.office_work.suggested_farmer_phone,
+        suggested_village: land.office_work.suggested_village,
+        suggested_mandal: land.office_work.suggested_mandal,
+        keep_in_special_package: land.office_work.keep_in_special_package,
+        package_name: land.office_work.package_name,
+        package_remarks: land.office_work.package_remarks,
+        mediator_id: land.office_work.mediator?.mediator_id || '',
+        certification_willingness: land.office_work.certification_willingness,
+        certification_location: land.office_work.certification_location,
+        board_start_date: land.office_work.board_start_date,
+        board_end_date: land.office_work.board_end_date,
+        border_latitude: land.office_work.border_latitude,
+        border_longitude: land.office_work.border_longitude,
+        visitors: visitors || [],
+      }) || {}),
     };
 
     setFormData(flattened);
@@ -236,10 +260,12 @@ export default function LandVerification() {
     );
     setExistingPassbookUrl(land.land_details?.passbook_photo || null);
     setExistingLandBorderUrl(land.gps_tracking?.land_border || null);
+    setExistingBorderPhotos(land.office_work?.border_photo || []);
     setPassbookPhoto(null);
     setLandBorder(null);
     setLandPhotos([]);
     setLandVideos([]);
+    setBorderPhotos([]);
   };
 
   const clearForm = () => {
@@ -252,6 +278,7 @@ export default function LandVerification() {
     setExistingLandVideos([]);
     setExistingPassbookUrl(null);
     setExistingLandBorderUrl(null);
+    setExistingBorderPhotos([]);
   };
 
   const handleInput = (e) => {
@@ -263,7 +290,6 @@ export default function LandVerification() {
 
   const handleSelectButton = (field, value) => {
     setFormData((prev) => {
-      // Handle array fields differently
       if (
         field === "water_source" ||
         field === "garden" ||
@@ -271,7 +297,6 @@ export default function LandVerification() {
       ) {
         return { ...prev, [field]: value };
       }
-      // For single selection fields
       return { ...prev, [field]: value };
     });
   };
@@ -296,6 +321,50 @@ export default function LandVerification() {
     setLandVideos((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const addBorderPhotos = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setBorderPhotos((prev) => [...prev, ...files]);
+  };
+
+  const removeBorderPhoto = (index) => {
+    setBorderPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const [visitorName, setVisitorName] = useState("");
+  const [visitorPhone, setVisitorPhone] = useState("");
+  const [visitorStatus, setVisitorStatus] = useState("Interested");
+
+  const handleAddVisitor = () => {
+    if (!visitorName || !visitorPhone) {
+      alert("Please enter visitor name and phone");
+      return;
+    }
+
+    const newVisitor = {
+      date: new Date().toISOString().split("T")[0],
+      name: visitorName,
+      phone: visitorPhone,
+      status: visitorStatus,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      visitors: [...(prev.visitors || []), newVisitor]
+    }));
+
+    setVisitorName("");
+    setVisitorPhone("");
+    setVisitorStatus("Interested");
+  };
+
+  const handleRemoveVisitor = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      visitors: (prev.visitors || []).filter((_, i) => i !== index)
+    }));
+  };
+
   const deleteLand = async (landId) => {
     if (!window.confirm("Are you sure you want to delete this land? This action cannot be undone.")) {
       return;
@@ -313,13 +382,9 @@ export default function LandVerification() {
 
       alert("Land deleted successfully!");
       
-      // Remove the land from state
       setLands(prevLands => prevLands.filter(land => land.land_id !== landId));
-      
-      // Remove from selectedLand if present
       setSelectedLand(prev => prev.filter(id => id !== landId));
       
-      // Close the row if it's open
       if (openRow !== null) {
         const landInRow = filteredLands[openRow];
         if (landInRow && landInRow.land_id === landId) {
@@ -327,7 +392,6 @@ export default function LandVerification() {
         }
       }
       
-      // Refresh the lands list
       await fetchLand();
     } catch (error) {
       console.error("Error deleting land:", error);
@@ -353,10 +417,10 @@ export default function LandVerification() {
 
       Object.keys(formData).forEach((k) => {
         const v = formData[k];
-        // Handle array fields specially
         if (Array.isArray(v)) {
-          // Join array with comma and space for backend
           fd.append(k, v.join(', '));
+        } else if (k === 'visitors') {
+          fd.append(k, JSON.stringify(v || []));
         } else {
           fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v || ''));
         }
@@ -367,6 +431,7 @@ export default function LandVerification() {
       if (landBorder) fd.append("land_border", landBorder);
       landPhotos.forEach((f) => fd.append("land_photo", f));
       landVideos.forEach((f) => fd.append("land_video", f));
+      borderPhotos.forEach((f) => fd.append("border_photo", f));
 
       const token = getToken();
       const headers = {
@@ -385,6 +450,34 @@ export default function LandVerification() {
       console.error("Update failed:", err);
       const msg = err.response?.data?.message || err.message || "Update failed";
       alert(msg);
+    }
+  };
+
+  const getCurrentLocation = (field) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (field === 'main') {
+            setFormData(prev => ({
+              ...prev,
+              latitude: position.coords.latitude.toString(),
+              longitude: position.coords.longitude.toString(),
+            }));
+          } else if (field === 'border') {
+            setFormData(prev => ({
+              ...prev,
+              border_latitude: position.coords.latitude.toString(),
+              border_longitude: position.coords.longitude.toString(),
+            }));
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Unable to fetch current location. Please enable location services.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser");
     }
   };
 
@@ -1045,6 +1138,63 @@ export default function LandVerification() {
                                         </div>
                                       </div>
                                     </div>
+
+                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                      <div className="p-2 bg-blue-50 rounded-lg">
+                                        <Navigation className="w-5 h-5 text-blue-600" />
+                                      </div>
+                                      <h4 className="text-lg font-semibold text-gray-800">
+                                        GPS & Path Tracking
+                                      </h4>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                      <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                          Land Entry Point
+                                        </label>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Latitude
+                                            </label>
+                                            <div className="flex gap-2">
+                                              <input
+                                                name="latitude"
+                                                onChange={handleInput}
+                                                value={formData.latitude || ""}
+                                                placeholder="Latitude"
+                                                className="w-full p-3 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() => getCurrentLocation('main')}
+                                                className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
+                                                title="Get current location"
+                                              >
+                                                <Navigation size={16} />
+                                              </button>
+                                            </div>
+                                            <VerificationButtons field="latitude" />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Longitude
+                                            </label>
+                                            <input
+                                              name="longitude"
+                                              onChange={handleInput}
+                                              value={formData.longitude || ""}
+                                              placeholder="Longitude"
+                                              className="w-full p-3 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                                            />
+                                            <VerificationButtons field="longitude" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
                                   </div>
 
                                   {/* Right Column - Form Sections */}
@@ -1281,21 +1431,359 @@ export default function LandVerification() {
                                   </div>
                                 </div>
 
-                                {/* Save Button */}
-                                <div className="mt-8 pt-6 border-t border-gray-200">
-                                  <div className="flex items-center justify-between">
-                                    <div className="text-sm text-gray-500">
-                                      All changes will be saved to the database
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                    <div className="flex items-center gap-3 mb-4">
+                                      <div className="p-2 bg-red-50 rounded-lg">
+                                        <Target className="w-5 h-5 text-red-600" />
+                                      </div>
+                                      <h4 className="text-lg font-semibold text-gray-800">
+                                        Office Work
+                                      </h4>
                                     </div>
-                                    <button
-                                      onClick={updateLand}
-                                      className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold flex items-center gap-2"
-                                    >
-                                      <Check className="w-5 h-5" />
-                                      Save Land Details
-                                    </button>
+
+                                    <div className="space-y-4">
+                                      {/* New Land Suggestion */}
+                                      <div className="space-y-3">
+                                        <h5 className="font-medium text-gray-700">New Land Suggestion</h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Suggested Farmer Name
+                                            </label>
+                                            <input
+                                              name="suggested_farmer_name"
+                                              onChange={handleInput}
+                                              value={formData.suggested_farmer_name || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Suggested Farmer Phone
+                                            </label>
+                                            <input
+                                              name="suggested_farmer_phone"
+                                              onChange={handleInput}
+                                              value={formData.suggested_farmer_phone || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Suggested Village
+                                            </label>
+                                            <input
+                                              name="suggested_village"
+                                              onChange={handleInput}
+                                              value={formData.suggested_village || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Suggested Mandal
+                                            </label>
+                                            <input
+                                              name="suggested_mandal"
+                                              onChange={handleInput}
+                                              value={formData.suggested_mandal || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Special Package */}
+                                      <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                          <input
+                                            type="checkbox"
+                                            name="keep_in_special_package"
+                                            checked={formData.keep_in_special_package === "true"}
+                                            onChange={(e) => handleInput({
+                                              target: {
+                                                name: "keep_in_special_package",
+                                                value: e.target.checked ? "true" : "false"
+                                              }
+                                            })}
+                                            className="w-4 h-4"
+                                          />
+                                          <label className="text-sm text-gray-700">
+                                            Keep in Special Package
+                                          </label>
+                                        </div>
+                                        
+                                        {formData.keep_in_special_package === "true" && (
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                Package Name
+                                              </label>
+                                              <input
+                                                name="package_name"
+                                                onChange={handleInput}
+                                                value={formData.package_name || ""}
+                                                className="w-full p-2 rounded-lg border border-gray-300"
+                                              />
+                                            </div>
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                Package Remarks
+                                              </label>
+                                              <input
+                                                name="package_remarks"
+                                                onChange={handleInput}
+                                                value={formData.package_remarks || ""}
+                                                className="w-full p-2 rounded-lg border border-gray-300"
+                                              />
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Assign Mediator */}
+                                      <div className="space-y-3">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                          Assign Mediator
+                                        </label>
+                                        <input
+                                          name="mediator_id"
+                                          onChange={handleInput}
+                                          value={formData.mediator_id || ""}
+                                          placeholder="Mediator Unique ID"
+                                          className="w-full p-2 rounded-lg border border-gray-300"
+                                        />
+                                      </div>
+
+                                      {/* Land Certification Process */}
+                                      <div className="space-y-3">
+                                        <h5 className="font-medium text-gray-700">Land Certification Process</h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Certification Willingness
+                                            </label>
+                                            <select
+                                              name="certification_willingness"
+                                              onChange={handleInput}
+                                              value={formData.certification_willingness || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            >
+                                              <option value="">Select...</option>
+                                              <option value="Thinking">Thinking</option>
+                                              <option value="Interested">Interested</option>
+                                              <option value="Not Interested">Not Interested</option>
+                                              <option value="Already Certified">Already Certified</option>
+                                            </select>
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Certification Location
+                                            </label>
+                                            <input
+                                              name="certification_location"
+                                              onChange={handleInput}
+                                              value={formData.certification_location || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Board Duration */}
+                                      <div className="space-y-3">
+                                        <h6 className="text-sm font-medium text-gray-700">Board Duration</h6>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Start Date
+                                            </label>
+                                            <input
+                                              type="date"
+                                              name="board_start_date"
+                                              onChange={handleInput}
+                                              value={formData.board_start_date || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              End Date
+                                            </label>
+                                            <input
+                                              type="date"
+                                              name="board_end_date"
+                                              onChange={handleInput}
+                                              value={formData.board_end_date || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Border Coordinates */}
+                                      <div className="space-y-3">
+                                        <h6 className="text-sm font-medium text-gray-700">Border Coordinates</h6>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Border Latitude
+                                            </label>
+                                            <div className="flex gap-2">
+                                              <input
+                                                name="border_latitude"
+                                                onChange={handleInput}
+                                                value={formData.border_latitude || ""}
+                                                className="w-full p-2 rounded-lg border border-gray-300"
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() => getCurrentLocation('border')}
+                                                className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
+                                                title="Get current border location"
+                                              >
+                                                <Navigation size={14} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Border Longitude
+                                            </label>
+                                            <input
+                                              name="border_longitude"
+                                              onChange={handleInput}
+                                              value={formData.border_longitude || ""}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Border Photos */}
+                                      <div className="space-y-3">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                          Border Photos
+                                        </label>
+                                        <input
+                                          type="file"
+                                          multiple
+                                          accept="image/*"
+                                          onChange={addBorderPhotos}
+                                          className="w-full p-2 rounded-lg border border-gray-300"
+                                        />
+                                        <MediaPreview
+                                          files={borderPhotos}
+                                          existingUrls={existingBorderPhotos}
+                                          onRemove={removeBorderPhoto}
+                                          type="image"
+                                        />
+                                      </div>
+
+                                      {/* Visitor Details */}
+                                      <div className="space-y-3">
+                                        <h6 className="text-sm font-medium text-gray-700">Visitor Details</h6>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Visitor Name
+                                            </label>
+                                            <input
+                                              type="text"
+                                              value={visitorName}
+                                              onChange={(e) => setVisitorName(e.target.value)}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Visitor Phone
+                                            </label>
+                                            <input
+                                              type="text"
+                                              value={visitorPhone}
+                                              onChange={(e) => setVisitorPhone(e.target.value)}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-500 mb-1">
+                                              Status
+                                            </label>
+                                            <select
+                                              value={visitorStatus}
+                                              onChange={(e) => setVisitorStatus(e.target.value)}
+                                              className="w-full p-2 rounded-lg border border-gray-300"
+                                            >
+                                              <option value="Interested">Interested</option>
+                                              <option value="Not Interested">Not Interested</option>
+                                              <option value="Follow up">Follow up</option>
+                                            </select>
+                                          </div>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={handleAddVisitor}
+                                          className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+                                        >
+                                          + Add Visitor
+                                        </button>
+
+                                        {/* Visitors List */}
+                                        {(formData.visitors || []).length > 0 && (
+                                          <div className="mt-3">
+                                            <div className="text-xs text-gray-500 mb-1">
+                                              Previous Visitors ({formData.visitors.length})
+                                            </div>
+                                            <div className="max-h-32 overflow-y-auto">
+                                              {(formData.visitors || []).map((visitor, index) => (
+                                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded mb-1">
+                                                  <div className="text-xs">
+                                                    <div className="font-medium">{visitor.name}</div>
+                                                    <div className="text-gray-500">{visitor.phone} • {visitor.date}</div>
+                                                  </div>
+                                                  <div className="flex items-center gap-2">
+                                                    <span className={`px-2 py-1 rounded text-xs ${
+                                                      visitor.status === "Interested" 
+                                                        ? "bg-green-100 text-green-700"
+                                                        : visitor.status === "Not Interested"
+                                                        ? "bg-red-100 text-red-700"
+                                                        : "bg-yellow-100 text-yellow-700"
+                                                    }`}>
+                                                      {visitor.status}
+                                                    </span>
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => handleRemoveVisitor(index)}
+                                                      className="text-red-500 hover:text-red-700"
+                                                    >
+                                                      <X size={14} />
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
+
+                                {/* Save Button */}
+                                 <div className="mt-8 pt-6 border-t border-gray-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="text-sm text-gray-500">
+                                    All changes will be saved to the database
+                                  </div>
+                                  <button
+                                    onClick={updateLand}
+                                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold flex items-center gap-2"
+                                  >
+                                    <Check className="w-5 h-5" />
+                                    Save Land Details
+                                  </button>
                                 </div>
+                              </div>
                               </div>
                             </div>
                           </td>

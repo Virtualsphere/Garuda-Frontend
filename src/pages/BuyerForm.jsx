@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import { 
@@ -18,7 +18,9 @@ import {
   Check,
   Globe,
   Navigation,
-  Tag
+  Tag,
+  ChevronDown,
+  Grid
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -27,12 +29,29 @@ export const BuyerForm = () => {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState("basic");
 
+  // Location states
+  const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [sectors, setSectors] = useState([]);
+  const [loadingLocation, setLoadingLocation] = useState({
+    states: false,
+    districts: false,
+    sectors: false
+  });
+
+  // Store location IDs separately
+  const [locationIds, setLocationIds] = useState({
+    stateId: "",
+    districtId: "",
+    sectorId: ""
+  });
+
   const initialForm = {
     name: "",
     phone: "",
     state: "",
     district: "",
-    sectors: "",
+    sector: "",
     near_town_1: "",
     near_town_2: "",
     acres: "",
@@ -44,8 +63,157 @@ export const BuyerForm = () => {
 
   const [form, setForm] = useState(initialForm);
 
+  // Fetch states on component mount
+  useEffect(() => {
+    fetchStates();
+  }, []);
+
+  // Fetch districts when state changes
+  useEffect(() => {
+    if (locationIds.stateId) {
+      fetchDistricts(locationIds.stateId);
+    } else {
+      setDistricts([]);
+      setSectors([]);
+      setForm(prev => ({ 
+        ...prev, 
+        district: "",
+        sector: ""
+      }));
+    }
+  }, [locationIds.stateId]);
+
+  // Fetch sectors when district changes
+  useEffect(() => {
+    if (locationIds.districtId) {
+      fetchSectors(locationIds.districtId);
+    } else {
+      setSectors([]);
+      setForm(prev => ({ ...prev, sector: "" }));
+    }
+  }, [locationIds.districtId]);
+
+  const fetchStates = async () => {
+    try {
+      setLoadingLocation(prev => ({ ...prev, states: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://72.61.169.226/admin/states", {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setStates(data);
+      } else {
+        console.error("Failed to fetch states");
+        toast.error("Failed to load states");
+      }
+    } catch (error) {
+      console.error("Error fetching states:", error);
+      toast.error("Error loading states");
+    } finally {
+      setLoadingLocation(prev => ({ ...prev, states: false }));
+    }
+  };
+
+  const fetchDistricts = async (stateId) => {
+    try {
+      setLoadingLocation(prev => ({ ...prev, districts: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/states/${stateId}/districts`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setDistricts(data);
+      } else {
+        console.error("Failed to fetch districts");
+        toast.error("Failed to load districts");
+      }
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+      toast.error("Error loading districts");
+    } finally {
+      setLoadingLocation(prev => ({ ...prev, districts: false }));
+    }
+  };
+
+  const fetchSectors = async (districtId) => {
+    try {
+      setLoadingLocation(prev => ({ ...prev, sectors: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/sectors`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setSectors(data);
+      } else {
+        console.error("Failed to fetch sectors");
+        toast.error("Failed to load sectors");
+      }
+    } catch (error) {
+      console.error("Error fetching sectors:", error);
+      toast.error("Error loading sectors");
+    } finally {
+      setLoadingLocation(prev => ({ ...prev, sectors: false }));
+    }
+  };
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // Handle location dropdown changes
+    if (name === "state") {
+      const selectedState = states.find(s => s.name === value);
+      setForm(prev => ({ 
+        ...prev, 
+        [name]: value,
+        district: "",
+        sector: ""
+      }));
+      setLocationIds(prev => ({
+        ...prev,
+        stateId: selectedState?.id || "",
+        districtId: "",
+        sectorId: ""
+      }));
+    } 
+    else if (name === "district") {
+      const selectedDistrict = districts.find(d => d.name === value);
+      setForm(prev => ({ 
+        ...prev, 
+        [name]: value,
+        sector: ""
+      }));
+      setLocationIds(prev => ({
+        ...prev,
+        districtId: selectedDistrict?.id || "",
+        sectorId: ""
+      }));
+    }
+    else if (name === "sector") {
+      const selectedSector = sectors.find(s => s.name === value);
+      setForm(prev => ({ ...prev, [name]: value }));
+      setLocationIds(prev => ({
+        ...prev,
+        sectorId: selectedSector?.id || ""
+      }));
+    }
+    else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -77,6 +245,11 @@ export const BuyerForm = () => {
           duration: 4000,
         });
         setForm(initialForm);
+        setLocationIds({
+          stateId: "",
+          districtId: "",
+          sectorId: ""
+        });
         setTimeout(() => {
           navigate("/buyers");
         }, 2000);
@@ -93,6 +266,11 @@ export const BuyerForm = () => {
 
   const handleReset = () => {
     setForm(initialForm);
+    setLocationIds({
+      stateId: "",
+      districtId: "",
+      sectorId: ""
+    });
     toast("Form cleared", {
       icon: "🔄",
     });
@@ -109,9 +287,9 @@ export const BuyerForm = () => {
   const fieldConfigs = {
     name: { icon: User, label: "Full Name", required: true, placeholder: "Enter buyer's full name" },
     phone: { icon: Phone, label: "Phone Number", required: true, placeholder: "Enter 10-digit mobile number", type: "tel" },
-    state: { icon: Globe, label: "State", placeholder: "Enter state" },
-    district: { icon: Landmark, label: "District", placeholder: "Enter district" },
-    sectors: { icon: Target, label: "Preferred Sectors", placeholder: "e.g., Residential, Commercial, Agricultural" },
+    state: { icon: Globe, label: "State", placeholder: "Select state", type: "select" },
+    district: { icon: Landmark, label: "District", placeholder: "Select district", type: "select" },
+    sector: { icon: Grid, label: "Sector", placeholder: "Select sector", type: "select" },
     near_town_1: { icon: Navigation, label: "Nearest Town 1", placeholder: "Primary nearby town" },
     near_town_2: { icon: Navigation, label: "Nearest Town 2", placeholder: "Secondary nearby town" },
     acres: { icon: Trees, label: "Required Acres", placeholder: "Enter land area in acres", type: "number" },
@@ -124,7 +302,7 @@ export const BuyerForm = () => {
   const getSectionFields = (sectionId) => {
     const sectionMap = {
       basic: ["name", "phone"],
-      location: ["state", "district", "sectors", "near_town_1", "near_town_2"],
+      location: ["state", "district", "sector", "near_town_1", "near_town_2"],
       requirements: ["acres", "type_of_soil"],
       budget: ["total_budget", "price_per_acres"],
       additional: ["remarks"],
@@ -135,6 +313,71 @@ export const BuyerForm = () => {
   const renderField = (fieldKey) => {
     const config = fieldConfigs[fieldKey];
     const Icon = config.icon;
+    
+    // Render dropdown for location fields
+    if (["state", "district", "sector"].includes(fieldKey)) {
+      let options = [];
+      let isLoading = false;
+      let isDisabled = false;
+      let helpText = "";
+      
+      switch(fieldKey) {
+        case "state":
+          options = states;
+          isLoading = loadingLocation.states;
+          break;
+        case "district":
+          options = districts;
+          isLoading = loadingLocation.districts;
+          isDisabled = !locationIds.stateId;
+          helpText = "Please select state first";
+          break;
+        case "sector":
+          options = sectors;
+          isLoading = loadingLocation.sectors;
+          isDisabled = !locationIds.districtId;
+          helpText = "Please select district first";
+          break;
+      }
+      
+      return (
+        <div key={fieldKey} className="space-y-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <Icon className="h-4 w-4" />
+            {config.label}
+            {config.required && <span className="text-red-500">*</span>}
+          </label>
+          <div className="relative">
+            <select
+              name={fieldKey}
+              value={form[fieldKey]}
+              onChange={handleChange}
+              disabled={isDisabled || isLoading}
+              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">{config.placeholder}</option>
+              {options.map(option => (
+                <option key={option.id} value={option.name}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+            <Icon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+            <ChevronDown className="absolute right-3 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
+            {isLoading && (
+              <div className="absolute right-10 top-3.5">
+                <div className="h-4 w-4 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+          {isDisabled && fieldKey !== "state" && (
+            <p className="text-xs text-gray-500">
+              {helpText}
+            </p>
+          )}
+        </div>
+      );
+    }
     
     if (fieldKey === "remarks") {
       return (

@@ -1,81 +1,64 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { GoogleMap, LoadScript, Marker, Polyline } from "@react-google-maps/api";
+import polyline from "@mapbox/polyline";
 import { PanelRight, Menu } from "lucide-react";
 
-// Fix default marker icon issue
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+const containerStyle = {
+  width: "100%",
+  height: "600px",
+};
+
+const center = {
+  lat: 20.5937,
+  lng: 78.9629,
+};
 
 export default function GarudaMap() {
   const [lands, setLands] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const getToken = () => {
-  return localStorage.getItem("token");
-};
+  const getToken = () => localStorage.getItem("token");
 
-// Common headers for all requests
-const getHeaders = () => {
-  const token = getToken();
-  const headers = {
-    'Content-Type': 'application/json',
+  const getHeaders = () => {
+    const token = getToken();
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return headers;
   };
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  
-  return headers;
-};
 
   useEffect(() => {
     fetch("http://72.61.169.226/admin/land", {
-        headers: getHeaders()
+      headers: getHeaders(),
     })
       .then((res) => res.json())
       .then((json) => setLands(json.data || []));
   }, []);
 
-  const parseLatLng = (lat, lng) => {
-    if (!lat || !lng) return null;
-
-    const latVal = parseFloat(String(lat).split(",")[0].replace(/[^0-9.-]/g, ""));
-    const lngVal = parseFloat(String(lng).split(",")[1] || String(lng).split(",")[0]);
-
-    if (isNaN(latVal) || isNaN(lngVal)) return null;
-    return [latVal, lngVal];
+  const decodePolyline = (encoded) => {
+    if (!encoded) return null;
+    try {
+      return polyline.decode(encoded).map(([lat, lng]) => ({ lat, lng }));
+    } catch {
+      return null;
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* MOBILE HEADER */}
+      {/* HEADERS SAME AS BEFORE */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-30">
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              <Menu size={24} />
-            </button>
-            <div>
-              <h1 className="text-lg font-semibold">Land Location</h1>
-            </div>
-          </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <Menu size={24} />
+          </button>
+          <h1 className="text-lg font-semibold">Land Location</h1>
         </div>
       </div>
 
-      {/* DESKTOP HEADER */}
-      <header className="hidden lg:flex h-14 items-center justify-between bg-white px-6 shadow-sm sticky top-0 z-50">
+      <header className="hidden lg:flex h-14 items-center bg-white px-6 shadow-sm sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg">
             <PanelRight className="h-5 w-5 text-white" />
@@ -84,41 +67,40 @@ const getHeaders = () => {
         </div>
       </header>
 
-      <div className="p-4 space-y-6 pt-16 lg:pt-6">
-        <MapContainer
-        center={[20.5937, 78.9629]}
-        zoom={5}
-        className="h-[600px] w-full rounded-xl shadow"
-      >
-        <TileLayer
-          attribution="© OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+      <div className="p-4 pt-16 lg:pt-6">
+        <LoadScript googleMapsApiKey="AIzaSyAD_1yL7L3YcqdNthx7m1P6D2qv9Lbn_cY">
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={5}
+          >
+            {lands.map((land) => {
+              const lat = parseFloat(land.gps_tracking?.latitude);
+              const lng = parseFloat(land.gps_tracking?.longitude);
+              const path = decodePolyline(land.gps_tracking?.road_path);
 
-        {lands.map((land) => {
-          const coords = parseLatLng(
-            land.gps_tracking?.latitude,
-            land.gps_tracking?.longitude
-          );
+              return (
+                <div key={land.land_id}>
+                  {!isNaN(lat) && !isNaN(lng) && (
+                    <Marker
+                      position={{ lat, lng }}
+                      title={land.land_id}
+                    />
+                  )}
 
-          if (!coords) return null;
-
-          return (
-            <Marker key={land.land_id} position={coords}>
-              <Popup>
-                <div className="text-sm">
-                  <strong>{land.land_id}</strong>
-                  <br />
-                  {land.land_location?.district},{" "}
-                  {land.land_location?.state}
-                  <br />
-                  Area: {land.land_details?.land_area}
+                  {path && (
+                    <Polyline
+                      path={path}
+                      options={{
+                        strokeWeight: 4,
+                      }}
+                    />
+                  )}
                 </div>
-              </Popup>
-            </Marker>
-          );
-        })}
-      </MapContainer>
+              );
+            })}
+          </GoogleMap>
+        </LoadScript>
       </div>
     </div>
   );
