@@ -259,7 +259,7 @@ export const DataEntry = () => {
         .filter(user => {
           // Check if user has the right role
           const userRole = user.role?.toLowerCase();
-          const isMediatorRole = userRole === 'agent' || userRole === 'field executive';
+          const isMediatorRole = userRole === 'mediator';
           
           // Get work location from work_location data
           const workLocation = data.work_location?.find((x) => x.unique_id === user.unique_id);
