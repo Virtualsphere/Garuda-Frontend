@@ -55,12 +55,80 @@ export default function LandVerification() {
   const [existingBorderPhotos, setExistingBorderPhotos] = useState([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const [mediators, setMediators] = useState([]);
+  const [loadingMediators, setLoadingMediators] = useState(false);
+
   const API_BASE = "http://72.61.169.226";
   const getToken = () => localStorage.getItem("token") || "";
 
   useEffect(() => {
     fetchLand();
   }, []);
+
+  const fetchMediators = async (districtName) => {
+    try {
+      if (!districtName) {
+        setMediators([]);
+        return;
+      }
+
+      setLoadingMediators(true);
+      const token = getToken();
+      
+      // Fetch all users with their details
+      const res = await fetch(`${API_BASE}/admin/personal/details`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        if (!data?.users) {
+          setMediators([]);
+          return;
+        }
+
+        // Filter users by role (mediator) and work district
+        const filteredMediators = data.users
+          .filter(user => {
+            // Check if user has the right role
+            const userRole = user.role?.toLowerCase();
+            const isMediatorRole = userRole === 'mediator';
+            
+            // Get work location from work_location data
+            const workLocation = data.work_location?.find((x) => x.unique_id === user.unique_id);
+            const worksInDistrict = workLocation?.work_district === districtName;
+            
+            return isMediatorRole && worksInDistrict;
+          })
+          .map(user => ({
+            id: user.unique_id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            role: user.role,
+            work_location: data.work_location?.find((x) => x.unique_id === user.unique_id) || {},
+          }));
+
+        setMediators(filteredMediators);
+        
+        console.log(`Found ${filteredMediators.length} mediators in district: ${districtName}`);
+        
+      } else {
+        console.error("Failed to fetch users for mediators");
+        setMediators([]);
+      }
+    } catch (error) {
+      console.error("Error fetching mediators:", error);
+      setMediators([]);
+    } finally {
+      setLoadingMediators(false);
+    }
+  };
 
   const handleVerifyClick = (field, status) => {
     setVerificationChecks((prev) => ({
@@ -266,6 +334,11 @@ export default function LandVerification() {
     setLandPhotos([]);
     setLandVideos([]);
     setBorderPhotos([]);
+    if (land.land_location?.district) {
+      fetchMediators(land.land_location.district);
+    } else {
+      setMediators([]);
+    }
   };
 
   const clearForm = () => {
@@ -279,13 +352,19 @@ export default function LandVerification() {
     setExistingPassbookUrl(null);
     setExistingLandBorderUrl(null);
     setExistingBorderPhotos([]);
+    setMediators([]);
   };
 
   const handleInput = (e) => {
     const name = e.target?.name;
     const value = e.target?.value;
     if (!name) return;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "district") {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+      fetchMediators(value);
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSelectButton = (field, value) => {
@@ -421,7 +500,11 @@ export default function LandVerification() {
           fd.append(k, v.join(', '));
         } else if (k === 'visitors') {
           fd.append(k, JSON.stringify(v || []));
-        } else {
+        }
+        else if (k === 'mediator_name') {
+          return;
+        } 
+        else {
           fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v || ''));
         }
       });
@@ -1546,13 +1629,32 @@ export default function LandVerification() {
                                         <label className="block text-sm font-medium text-gray-700">
                                           Assign Mediator
                                         </label>
-                                        <input
-                                          name="mediator_id"
-                                          onChange={handleInput}
-                                          value={formData.mediator_id || ""}
-                                          placeholder="Mediator Unique ID"
-                                          className="w-full p-2 rounded-lg border border-gray-300"
-                                        />
+                                        <div className="space-y-2">
+                                          <div className="text-sm text-gray-600 mb-1">
+                                            Current Mediator: <span className="font-medium">{formData.mediator_name || "Not assigned"}</span>
+                                          </div>
+                                          <select
+                                            name="mediator_id"
+                                            onChange={handleInput}
+                                            value={formData.mediator_id || ""}
+                                            disabled={loadingMediators}
+                                            className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                          >
+                                            <option value="">Select a mediator...</option>
+                                            {mediators.map((mediator) => (
+                                              <option key={mediator.id} value={mediator.id}>
+                                                {mediator.name} - {mediator.phone} ({mediator.role})
+                                              </option>
+                                            ))}
+                                          </select>
+                                          <p className="text-xs text-gray-500">
+                                            {loadingMediators 
+                                              ? "Loading mediators..." 
+                                              : mediators.length === 0
+                                                ? `No mediators found in ${formData.district || "selected"} district`
+                                                : `Found ${mediators.length} mediator(s) in ${formData.district || "selected"} district`}
+                                          </p>
+                                        </div>
                                       </div>
 
                                       {/* Land Certification Process */}
