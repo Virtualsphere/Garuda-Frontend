@@ -22,6 +22,7 @@ import {
   ChevronDown,
   Grid
 } from "lucide-react";
+import { FaRupeeSign } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 export const BuyerForm = () => {
@@ -280,7 +281,7 @@ export const BuyerForm = () => {
     { id: "basic", label: "Basic Info", icon: User },
     { id: "location", label: "Location", icon: MapPin },
     { id: "requirements", label: "Requirements", icon: Target },
-    { id: "budget", label: "Budget", icon: DollarSign },
+    { id: "budget", label: "Budget", icon: FaRupeeSign },
     { id: "additional", label: "Additional", icon: FileText },
   ];
 
@@ -293,7 +294,7 @@ export const BuyerForm = () => {
     near_town_1: { icon: Navigation, label: "Nearest Town 1", placeholder: "Primary nearby town" },
     near_town_2: { icon: Navigation, label: "Nearest Town 2", placeholder: "Secondary nearby town" },
     acres: { icon: Trees, label: "Required Acres", placeholder: "Enter land area in acres", type: "number" },
-    total_budget: { icon: DollarSign, label: "Total Budget (₹)", placeholder: "Enter total budget amount", type: "number" },
+    total_budget: { icon: FaRupeeSign, label: "Total Budget (₹)", placeholder: "Enter total budget amount", type: "number" },
     price_per_acres: { icon: Tag, label: "Price per Acre (₹)", placeholder: "Expected price per acre", type: "number" },
     type_of_soil: { icon: Building2, label: "Type of Soil", placeholder: "e.g., Black Soil, Red Soil" },
     remarks: { icon: FileText, label: "Remarks", placeholder: "Any additional notes or requirements" },

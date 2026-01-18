@@ -1,5 +1,6 @@
 import { React, useContext, createContext, useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   ChevronUp,
@@ -19,13 +20,182 @@ import {
   Menu,
   Trash2,
   Navigation,
-  Target
+  Target,
+  Route
 } from "lucide-react";
+import { 
+  FiEye
+} from "react-icons/fi";
 import { useLocation } from "react-router-dom";
+import { LoadScript, GoogleMap, Marker, Polyline } from "@react-google-maps/api";
+import polyline from "@mapbox/polyline";
 
 const VerificationContext = createContext();
 
+const MapModal = ({ isOpen, onClose, latitude, longitude, roadPath }) => {
+  const [mapCenter, setMapCenter] = useState({ lat: 20.5937, lng: 78.9629 });
+  const [decodedPath, setDecodedPath] = useState(null);
+  const [mapZoom, setMapZoom] = useState(15);
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && latitude && longitude) {
+      // Parse coordinates - handle both single and comma-separated values
+      let lat, lng;
+      
+      if (typeof latitude === 'string' && latitude.includes(',')) {
+        const coords = latitude.split(',').map(coord => parseFloat(coord.trim()));
+        lat = coords[0];
+      } else {
+        lat = parseFloat(latitude);
+      }
+      
+      if (typeof longitude === 'string' && longitude.includes(',')) {
+        const coords = longitude.split(',').map(coord => parseFloat(coord.trim()));
+        lng = coords[0];
+      } else {
+        lng = parseFloat(longitude);
+      }
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setMapCenter({ lat, lng });
+        setMapZoom(15);
+      }
+
+      // Decode polyline if exists
+      if (roadPath) {
+        try {
+          const decoded = polyline.decode(roadPath).map(([lat, lng]) => ({ lat, lng }));
+          setDecodedPath(decoded);
+        } catch (error) {
+          console.error("Error decoding polyline:", error);
+          setDecodedPath(null);
+        }
+      } else {
+        setDecodedPath(null);
+      }
+    }
+  }, [isOpen, latitude, longitude, roadPath]);
+
+  if (!isOpen) return null;
+
+  const containerStyle = {
+    width: '100%',
+    height: '400px'
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-gray-800">Road to Land Path</h3>
+            <p className="text-gray-600 text-sm mt-1">
+              Showing path to land location
+              {latitude && longitude && (
+                <span className="ml-2 text-gray-500">
+                  (Lat: {typeof latitude === 'string' ? latitude.split(',')[0] : latitude}, 
+                  Lng: {typeof longitude === 'string' ? longitude.split(',')[0] : longitude})
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="p-4">
+          <LoadScript 
+            googleMapsApiKey="AIzaSyAD_1yL7L3YcqdNthx7m1P6D2qv9Lbn_cY"
+            onLoad={() => setGoogleMapsLoaded(true)}
+          >
+            {googleMapsLoaded && (
+              <GoogleMap
+                mapContainerStyle={containerStyle}
+                center={mapCenter}
+                zoom={mapZoom}
+              >
+                {/* Marker for land location */}
+                <Marker
+                  position={mapCenter}
+                  title="Land Location"
+                  icon={{
+                    url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                    scaledSize: new window.google.maps.Size(40, 40)
+                  }}
+                />
+
+                {/* Polyline for road path */}
+                {decodedPath && decodedPath.length > 0 && (
+                  <Polyline
+                    path={decodedPath}
+                    options={{
+                      strokeColor: "#10B981",
+                      strokeOpacity: 0.8,
+                      strokeWeight: 5,
+                      geodesic: true,
+                      clickable: false
+                    }}
+                  />
+                )}
+
+                {/* Start point marker if path exists */}
+                {decodedPath && decodedPath.length > 0 && (
+                  <Marker
+                    position={decodedPath[0]}
+                    title="Path Start"
+                    icon={{
+                      url: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                      scaledSize: new window.google.maps.Size(30, 30)
+                    }}
+                  />
+                )}
+              </GoogleMap>
+            )}
+          </LoadScript>
+        </div>
+
+        <div className="p-4 bg-gray-50 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              {decodedPath ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span>Path Start</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                    <span>Land Location</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-1 bg-emerald-400 rounded"></div>
+                    <span>Road Path</span>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-amber-600">No road path data available for this land</span>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function LandVerification() {
+  const navigate = useNavigate();
   const { state } = useLocation();
   const [openRow, setOpenRow] = useState(null);
   const [lands, setLands] = useState([]);
@@ -34,6 +204,8 @@ export default function LandVerification() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const isBuyerSelecting = !!state?.buyer_id;
+  const [mapModalOpen, setMapModalOpen] = useState(false);
+  const [selectedLandForMap, setSelectedLandForMap] = useState(null);
 
   // Form / edit states
   const [formData, setFormData] = useState({
@@ -64,6 +236,26 @@ export default function LandVerification() {
   useEffect(() => {
     fetchLand();
   }, []);
+
+  const openRoadPathMap = (landData) => {
+    if (!landData) return;
+    
+    // Check if we have coordinates
+    const lat = landData.gps_tracking?.latitude;
+    const lng = landData.gps_tracking?.longitude;
+    
+    if (!lat || !lng) {
+      alert("No GPS coordinates available for this land");
+      return;
+    }
+
+    setSelectedLandForMap({
+      latitude: lat,
+      longitude: lng,
+      roadPath: landData.gps_tracking?.road_path
+    });
+    setMapModalOpen(true);
+  };
 
   const fetchMediators = async (districtName) => {
     try {
@@ -488,6 +680,8 @@ export default function LandVerification() {
       }
 
       const fd = new FormData();
+      
+      // Check verification status first
       Object.values(verificationChecks).forEach((v) => {
         if (v === "fail") {
           verificationStatus = "rejected";
@@ -496,20 +690,26 @@ export default function LandVerification() {
 
       Object.keys(formData).forEach((k) => {
         const v = formData[k];
+        
+        // Skip verification field from formData since we'll add it separately
+        if (k === 'verification') {
+          return;
+        }
+        
         if (Array.isArray(v)) {
           fd.append(k, v.join(', '));
         } else if (k === 'visitors') {
           fd.append(k, JSON.stringify(v || []));
-        }
-        else if (k === 'mediator_name') {
-          return;
-        } 
-        else {
+        } else if (k === 'mediator_name') {
+          return; // Don't send mediator_name to backend
+        } else {
           fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v || ''));
         }
       });
 
+      // Add verification status separately (overrides any existing value)
       fd.append("verification", verificationStatus);
+      
       if (passbookPhoto) fd.append("passbook_photo", passbookPhoto);
       if (landBorder) fd.append("land_border", landBorder);
       landPhotos.forEach((f) => fd.append("land_photo", f));
@@ -525,6 +725,9 @@ export default function LandVerification() {
       const url = `http://72.61.169.226/admin/land/${encodeURIComponent(
         formData.land_id
       )}`;
+      
+      console.log("Sending verification status:", verificationStatus); // Debug log
+      
       const res = await axios.put(url, fd, { headers });
 
       alert("Update successful");
@@ -563,6 +766,85 @@ export default function LandVerification() {
       alert("Geolocation is not supported by your browser");
     }
   };
+
+  const renderGPSTrackingSection = () => (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-blue-50 rounded-lg">
+          <Navigation className="w-5 h-5 text-blue-600" />
+        </div>
+        <h4 className="text-lg font-semibold text-gray-800">
+          GPS & Path Tracking
+        </h4>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Land Entry Point
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Latitude
+              </label>
+              <div className="flex gap-2">
+                <input
+                  name="latitude"
+                  onChange={handleInput}
+                  value={formData.latitude || ""}
+                  placeholder="Latitude"
+                  className="w-full p-3 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => getCurrentLocation('main')}
+                  className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
+                  title="Get current location"
+                >
+                  <Navigation size={16} />
+                </button>
+              </div>
+              <VerificationButtons field="latitude" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Longitude
+              </label>
+              <input
+                name="longitude"
+                onChange={handleInput}
+                value={formData.longitude || ""}
+                placeholder="Longitude"
+                className="w-full p-3 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
+              />
+              <VerificationButtons field="longitude" />
+            </div>
+          </div>
+        </div>
+
+        {/* Road to Path Button */}
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={() => {
+              const currentLand = filteredLands[openRow];
+              if (currentLand) {
+                openRoadPathMap(currentLand);
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold"
+          >
+            <Route className="w-5 h-5" />
+            View Road to Path
+          </button>
+          <p className="text-xs text-gray-500 mt-2">
+            Click to view the road path to this land location on map
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <VerificationContext.Provider
@@ -887,6 +1169,18 @@ export default function LandVerification() {
                               <Trash2 className="w-4 h-4" />
                               Delete
                             </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/land-purchase/${item.land_id}`);
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                              title="View purchase requests"
+                            >
+                              <FiEye className="w-4 h-4" />
+                              Enquiry
+                            </button>
                           </div>
                         </td>
 
@@ -1174,7 +1468,7 @@ export default function LandVerification() {
                                       </div>
                                     </div>
 
-                                    {/* Farmer Details Card */}
+                                    {/* Dispute Details Card */}
                                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                                       <div className="flex items-center gap-3 mb-4">
                                         <div className="p-2 bg-blue-50 rounded-lg">
@@ -1222,62 +1516,7 @@ export default function LandVerification() {
                                       </div>
                                     </div>
 
-                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                                    <div className="flex items-center gap-3 mb-4">
-                                      <div className="p-2 bg-blue-50 rounded-lg">
-                                        <Navigation className="w-5 h-5 text-blue-600" />
-                                      </div>
-                                      <h4 className="text-lg font-semibold text-gray-800">
-                                        GPS & Path Tracking
-                                      </h4>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                      <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                          Land Entry Point
-                                        </label>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Latitude
-                                            </label>
-                                            <div className="flex gap-2">
-                                              <input
-                                                name="latitude"
-                                                onChange={handleInput}
-                                                value={formData.latitude || ""}
-                                                placeholder="Latitude"
-                                                className="w-full p-3 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
-                                              />
-                                              <button
-                                                type="button"
-                                                onClick={() => getCurrentLocation('main')}
-                                                className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
-                                                title="Get current location"
-                                              >
-                                                <Navigation size={16} />
-                                              </button>
-                                            </div>
-                                            <VerificationButtons field="latitude" />
-                                          </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Longitude
-                                            </label>
-                                            <input
-                                              name="longitude"
-                                              onChange={handleInput}
-                                              value={formData.longitude || ""}
-                                              placeholder="Longitude"
-                                              className="w-full p-3 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all"
-                                            />
-                                            <VerificationButtons field="longitude" />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
+                                    {renderGPSTrackingSection()}
                                   </div>
 
                                   {/* Right Column - Form Sections */}
@@ -1913,6 +2152,13 @@ export default function LandVerification() {
           </div>
         </div>
       </div>
+      <MapModal
+        isOpen={mapModalOpen}
+        onClose={() => setMapModalOpen(false)}
+        latitude={selectedLandForMap?.latitude}
+        longitude={selectedLandForMap?.longitude}
+        roadPath={selectedLandForMap?.roadPath}
+      />
     </VerificationContext.Provider>
   );
 }
@@ -2116,7 +2362,6 @@ function MediaPreview({ files, existingUrls, onRemove, type }) {
   );
 }
 
-// Add these icons if not already imported
 const Search = (props) => (
   <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path

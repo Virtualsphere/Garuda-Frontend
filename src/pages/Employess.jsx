@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { PanelRight, X, Plus, RefreshCw, Menu, UserPlus, Trash2, Edit } from "lucide-react";
+import {
+  PanelRight,
+  X,
+  Plus,
+  RefreshCw,
+  Menu,
+  UserPlus,
+  Trash2,
+  Edit,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Employee() {
@@ -12,7 +21,10 @@ export default function Employee() {
   const [loading, setLoading] = useState(true);
   const createdUrls = useRef([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+
   // Signup form state
   const [showSignupForm, setShowSignupForm] = useState(false);
   const [signupData, setSignupData] = useState({
@@ -37,7 +49,7 @@ export default function Employee() {
     states: false,
     districts: false,
     mandals: false,
-    villages: false
+    villages: false,
   });
 
   // Location states for WORK LOCATION
@@ -49,7 +61,7 @@ export default function Employee() {
     states: false,
     districts: false,
     mandals: false,
-    villages: false
+    villages: false,
   });
 
   // To store IDs (for fetching dependent dropdowns)
@@ -57,16 +69,16 @@ export default function Employee() {
     stateId: "",
     districtId: "",
     mandalId: "",
-    villageId: ""
+    villageId: "",
   });
 
   const [workLocationIds, setWorkLocationIds] = useState({
     stateId: "",
     districtId: "",
     mandalId: "",
-    villageId: ""
+    villageId: "",
   });
-  
+
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
@@ -174,22 +186,19 @@ export default function Employee() {
     }
   };
 
-  // ========== LOCATION FETCH FUNCTIONS ==========
-
-  // Fetch all states (used for both home and work locations)
   const fetchStates = async () => {
     try {
-      setHomeLocationLoading(prev => ({ ...prev, states: true }));
-      setWorkLocationLoading(prev => ({ ...prev, states: true }));
-      
+      setHomeLocationLoading((prev) => ({ ...prev, states: true }));
+      setWorkLocationLoading((prev) => ({ ...prev, states: true }));
+
       const token = localStorage.getItem("token");
       const res = await fetch("http://72.61.169.226/admin/states", {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         setStates(data);
@@ -200,8 +209,8 @@ export default function Employee() {
     } catch (error) {
       console.error("Error fetching states:", error);
     } finally {
-      setHomeLocationLoading(prev => ({ ...prev, states: false }));
-      setWorkLocationLoading(prev => ({ ...prev, states: false }));
+      setHomeLocationLoading((prev) => ({ ...prev, states: false }));
+      setWorkLocationLoading((prev) => ({ ...prev, states: false }));
     }
   };
 
@@ -213,17 +222,20 @@ export default function Employee() {
       setVillages([]);
       return;
     }
-    
+
     try {
-      setHomeLocationLoading(prev => ({ ...prev, districts: true }));
+      setHomeLocationLoading((prev) => ({ ...prev, districts: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/states/${stateId}/districts`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/states/${stateId}/districts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setDistricts(data);
@@ -233,7 +245,7 @@ export default function Employee() {
     } catch (error) {
       console.error("Error fetching districts:", error);
     } finally {
-      setHomeLocationLoading(prev => ({ ...prev, districts: false }));
+      setHomeLocationLoading((prev) => ({ ...prev, districts: false }));
     }
   };
 
@@ -244,17 +256,20 @@ export default function Employee() {
       setVillages([]);
       return;
     }
-    
+
     try {
-      setHomeLocationLoading(prev => ({ ...prev, mandals: true }));
+      setHomeLocationLoading((prev) => ({ ...prev, mandals: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/mandals`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/districts/${districtId}/mandals`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setMandals(data);
@@ -264,7 +279,7 @@ export default function Employee() {
     } catch (error) {
       console.error("Error fetching mandals:", error);
     } finally {
-      setHomeLocationLoading(prev => ({ ...prev, mandals: false }));
+      setHomeLocationLoading((prev) => ({ ...prev, mandals: false }));
     }
   };
 
@@ -274,17 +289,20 @@ export default function Employee() {
       setVillages([]);
       return;
     }
-    
+
     try {
-      setHomeLocationLoading(prev => ({ ...prev, villages: true }));
+      setHomeLocationLoading((prev) => ({ ...prev, villages: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/mandals/${mandalId}/villages`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/mandals/${mandalId}/villages`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setVillages(data);
@@ -294,11 +312,10 @@ export default function Employee() {
     } catch (error) {
       console.error("Error fetching villages:", error);
     } finally {
-      setHomeLocationLoading(prev => ({ ...prev, villages: false }));
+      setHomeLocationLoading((prev) => ({ ...prev, villages: false }));
     }
   };
 
-  // WORK LOCATION: Fetch districts based on stateId
   const fetchWorkDistricts = async (stateId) => {
     if (!stateId) {
       setWorkDistricts([]);
@@ -306,17 +323,20 @@ export default function Employee() {
       setWorkVillages([]);
       return;
     }
-    
+
     try {
-      setWorkLocationLoading(prev => ({ ...prev, districts: true }));
+      setWorkLocationLoading((prev) => ({ ...prev, districts: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/states/${stateId}/districts`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/states/${stateId}/districts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setWorkDistricts(data);
@@ -326,28 +346,30 @@ export default function Employee() {
     } catch (error) {
       console.error("Error fetching work districts:", error);
     } finally {
-      setWorkLocationLoading(prev => ({ ...prev, districts: false }));
+      setWorkLocationLoading((prev) => ({ ...prev, districts: false }));
     }
   };
 
-  // WORK LOCATION: Fetch mandals based on districtId
   const fetchWorkMandals = async (districtId) => {
     if (!districtId) {
       setWorkMandals([]);
       setWorkVillages([]);
       return;
     }
-    
+
     try {
-      setWorkLocationLoading(prev => ({ ...prev, mandals: true }));
+      setWorkLocationLoading((prev) => ({ ...prev, mandals: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/mandals`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/districts/${districtId}/mandals`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setWorkMandals(data);
@@ -357,7 +379,7 @@ export default function Employee() {
     } catch (error) {
       console.error("Error fetching work mandals:", error);
     } finally {
-      setWorkLocationLoading(prev => ({ ...prev, mandals: false }));
+      setWorkLocationLoading((prev) => ({ ...prev, mandals: false }));
     }
   };
 
@@ -367,17 +389,20 @@ export default function Employee() {
       setWorkVillages([]);
       return;
     }
-    
+
     try {
-      setWorkLocationLoading(prev => ({ ...prev, villages: true }));
+      setWorkLocationLoading((prev) => ({ ...prev, villages: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/mandals/${mandalId}/villages`, {
-        headers: { 
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      const res = await fetch(
+        `http://72.61.169.226/admin/mandals/${mandalId}/villages`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
-      
+      );
+
       if (res.ok) {
         const data = await res.json();
         setWorkVillages(data);
@@ -387,7 +412,7 @@ export default function Employee() {
     } catch (error) {
       console.error("Error fetching work villages:", error);
     } finally {
-      setWorkLocationLoading(prev => ({ ...prev, villages: false }));
+      setWorkLocationLoading((prev) => ({ ...prev, villages: false }));
     }
   };
 
@@ -414,50 +439,53 @@ export default function Employee() {
   // Handle password form changes
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswordData(prev => ({
+    setPasswordData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   // Update employee password
   const updateEmployeePassword = async () => {
     const { newPassword, confirmPassword } = passwordData;
-    
+
     // Validation
     if (!newPassword || !confirmPassword) {
       setPasswordError("Both password fields are required");
       return;
     }
-    
+
     if (newPassword !== confirmPassword) {
       setPasswordError("Passwords do not match");
       return;
     }
-    
+
     if (newPassword.length < 6) {
       setPasswordError("Password must be at least 6 characters long");
       return;
     }
-    
+
     setPasswordLoading(true);
     setPasswordError("");
-    
+
     try {
-      const response = await fetch("http://72.61.169.226/admin/update/password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({
-          unique_id: formData.unique_id,
-          newPassword: newPassword
-        })
-      });
-      
+      const response = await fetch(
+        "http://72.61.169.226/admin/update/password",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            unique_id: formData.unique_id,
+            newPassword: newPassword,
+          }),
+        }
+      );
+
       const data = await response.json();
-      
+
       if (response.ok) {
         alert("Password updated successfully!");
         closePasswordForm();
@@ -479,22 +507,22 @@ export default function Employee() {
       const response = await fetch("http://72.61.169.226/admin/roles", {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         console.log("Fetched roles:", data.roles);
         setRoles(data.roles || []);
-        
+
         // If roles are fetched, set default role to first one if exists
         if (data.roles && data.roles.length > 0) {
-          setSignupData(prev => ({
+          setSignupData((prev) => ({
             ...prev,
-            role: data.roles[0].name // Keep original case
+            role: data.roles[0].name, // Keep original case
           }));
         }
       } else {
@@ -530,45 +558,60 @@ export default function Employee() {
     setSelectedEmployee(emp);
     const copy = JSON.parse(JSON.stringify(emp));
     setFormData(copy);
-    
+
     // Reset location IDs
     setHomeLocationIds({
       stateId: "",
       districtId: "",
       mandalId: "",
-      villageId: ""
+      villageId: "",
     });
-    
+
     setWorkLocationIds({
       stateId: "",
       districtId: "",
       mandalId: "",
-      villageId: ""
+      villageId: "",
     });
-    
+
     // If employee has home address, try to find and set IDs
     if (emp.address?.state) {
-      const currentState = states.find(s => s.name === emp.address.state);
+      const currentState = states.find((s) => s.name === emp.address.state);
       if (currentState) {
-        setHomeLocationIds(prev => ({ ...prev, stateId: currentState.id }));
+        setHomeLocationIds((prev) => ({ ...prev, stateId: currentState.id }));
         fetchDistricts(currentState.id).then(() => {
           // After districts are fetched, try to find district ID
           if (emp.address?.district) {
-            const currentDistrict = districts.find(d => d.name === emp.address.district);
+            const currentDistrict = districts.find(
+              (d) => d.name === emp.address.district
+            );
             if (currentDistrict) {
-              setHomeLocationIds(prev => ({ ...prev, districtId: currentDistrict.id }));
+              setHomeLocationIds((prev) => ({
+                ...prev,
+                districtId: currentDistrict.id,
+              }));
               fetchMandals(currentDistrict.id).then(() => {
                 // After mandals are fetched, try to find mandal ID
                 if (emp.address?.mandal) {
-                  const currentMandal = mandals.find(m => m.name === emp.address.mandal);
+                  const currentMandal = mandals.find(
+                    (m) => m.name === emp.address.mandal
+                  );
                   if (currentMandal) {
-                    setHomeLocationIds(prev => ({ ...prev, mandalId: currentMandal.id }));
+                    setHomeLocationIds((prev) => ({
+                      ...prev,
+                      mandalId: currentMandal.id,
+                    }));
                     fetchVillages(currentMandal.id).then(() => {
                       // After villages are fetched, try to find village ID
                       if (emp.address?.village) {
-                        const currentVillage = villages.find(v => v.name === emp.address.village);
+                        const currentVillage = villages.find(
+                          (v) => v.name === emp.address.village
+                        );
                         if (currentVillage) {
-                          setHomeLocationIds(prev => ({ ...prev, villageId: currentVillage.id }));
+                          setHomeLocationIds((prev) => ({
+                            ...prev,
+                            villageId: currentVillage.id,
+                          }));
                         }
                       }
                     });
@@ -580,27 +623,47 @@ export default function Employee() {
         });
       }
     }
-    
+
     // If employee has work location, try to find and set IDs
     if (emp.work_location?.work_state) {
-      const currentWorkState = workStates.find(s => s.name === emp.work_location.work_state);
+      const currentWorkState = workStates.find(
+        (s) => s.name === emp.work_location.work_state
+      );
       if (currentWorkState) {
-        setWorkLocationIds(prev => ({ ...prev, stateId: currentWorkState.id }));
+        setWorkLocationIds((prev) => ({
+          ...prev,
+          stateId: currentWorkState.id,
+        }));
         fetchWorkDistricts(currentWorkState.id).then(() => {
           if (emp.work_location?.work_district) {
-            const currentWorkDistrict = workDistricts.find(d => d.name === emp.work_location.work_district);
+            const currentWorkDistrict = workDistricts.find(
+              (d) => d.name === emp.work_location.work_district
+            );
             if (currentWorkDistrict) {
-              setWorkLocationIds(prev => ({ ...prev, districtId: currentWorkDistrict.id }));
+              setWorkLocationIds((prev) => ({
+                ...prev,
+                districtId: currentWorkDistrict.id,
+              }));
               fetchWorkMandals(currentWorkDistrict.id).then(() => {
                 if (emp.work_location?.work_mandal) {
-                  const currentWorkMandal = workMandals.find(m => m.name === emp.work_location.work_mandal);
+                  const currentWorkMandal = workMandals.find(
+                    (m) => m.name === emp.work_location.work_mandal
+                  );
                   if (currentWorkMandal) {
-                    setWorkLocationIds(prev => ({ ...prev, mandalId: currentWorkMandal.id }));
+                    setWorkLocationIds((prev) => ({
+                      ...prev,
+                      mandalId: currentWorkMandal.id,
+                    }));
                     fetchWorkVillages(currentWorkMandal.id).then(() => {
                       if (emp.work_location?.work_village) {
-                        const currentWorkVillage = workVillages.find(v => v.name === emp.work_location.work_village);
+                        const currentWorkVillage = workVillages.find(
+                          (v) => v.name === emp.work_location.work_village
+                        );
                         if (currentWorkVillage) {
-                          setWorkLocationIds(prev => ({ ...prev, villageId: currentWorkVillage.id }));
+                          setWorkLocationIds((prev) => ({
+                            ...prev,
+                            villageId: currentWorkVillage.id,
+                          }));
                         }
                       }
                     });
@@ -641,27 +704,30 @@ export default function Employee() {
   // Delete employee function - UPDATED to use route parameter
   const deleteEmployee = async () => {
     if (!employeeToDelete) return;
-    
+
     setDeleteLoading(true);
     try {
       // Using route parameter format: /admin/personal/detial/:uniqueId
-      const response = await fetch(`http://72.61.169.226/admin/personal/detial/${employeeToDelete.unique_id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json"
+      const response = await fetch(
+        `http://72.61.169.226/admin/personal/detial/${employeeToDelete.unique_id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+          // No need for body since unique_id is in the URL
         }
-        // No need for body since unique_id is in the URL
-      });
+      );
 
       const data = await response.json();
 
       if (response.ok) {
         alert("Employee deleted successfully!");
-        
+
         // Close confirmation modal
         closeDeleteConfirm();
-        
+
         // Refresh employee list
         fetchAll();
       } else {
@@ -710,7 +776,7 @@ export default function Employee() {
   const handleHomeLocationChange = async (type, value, id) => {
     const updates = { [type]: value };
     const idUpdates = { [`${type}Id`]: id };
-    
+
     // Cascade clearing for dependent fields
     if (type === "state") {
       updates.district = "";
@@ -722,7 +788,7 @@ export default function Employee() {
       setDistricts([]);
       setMandals([]);
       setVillages([]);
-      
+
       if (id) {
         await fetchDistricts(id);
       }
@@ -733,7 +799,7 @@ export default function Employee() {
       idUpdates.villageId = "";
       setMandals([]);
       setVillages([]);
-      
+
       if (id) {
         await fetchMandals(id);
       }
@@ -741,25 +807,25 @@ export default function Employee() {
       updates.village = "";
       idUpdates.villageId = "";
       setVillages([]);
-      
+
       if (id) {
         await fetchVillages(id);
       }
     }
-    
+
     // Update form data
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       address: {
         ...prev.address,
-        ...updates
-      }
+        ...updates,
+      },
     }));
-    
+
     // Update location IDs
-    setHomeLocationIds(prev => ({
+    setHomeLocationIds((prev) => ({
       ...prev,
-      ...idUpdates
+      ...idUpdates,
     }));
   };
 
@@ -768,7 +834,7 @@ export default function Employee() {
     const fieldName = type.replace("work_", "");
     const updates = { [type]: value };
     const idUpdates = { [`${fieldName}Id`]: id };
-    
+
     // Cascade clearing for dependent fields
     if (type === "work_state") {
       updates.work_district = "";
@@ -780,7 +846,7 @@ export default function Employee() {
       setWorkDistricts([]);
       setWorkMandals([]);
       setWorkVillages([]);
-      
+
       if (id) {
         await fetchWorkDistricts(id);
       }
@@ -791,7 +857,7 @@ export default function Employee() {
       idUpdates.villageId = "";
       setWorkMandals([]);
       setWorkVillages([]);
-      
+
       if (id) {
         await fetchWorkMandals(id);
       }
@@ -799,32 +865,32 @@ export default function Employee() {
       updates.work_village = "";
       idUpdates.villageId = "";
       setWorkVillages([]);
-      
+
       if (id) {
         await fetchWorkVillages(id);
       }
     }
-    
+
     // Update form data
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       work_location: {
         ...prev.work_location,
-        ...updates
-      }
+        ...updates,
+      },
     }));
-    
+
     // Update location IDs
-    setWorkLocationIds(prev => ({
+    setWorkLocationIds((prev) => ({
       ...prev,
-      ...idUpdates
+      ...idUpdates,
     }));
   };
 
   // Handle signup submission
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!signupData.agree) {
       alert("Please agree to the Terms & Conditions");
       return;
@@ -833,20 +899,20 @@ export default function Employee() {
     const { name, email, phone, password, role } = signupData;
 
     setSignupLoading(true);
-    
+
     try {
       const response = await fetch("http://72.61.169.226/api/create-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + localStorage.getItem("token")
+          Authorization: "Bearer " + localStorage.getItem("token"),
         },
-        body: JSON.stringify({ 
-          name, 
-          email, 
-          phone, 
-          password, 
-          role: role // Send exact role name
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          password,
+          role: role, // Send exact role name
         }),
       });
 
@@ -855,10 +921,10 @@ export default function Employee() {
       if (response.ok) {
         alert("Registration successful!");
         console.log("Registered user:", data.user);
-        
+
         // Reset form and close
         closeSignupForm();
-        
+
         // Refresh employee list
         fetchAll();
       } else {
@@ -912,19 +978,33 @@ export default function Employee() {
     fd.append("unique_id", formData.unique_id);
 
     // Basic user fields
-    ["name", "email", "phone", "blood_group", "role", "join_date"].forEach((k) =>
-      fd.append(k, formData[k] ?? "")
+    ["name", "email", "phone", "status", "blood_group", "role", "join_date"].forEach(
+      (k) => fd.append(k, formData[k] ?? "")
     );
 
     // Address fields
     if (formData.address) {
-      ["state", "district", "mandal", "village", "pincode", "near_town_1", "near_town_2", "near_town_3"].forEach((k) =>
-        fd.append(k, formData.address[k] ?? "")
-      );
+      [
+        "state",
+        "district",
+        "mandal",
+        "village",
+        "pincode",
+        "near_town_1",
+        "near_town_2",
+        "near_town_3",
+      ].forEach((k) => fd.append(k, formData.address[k] ?? ""));
     } else {
-      ["state", "district", "mandal", "village", "pincode", "near_town_1", "near_town_2", "near_town_3"].forEach((k) =>
-        fd.append(k, "")
-      );
+      [
+        "state",
+        "district",
+        "mandal",
+        "village",
+        "pincode",
+        "near_town_1",
+        "near_town_2",
+        "near_town_3",
+      ].forEach((k) => fd.append(k, ""));
     }
 
     // Aadhar fields
@@ -1017,7 +1097,15 @@ export default function Employee() {
   };
 
   // Helper function to render location dropdown
-  const renderLocationDropdown = (label, value, onChange, options, loading, disabled, helpText) => (
+  const renderLocationDropdown = (
+    label,
+    value,
+    onChange,
+    options,
+    loading,
+    disabled,
+    helpText
+  ) => (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
         {label}
@@ -1221,7 +1309,9 @@ export default function Employee() {
                             </span>
                           </div>
                           <span className="font-medium text-green-600 text-sm">
-                            {emp.salary?.package ? `₹${emp.salary.package}` : "-"}
+                            {emp.salary?.package
+                              ? `₹${emp.salary.package}`
+                              : "-"}
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm mb-3">
@@ -1248,13 +1338,15 @@ export default function Employee() {
                             <Edit size={14} />
                             Edit
                           </button>
-                          <button
-                            onClick={() => openDeleteConfirm(emp)}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
-                          >
-                            <Trash2 size={14} />
-                            Delete
-                          </button>
+                          {emp.role !== "admin" && emp.role !== "Admin" && (
+                            <button
+                              onClick={() => openDeleteConfirm(emp)}
+                              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+                            >
+                              <Trash2 size={14} />
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1319,14 +1411,16 @@ export default function Employee() {
                         <Edit size={14} />
                         Edit
                       </button>
-                      <button
-                        onClick={() => openDeleteConfirm(emp)}
-                        className="flex items-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
-                        title="Delete Employee"
-                      >
-                        <Trash2 size={14} />
-                        Delete
-                      </button>
+                      {emp.role !== "admin" && emp.role !== "Admin" && (
+                        <button
+                          onClick={() => openDeleteConfirm(emp)}
+                          className="flex items-center gap-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-colors"
+                          title="Delete Employee"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -1377,7 +1471,9 @@ export default function Employee() {
           <div className="w-full max-w-3xl bg-white rounded-xl lg:rounded-2xl shadow-xl p-4 lg:p-6 max-h-[90vh] overflow-y-auto border border-gray-200">
             <div className="flex justify-between items-center mb-4 lg:mb-6">
               <div>
-                <h2 className="text-lg lg:text-xl font-semibold">Edit Employee</h2>
+                <h2 className="text-lg lg:text-xl font-semibold">
+                  Edit Employee
+                </h2>
                 <p className="text-xs lg:text-sm text-gray-500">
                   ID: {formData.unique_id}
                 </p>
@@ -1454,6 +1550,20 @@ export default function Employee() {
                     onChange={handleChange}
                     className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Phone Number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <input
+                    name="status"
+                    type="text"
+                    value={formData.status || ""}
+                    onChange={handleChange}
+                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                    placeholder="Status"
                   />
                 </div>
 
@@ -1555,15 +1665,21 @@ export default function Employee() {
               <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Address Details
               </h3>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
                 {/* State Dropdown */}
                 {renderLocationDropdown(
                   "State",
                   formData.address?.state || "",
                   (e) => {
-                    const selectedState = states.find(s => s.name === e.target.value);
-                    handleHomeLocationChange("state", e.target.value, selectedState?.id);
+                    const selectedState = states.find(
+                      (s) => s.name === e.target.value
+                    );
+                    handleHomeLocationChange(
+                      "state",
+                      e.target.value,
+                      selectedState?.id
+                    );
                   },
                   states,
                   homeLocationLoading.states,
@@ -1576,8 +1692,14 @@ export default function Employee() {
                   "District",
                   formData.address?.district || "",
                   (e) => {
-                    const selectedDistrict = districts.find(d => d.name === e.target.value);
-                    handleHomeLocationChange("district", e.target.value, selectedDistrict?.id);
+                    const selectedDistrict = districts.find(
+                      (d) => d.name === e.target.value
+                    );
+                    handleHomeLocationChange(
+                      "district",
+                      e.target.value,
+                      selectedDistrict?.id
+                    );
                   },
                   districts,
                   homeLocationLoading.districts,
@@ -1590,13 +1712,21 @@ export default function Employee() {
                   "Mandal",
                   formData.address?.mandal || "",
                   (e) => {
-                    const selectedMandal = mandals.find(m => m.name === e.target.value);
-                    handleHomeLocationChange("mandal", e.target.value, selectedMandal?.id);
+                    const selectedMandal = mandals.find(
+                      (m) => m.name === e.target.value
+                    );
+                    handleHomeLocationChange(
+                      "mandal",
+                      e.target.value,
+                      selectedMandal?.id
+                    );
                   },
                   mandals,
                   homeLocationLoading.mandals,
                   !homeLocationIds.districtId,
-                  !formData.address?.district ? "Please select a district first" : ""
+                  !formData.address?.district
+                    ? "Please select a district first"
+                    : ""
                 )}
 
                 {/* Village Dropdown */}
@@ -1604,13 +1734,21 @@ export default function Employee() {
                   "Village",
                   formData.address?.village || "",
                   (e) => {
-                    const selectedVillage = villages.find(v => v.name === e.target.value);
-                    handleHomeLocationChange("village", e.target.value, selectedVillage?.id);
+                    const selectedVillage = villages.find(
+                      (v) => v.name === e.target.value
+                    );
+                    handleHomeLocationChange(
+                      "village",
+                      e.target.value,
+                      selectedVillage?.id
+                    );
                   },
                   villages,
                   homeLocationLoading.villages,
                   !homeLocationIds.mandalId,
-                  !formData.address?.mandal ? "Please select a mandal first" : ""
+                  !formData.address?.mandal
+                    ? "Please select a mandal first"
+                    : ""
                 )}
 
                 {/* Pincode (remains as input) */}
@@ -1629,23 +1767,21 @@ export default function Employee() {
                 </div>
 
                 {/* Near Towns (remain as inputs) */}
-                {["near_town_1", "near_town_2", "near_town_3"].map(
-                  (field) => (
-                    <div key={field}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                        {field.replace("_", " ")}
-                      </label>
-                      <input
-                        value={formData.address?.[field] || ""}
-                        onChange={(e) =>
-                          handleNestedChange("address", field, e.target.value)
-                        }
-                        className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                        placeholder={`Enter ${field.replace("_", " ")}`}
-                      />
-                    </div>
-                  )
-                )}
+                {["near_town_1", "near_town_2", "near_town_3"].map((field) => (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                      {field.replace("_", " ")}
+                    </label>
+                    <input
+                      value={formData.address?.[field] || ""}
+                      onChange={(e) =>
+                        handleNestedChange("address", field, e.target.value)
+                      }
+                      className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                      placeholder={`Enter ${field.replace("_", " ")}`}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -1770,7 +1906,14 @@ export default function Employee() {
                   "phonepe_number",
                   "upi_id",
                 ].map((field) => (
-                  <div key={field} className={["account_number", "upi_id"].includes(field) ? "lg:col-span-2" : ""}>
+                  <div
+                    key={field}
+                    className={
+                      ["account_number", "upi_id"].includes(field)
+                        ? "lg:col-span-2"
+                        : ""
+                    }
+                  >
                     <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
                       {field.replace(/_/g, " ")}
                     </label>
@@ -1792,15 +1935,21 @@ export default function Employee() {
               <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Work Location
               </h3>
-              
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
                 {/* Work State Dropdown */}
                 {renderLocationDropdown(
                   "State",
                   formData.work_location?.work_state || "",
                   (e) => {
-                    const selectedState = workStates.find(s => s.name === e.target.value);
-                    handleWorkLocationChange("work_state", e.target.value, selectedState?.id);
+                    const selectedState = workStates.find(
+                      (s) => s.name === e.target.value
+                    );
+                    handleWorkLocationChange(
+                      "work_state",
+                      e.target.value,
+                      selectedState?.id
+                    );
                   },
                   workStates,
                   workLocationLoading.states,
@@ -1813,13 +1962,21 @@ export default function Employee() {
                   "District",
                   formData.work_location?.work_district || "",
                   (e) => {
-                    const selectedDistrict = workDistricts.find(d => d.name === e.target.value);
-                    handleWorkLocationChange("work_district", e.target.value, selectedDistrict?.id);
+                    const selectedDistrict = workDistricts.find(
+                      (d) => d.name === e.target.value
+                    );
+                    handleWorkLocationChange(
+                      "work_district",
+                      e.target.value,
+                      selectedDistrict?.id
+                    );
                   },
                   workDistricts,
                   workLocationLoading.districts,
                   !workLocationIds.stateId,
-                  !formData.work_location?.work_state ? "Please select a state first" : ""
+                  !formData.work_location?.work_state
+                    ? "Please select a state first"
+                    : ""
                 )}
 
                 {/* Work Mandal Dropdown */}
@@ -1827,13 +1984,21 @@ export default function Employee() {
                   "Mandal",
                   formData.work_location?.work_mandal || "",
                   (e) => {
-                    const selectedMandal = workMandals.find(m => m.name === e.target.value);
-                    handleWorkLocationChange("work_mandal", e.target.value, selectedMandal?.id);
+                    const selectedMandal = workMandals.find(
+                      (m) => m.name === e.target.value
+                    );
+                    handleWorkLocationChange(
+                      "work_mandal",
+                      e.target.value,
+                      selectedMandal?.id
+                    );
                   },
                   workMandals,
                   workLocationLoading.mandals,
                   !workLocationIds.districtId,
-                  !formData.work_location?.work_district ? "Please select a district first" : ""
+                  !formData.work_location?.work_district
+                    ? "Please select a district first"
+                    : ""
                 )}
 
                 {/* Work Village Dropdown */}
@@ -1841,16 +2006,24 @@ export default function Employee() {
                   "Village",
                   formData.work_location?.work_village || "",
                   (e) => {
-                    const selectedVillage = workVillages.find(v => v.name === e.target.value);
-                    handleWorkLocationChange("work_village", e.target.value, selectedVillage?.id);
+                    const selectedVillage = workVillages.find(
+                      (v) => v.name === e.target.value
+                    );
+                    handleWorkLocationChange(
+                      "work_village",
+                      e.target.value,
+                      selectedVillage?.id
+                    );
                   },
                   workVillages,
                   workLocationLoading.villages,
                   !workLocationIds.mandalId,
-                  !formData.work_location?.work_mandal ? "Please select a mandal first" : ""
+                  !formData.work_location?.work_mandal
+                    ? "Please select a mandal first"
+                    : ""
                 )}
               </div>
-              
+
               {/* Optional: "Same as Home Address" checkbox */}
               <div className="flex items-center mt-4">
                 <input
@@ -1859,22 +2032,22 @@ export default function Employee() {
                   onChange={(e) => {
                     if (e.target.checked) {
                       // Copy home address to work location
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
                         work_location: {
                           ...prev.work_location,
                           work_state: prev.address?.state || "",
                           work_district: prev.address?.district || "",
                           work_mandal: prev.address?.mandal || "",
-                          work_village: prev.address?.village || ""
-                        }
+                          work_village: prev.address?.village || "",
+                        },
                       }));
                       // Also update work location IDs
                       setWorkLocationIds({
                         stateId: homeLocationIds.stateId,
                         districtId: homeLocationIds.districtId,
                         mandalId: homeLocationIds.mandalId,
-                        villageId: homeLocationIds.villageId
+                        villageId: homeLocationIds.villageId,
                       });
                     }
                   }}
@@ -1942,7 +2115,11 @@ export default function Employee() {
                   <input
                     value={formData.personal_assignment?.report_to || ""}
                     onChange={(e) =>
-                      handleNestedChange("personal_assignment", "report_to", e.target.value)
+                      handleNestedChange(
+                        "personal_assignment",
+                        "report_to",
+                        e.target.value
+                      )
                     }
                     className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Person to report to"
@@ -1953,9 +2130,15 @@ export default function Employee() {
                     Assigned Employee
                   </label>
                   <input
-                    value={formData.personal_assignment?.assigned_employee || ""}
+                    value={
+                      formData.personal_assignment?.assigned_employee || ""
+                    }
                     onChange={(e) =>
-                      handleNestedChange("personal_assignment", "assigned_employee", e.target.value)
+                      handleNestedChange(
+                        "personal_assignment",
+                        "assigned_employee",
+                        e.target.value
+                      )
                     }
                     className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
                     placeholder="Assigned employee"
@@ -2019,34 +2202,122 @@ export default function Employee() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   New Password
                 </label>
-                <input
-                  type="password"
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter new password"
-                  required
-                  minLength="6"
-                  disabled={passwordLoading}
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter new password"
+                    required
+                    minLength="6"
+                    disabled={passwordLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    disabled={passwordLoading}
+                  >
+                    {showNewPassword ? (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Confirm Password
                 </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Confirm new password"
-                  required
-                  minLength="6"
-                  disabled={passwordLoading}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Confirm new password"
+                    required
+                    minLength="6"
+                    disabled={passwordLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    disabled={passwordLoading}
+                  >
+                    {showConfirmPassword ? (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               {passwordError && (
@@ -2058,13 +2329,22 @@ export default function Employee() {
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <div className="text-yellow-600 mt-0.5">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                   <div>
                     <p className="text-sm text-yellow-700">
-                      The password will be updated immediately. Employee will need to use this new password for future logins.
+                      The password will be updated immediately. Employee will
+                      need to use this new password for future logins.
                     </p>
                   </div>
                 </div>
@@ -2085,9 +2365,25 @@ export default function Employee() {
                 >
                   {passwordLoading ? (
                     <>
-                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Updating...
                     </>
@@ -2160,8 +2456,16 @@ export default function Employee() {
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <div className="text-yellow-600 mt-0.5">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                   <div>
@@ -2194,9 +2498,25 @@ export default function Employee() {
               >
                 {deleteLoading ? (
                   <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Deleting...
                   </>
@@ -2281,19 +2601,36 @@ export default function Employee() {
                     </div>
                   )}
                 </div>
-                
+
                 {rolesLoading ? (
                   <div className="flex items-center justify-center p-3 border border-gray-300 rounded-lg bg-gray-50">
-                    <svg className="animate-spin h-5 w-5 mr-3 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 mr-3 text-emerald-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     <span className="text-gray-600">Loading roles...</span>
                   </div>
                 ) : roles.length === 0 ? (
                   <div className="text-center p-3 border border-yellow-300 rounded-lg bg-yellow-50">
                     <p className="text-yellow-700 text-sm">
-                      No roles found. Please create roles first in Access Controls.
+                      No roles found. Please create roles first in Access
+                      Controls.
                     </p>
                   </div>
                 ) : (
@@ -2306,8 +2643,8 @@ export default function Employee() {
                   >
                     <option value="">-- Select a Role --</option>
                     {roles.map((role) => (
-                      <option 
-                        key={role.id || role.name} 
+                      <option
+                        key={role.id || role.name}
                         value={role.name}
                         title={role.description || "No description"}
                       >
@@ -2317,7 +2654,7 @@ export default function Employee() {
                     ))}
                   </select>
                 )}
-                
+
                 {roles.length > 0 && (
                   <div className="mt-2 text-xs text-gray-500">
                     {roles.length} role(s) loaded from database
@@ -2326,8 +2663,9 @@ export default function Employee() {
               </div>
 
               <div>
+                <div className="relative">
                 <input
-                  type="password"
+                  type={showSignupPassword ? "text" : "password"}
                   name="password"
                   placeholder="Password"
                   value={signupData.password}
@@ -2336,6 +2674,23 @@ export default function Employee() {
                   required
                   minLength="6"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowSignupPassword(!showSignupPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showSignupPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               </div>
 
               <div className="flex items-start space-x-3">
@@ -2356,13 +2711,33 @@ export default function Employee() {
               <button
                 type="submit"
                 disabled={signupLoading || rolesLoading || !signupData.role}
-                className={`w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold py-3 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition duration-300 transform hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${(signupLoading || rolesLoading || !signupData.role) ? 'opacity-70 cursor-not-allowed' : ''} text-sm lg:text-base`}
+                className={`w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold py-3 rounded-lg hover:from-emerald-600 hover:to-teal-700 transition duration-300 transform hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                  signupLoading || rolesLoading || !signupData.role
+                    ? "opacity-70 cursor-not-allowed"
+                    : ""
+                } text-sm lg:text-base`}
               >
                 {signupLoading ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin h-5 w-5 mr-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-5 w-5 mr-3 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Processing...
                   </span>

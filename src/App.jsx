@@ -31,6 +31,8 @@ import GarudaMap from './pages/GarudaMap';
 import { Banner } from './pages/Banner';
 import { Review } from './pages/Review';
 import { Notification } from './pages/Notification';
+import { LandPurchaseDetail } from './pages/LandPurchaseDetail';
+import { UpdateLandPurchaseModal } from './pages/UpdateLandPurchaseModal';
 function App() {
 
   return (
@@ -65,6 +67,8 @@ function App() {
           <Route path="banner" element={<Banner />} />
           <Route path="review" element={<Review />} />
           <Route path="notification" element={<Notification />} />
+          <Route path="/land-purchase/:landId" element={<LandPurchaseDetail />} />
+          <Route path="/land-purchase/modal" element={<UpdateLandPurchaseModal />} />
           <Route path="map" element={<GarudaMap />} />
         </Route>
         <Route index element={<Signin />} />
