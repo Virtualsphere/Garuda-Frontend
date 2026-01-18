@@ -211,7 +211,8 @@ export default function LandVerification() {
   const [formData, setFormData] = useState({
     water_source: [],
     garden: [],
-    shed_details: []
+    shed_details: [],
+    keep_in_special_package: "false"
   });
   const [passbookPhoto, setPassbookPhoto] = useState(null);
   const [landBorder, setLandBorder] = useState(null);
@@ -320,6 +321,13 @@ export default function LandVerification() {
     } finally {
       setLoadingMediators(false);
     }
+  };
+
+  const handleCheckboxChange = (name, checked) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked ? "true" : "false"
+    }));
   };
 
   const handleVerifyClick = (field, status) => {
@@ -1822,12 +1830,7 @@ export default function LandVerification() {
                                             type="checkbox"
                                             name="keep_in_special_package"
                                             checked={formData.keep_in_special_package === "true"}
-                                            onChange={(e) => handleInput({
-                                              target: {
-                                                name: "keep_in_special_package",
-                                                value: e.target.checked ? "true" : "false"
-                                              }
-                                            })}
+                                            onChange={(e) => handleCheckboxChange("keep_in_special_package", e.target.checked)}
                                             className="w-4 h-4"
                                           />
                                           <label className="text-sm text-gray-700">
