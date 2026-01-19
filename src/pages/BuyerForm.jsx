@@ -33,11 +33,11 @@ export const BuyerForm = () => {
   // Location states
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
-  const [sectors, setSectors] = useState([]);
+  const [mandal, setMandal] = useState([]);
   const [loadingLocation, setLoadingLocation] = useState({
     states: false,
     districts: false,
-    sectors: false
+    mandal: false
   });
 
   // Store location IDs separately
@@ -75,7 +75,7 @@ export const BuyerForm = () => {
       fetchDistricts(locationIds.stateId);
     } else {
       setDistricts([]);
-      setSectors([]);
+      setMandal([]);
       setForm(prev => ({ 
         ...prev, 
         district: "",
@@ -84,12 +84,12 @@ export const BuyerForm = () => {
     }
   }, [locationIds.stateId]);
 
-  // Fetch sectors when district changes
+  // Fetch mandal when district changes
   useEffect(() => {
     if (locationIds.districtId) {
-      fetchSectors(locationIds.districtId);
+      fetchMandal(locationIds.districtId);
     } else {
-      setSectors([]);
+      setMandal([]);
       setForm(prev => ({ ...prev, sector: "" }));
     }
   }, [locationIds.districtId]);
@@ -146,11 +146,11 @@ export const BuyerForm = () => {
     }
   };
 
-  const fetchSectors = async (districtId) => {
+  const fetchMandal = async (districtId) => {
     try {
-      setLoadingLocation(prev => ({ ...prev, sectors: true }));
+      setLoadingLocation(prev => ({ ...prev, mandal: true }));
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/sectors`, {
+      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/mandals`, {
         headers: { 
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -159,16 +159,16 @@ export const BuyerForm = () => {
       
       if (res.ok) {
         const data = await res.json();
-        setSectors(data);
+        setMandal(data);
       } else {
-        console.error("Failed to fetch sectors");
-        toast.error("Failed to load sectors");
+        console.error("Failed to fetch mandal");
+        toast.error("Failed to load mandal");
       }
     } catch (error) {
-      console.error("Error fetching sectors:", error);
-      toast.error("Error loading sectors");
+      console.error("Error fetching mandal:", error);
+      toast.error("Error loading mandal");
     } finally {
-      setLoadingLocation(prev => ({ ...prev, sectors: false }));
+      setLoadingLocation(prev => ({ ...prev, mandal: false }));
     }
   };
 
@@ -205,7 +205,7 @@ export const BuyerForm = () => {
       }));
     }
     else if (name === "sector") {
-      const selectedSector = sectors.find(s => s.name === value);
+      const selectedSector = mandal.find(s => s.name === value);
       setForm(prev => ({ ...prev, [name]: value }));
       setLocationIds(prev => ({
         ...prev,
@@ -287,7 +287,7 @@ export const BuyerForm = () => {
 
   const fieldConfigs = {
     name: { icon: User, label: "Full Name", required: true, placeholder: "Enter buyer's full name" },
-    phone: { icon: Phone, label: "Phone Number", required: true, placeholder: "Enter 10-digit mobile number", type: "tel" },
+    phone: { icon: Phone, label: "Phone Number", required: true, placeholder: "Enter 10-digit mobile number", type: "tel", pattern: "[0-9]{10}", inputMode: "numeric" },
     state: { icon: Globe, label: "State", placeholder: "Select state", type: "select" },
     district: { icon: Landmark, label: "District", placeholder: "Select district", type: "select" },
     sector: { icon: Grid, label: "Sector", placeholder: "Select sector", type: "select" },
@@ -334,8 +334,8 @@ export const BuyerForm = () => {
           helpText = "Please select state first";
           break;
         case "sector":
-          options = sectors;
-          isLoading = loadingLocation.sectors;
+          options = mandal;
+          isLoading = loadingLocation.mandal;
           isDisabled = !locationIds.districtId;
           helpText = "Please select district first";
           break;

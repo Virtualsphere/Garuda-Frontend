@@ -93,6 +93,10 @@ export default function Employee() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordError, setPasswordError] = useState("");
 
+  // NEW: States for employee dropdowns (for Assign To and Report To)
+  const [allEmployeesList, setAllEmployeesList] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+
   // Format role name for display
   const formatRoleName = (roleName) => {
     if (!roleName) return "Unknown";
@@ -100,6 +104,48 @@ export default function Employee() {
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
+  };
+
+  // Add this Tooltip component after imports and before the Employee component
+  const Tooltip = ({ children, text, position = "top" }) => {
+    const [visible, setVisible] = useState(false);
+
+    const positionClasses = {
+      top: "bottom-full left-1/2 transform -translate-x-1/2 mb-2",
+      bottom: "top-full left-1/2 transform -translate-x-1/2 mt-2",
+      left: "right-full top-1/2 transform -translate-y-1/2 mr-2",
+      right: "left-full top-1/2 transform -translate-y-1/2 ml-2",
+    };
+
+    const arrowClasses = {
+      top: "top-full left-1/2 -translate-x-1/2 -mt-1",
+      bottom: "bottom-full left-1/2 -translate-x-1/2 -mb-1",
+      left: "left-full top-1/2 -translate-y-1/2 -ml-1",
+      right: "right-full top-1/2 -translate-y-1/2 -mr-1",
+    };
+
+    return (
+      <div className="relative inline-block w-full">
+        <div
+          onMouseEnter={() => setVisible(true)}
+          onMouseLeave={() => setVisible(false)}
+          className="w-full"
+        >
+          {children}
+        </div>
+
+        {visible && (
+          <div
+            className={`absolute z-50 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm whitespace-nowrap ${positionClasses[position]}`}
+          >
+            {text}
+            <div
+              className={`absolute w-2 h-2 bg-gray-900 transform rotate-45 ${arrowClasses[position]}`}
+            />
+          </div>
+        )}
+      </div>
+    );
   };
 
   const filePreview = (fileOrUrl) => {
@@ -111,6 +157,54 @@ export default function Employee() {
     }
     // backend already returns full URL like http://72.61.169.226/public/images/...
     return fileOrUrl;
+  };
+
+  // NEW: Fetch all employees for dropdowns (excluding current employee and "user" role)
+  const fetchAllEmployeesForDropdown = async (excludeUniqueId = null) => {
+    try {
+      setLoadingEmployees(true);
+      const res = await fetch("http://72.61.169.226/admin/personal/details", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const data = await res.json();
+
+      if (!data?.users) {
+        setAllEmployeesList([]);
+        return;
+      }
+
+      // Format employees for dropdown - EXCLUDE "user" role
+      const formattedEmployees = data.users
+        .filter(user => {
+          // Exclude current employee if provided
+          if (excludeUniqueId && user.unique_id === excludeUniqueId) return false;
+          // Exclude employees with "user" role (case insensitive)
+          const userRole = user.role?.toLowerCase() || "";
+          return userRole !== "user";
+        })
+        .map(user => ({
+          id: user.unique_id,
+          name: user.name,
+          phone: user.phone || "",
+          email: user.email || "",
+          role: user.role || "",
+          displayRole: formatRoleName(user.role),
+          // Get work district for filtering if needed
+          work_location: data.work_location?.find((x) => x.unique_id === user.unique_id) || {},
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      setAllEmployeesList(formattedEmployees);
+      console.log(`Loaded ${formattedEmployees.length} employees for dropdown (excluding "user" role)`);
+    } catch (err) {
+      console.error("Error fetching employees for dropdown:", err);
+      setAllEmployeesList([]);
+    } finally {
+      setLoadingEmployees(false);
+    }
   };
 
   // Fetch all users + relational tables
@@ -233,7 +327,7 @@ export default function Employee() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (res.ok) {
@@ -267,7 +361,7 @@ export default function Employee() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (res.ok) {
@@ -300,7 +394,7 @@ export default function Employee() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (res.ok) {
@@ -334,7 +428,7 @@ export default function Employee() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (res.ok) {
@@ -367,7 +461,7 @@ export default function Employee() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (res.ok) {
@@ -400,7 +494,7 @@ export default function Employee() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (res.ok) {
@@ -481,7 +575,7 @@ export default function Employee() {
             unique_id: formData.unique_id,
             newPassword: newPassword,
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -541,6 +635,7 @@ export default function Employee() {
     fetchAll();
     fetchRoles();
     fetchStates();
+    fetchAllEmployeesForDropdown(); // Fetch employees for dropdown
 
     // Cleanup on unmount
     return () => {
@@ -574,6 +669,9 @@ export default function Employee() {
       villageId: "",
     });
 
+    // Fetch employees for dropdown (excluding current employee)
+    fetchAllEmployeesForDropdown(emp.unique_id);
+
     // If employee has home address, try to find and set IDs
     if (emp.address?.state) {
       const currentState = states.find((s) => s.name === emp.address.state);
@@ -583,7 +681,7 @@ export default function Employee() {
           // After districts are fetched, try to find district ID
           if (emp.address?.district) {
             const currentDistrict = districts.find(
-              (d) => d.name === emp.address.district
+              (d) => d.name === emp.address.district,
             );
             if (currentDistrict) {
               setHomeLocationIds((prev) => ({
@@ -594,7 +692,7 @@ export default function Employee() {
                 // After mandals are fetched, try to find mandal ID
                 if (emp.address?.mandal) {
                   const currentMandal = mandals.find(
-                    (m) => m.name === emp.address.mandal
+                    (m) => m.name === emp.address.mandal,
                   );
                   if (currentMandal) {
                     setHomeLocationIds((prev) => ({
@@ -605,7 +703,7 @@ export default function Employee() {
                       // After villages are fetched, try to find village ID
                       if (emp.address?.village) {
                         const currentVillage = villages.find(
-                          (v) => v.name === emp.address.village
+                          (v) => v.name === emp.address.village,
                         );
                         if (currentVillage) {
                           setHomeLocationIds((prev) => ({
@@ -627,7 +725,7 @@ export default function Employee() {
     // If employee has work location, try to find and set IDs
     if (emp.work_location?.work_state) {
       const currentWorkState = workStates.find(
-        (s) => s.name === emp.work_location.work_state
+        (s) => s.name === emp.work_location.work_state,
       );
       if (currentWorkState) {
         setWorkLocationIds((prev) => ({
@@ -637,7 +735,7 @@ export default function Employee() {
         fetchWorkDistricts(currentWorkState.id).then(() => {
           if (emp.work_location?.work_district) {
             const currentWorkDistrict = workDistricts.find(
-              (d) => d.name === emp.work_location.work_district
+              (d) => d.name === emp.work_location.work_district,
             );
             if (currentWorkDistrict) {
               setWorkLocationIds((prev) => ({
@@ -647,7 +745,7 @@ export default function Employee() {
               fetchWorkMandals(currentWorkDistrict.id).then(() => {
                 if (emp.work_location?.work_mandal) {
                   const currentWorkMandal = workMandals.find(
-                    (m) => m.name === emp.work_location.work_mandal
+                    (m) => m.name === emp.work_location.work_mandal,
                   );
                   if (currentWorkMandal) {
                     setWorkLocationIds((prev) => ({
@@ -657,7 +755,7 @@ export default function Employee() {
                     fetchWorkVillages(currentWorkMandal.id).then(() => {
                       if (emp.work_location?.work_village) {
                         const currentWorkVillage = workVillages.find(
-                          (v) => v.name === emp.work_location.work_village
+                          (v) => v.name === emp.work_location.work_village,
                         );
                         if (currentWorkVillage) {
                           setWorkLocationIds((prev) => ({
@@ -717,7 +815,7 @@ export default function Employee() {
             "Content-Type": "application/json",
           },
           // No need for body since unique_id is in the URL
-        }
+        },
       );
 
       const data = await response.json();
@@ -927,6 +1025,8 @@ export default function Employee() {
 
         // Refresh employee list
         fetchAll();
+        // Also refresh dropdown list
+        fetchAllEmployeesForDropdown();
       } else {
         alert(`Error: ${data.error || "Registration failed"}`);
       }
@@ -967,6 +1067,22 @@ export default function Employee() {
     }
   };
 
+  // NEW: Handle employee dropdown change (for Assign To and Report To)
+  const handleEmployeeDropdownChange = (field, uniqueId) => {
+    // Find the selected employee
+    const selectedEmployee = allEmployeesList.find(emp => emp.id === uniqueId);
+    
+    // Update form data with unique_id and display name
+    setFormData((prev) => ({
+      ...prev,
+      personal_assignment: {
+        ...prev.personal_assignment,
+        [field]: uniqueId, // Store unique_id
+        [`${field}_name`]: selectedEmployee ? selectedEmployee.name : "", // Store name for display
+      },
+    }));
+  };
+
   // Update employee
   const handleUpdate = async () => {
     if (!formData?.unique_id) {
@@ -978,9 +1094,15 @@ export default function Employee() {
     fd.append("unique_id", formData.unique_id);
 
     // Basic user fields
-    ["name", "email", "phone", "status", "blood_group", "role", "join_date"].forEach(
-      (k) => fd.append(k, formData[k] ?? "")
-    );
+    [
+      "name",
+      "email",
+      "phone",
+      "status",
+      "blood_group",
+      "role",
+      "join_date",
+    ].forEach((k) => fd.append(k, formData[k] ?? ""));
 
     // Address fields
     if (formData.address) {
@@ -1025,17 +1147,21 @@ export default function Employee() {
 
     // Work location
     ["work_state", "work_district", "work_mandal", "work_village"].forEach(
-      (k) => fd.append(k, formData.work_location?.[k] ?? "")
+      (k) => fd.append(k, formData.work_location?.[k] ?? ""),
     );
 
     // Vehicle
     ["vehicle_type", "license_plate"].forEach((k) =>
-      fd.append(k, formData.vehicle?.[k] ?? "")
+      fd.append(k, formData.vehicle?.[k] ?? ""),
     );
 
-    ["report_to", "assigned_employee"].forEach((k) =>
-      fd.append(k, formData.personal_assignment?.[k] ?? "")
-    );
+    // NEW: Send unique_id for report_to and assigned_employee
+    // Get the actual unique_id from personal_assignment
+    const reportToUniqueId = formData.personal_assignment?.report_to || "";
+    const assignedEmployeeUniqueId = formData.personal_assignment?.assigned_employee || "";
+    
+    fd.append("report_to", reportToUniqueId);
+    fd.append("assigned_employee", assignedEmployeeUniqueId);
 
     // Files
     if (formData.image instanceof File) {
@@ -1091,7 +1217,7 @@ export default function Employee() {
         count: 1,
       };
       setTabs((prev) =>
-        [...prev, newTab].sort((a, b) => a.display.localeCompare(b.display))
+        [...prev, newTab].sort((a, b) => a.display.localeCompare(b.display)),
       );
     }
   };
@@ -1104,7 +1230,7 @@ export default function Employee() {
     options,
     loading,
     disabled,
-    helpText
+    helpText,
   ) => (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1127,6 +1253,39 @@ export default function Employee() {
       {helpText && <p className="text-xs text-gray-500 mt-1">{helpText}</p>}
     </div>
   );
+
+  // NEW: Helper function to render employee dropdown
+  const renderEmployeeDropdown = (label, field, currentValue) => {
+    // Get the display name for current value
+    const currentEmployee = allEmployeesList.find(emp => emp.id === currentValue);
+    const displayValue = currentEmployee ? currentEmployee.name : currentValue || "";
+
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+        <select
+          value={currentValue || ""}
+          onChange={(e) => handleEmployeeDropdownChange(field, e.target.value)}
+          disabled={loadingEmployees}
+          className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base disabled:opacity-50"
+        >
+          <option value="">Select {label}</option>
+          {allEmployeesList.map((employee) => (
+            <option key={employee.id} value={employee.id}>
+              {employee.name} - {employee.role} ({employee.phone})
+            </option>
+          ))}
+        </select>
+        {loadingEmployees && <p className="text-xs text-gray-500 mt-1">Loading employees...</p>}
+        <p className="text-xs text-gray-500 mt-1">
+          {allEmployeesList.length} employee(s) available
+          {displayValue && ` • Currently selected: ${displayValue}`}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 relative">
@@ -1450,7 +1609,7 @@ export default function Employee() {
               <p className="text-gray-500 mb-4 text-sm lg:text-base">
                 {activeTab
                   ? `No employees with role "${formatRoleName(
-                      activeTab
+                      activeTab,
                     )}" found.`
                   : "No employees found in the system."}
               </p>
@@ -1546,6 +1705,9 @@ export default function Employee() {
                   <input
                     name="phone"
                     type="tel"
+                    pattern="[0-9]{10}"
+                    inputMode="numeric"
+                    maxLength={10}
                     value={formData.phone || ""}
                     onChange={handleChange}
                     className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
@@ -1673,18 +1835,18 @@ export default function Employee() {
                   formData.address?.state || "",
                   (e) => {
                     const selectedState = states.find(
-                      (s) => s.name === e.target.value
+                      (s) => s.name === e.target.value,
                     );
                     handleHomeLocationChange(
                       "state",
                       e.target.value,
-                      selectedState?.id
+                      selectedState?.id,
                     );
                   },
                   states,
                   homeLocationLoading.states,
                   false,
-                  ""
+                  "",
                 )}
 
                 {/* District Dropdown */}
@@ -1693,18 +1855,18 @@ export default function Employee() {
                   formData.address?.district || "",
                   (e) => {
                     const selectedDistrict = districts.find(
-                      (d) => d.name === e.target.value
+                      (d) => d.name === e.target.value,
                     );
                     handleHomeLocationChange(
                       "district",
                       e.target.value,
-                      selectedDistrict?.id
+                      selectedDistrict?.id,
                     );
                   },
                   districts,
                   homeLocationLoading.districts,
                   !homeLocationIds.stateId,
-                  !formData.address?.state ? "Please select a state first" : ""
+                  !formData.address?.state ? "Please select a state first" : "",
                 )}
 
                 {/* Mandal Dropdown */}
@@ -1713,12 +1875,12 @@ export default function Employee() {
                   formData.address?.mandal || "",
                   (e) => {
                     const selectedMandal = mandals.find(
-                      (m) => m.name === e.target.value
+                      (m) => m.name === e.target.value,
                     );
                     handleHomeLocationChange(
                       "mandal",
                       e.target.value,
-                      selectedMandal?.id
+                      selectedMandal?.id,
                     );
                   },
                   mandals,
@@ -1726,7 +1888,7 @@ export default function Employee() {
                   !homeLocationIds.districtId,
                   !formData.address?.district
                     ? "Please select a district first"
-                    : ""
+                    : "",
                 )}
 
                 {/* Village Dropdown */}
@@ -1735,12 +1897,12 @@ export default function Employee() {
                   formData.address?.village || "",
                   (e) => {
                     const selectedVillage = villages.find(
-                      (v) => v.name === e.target.value
+                      (v) => v.name === e.target.value,
                     );
                     handleHomeLocationChange(
                       "village",
                       e.target.value,
-                      selectedVillage?.id
+                      selectedVillage?.id,
                     );
                   },
                   villages,
@@ -1748,7 +1910,7 @@ export default function Employee() {
                   !homeLocationIds.mandalId,
                   !formData.address?.mandal
                     ? "Please select a mandal first"
-                    : ""
+                    : "",
                 )}
 
                 {/* Pincode (remains as input) */}
@@ -1801,7 +1963,7 @@ export default function Employee() {
                     handleNestedChange(
                       "aadhar",
                       "aadhar_number",
-                      e.target.value
+                      e.target.value,
                     )
                   }
                   className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4 text-sm lg:text-base"
@@ -1833,7 +1995,7 @@ export default function Employee() {
                     onChange={(e) =>
                       handleFileChange(
                         "aadhar.aadhar_front_image",
-                        e.target.files[0]
+                        e.target.files[0],
                       )
                     }
                     className="w-full p-2 border border-gray-300 rounded-lg text-sm"
@@ -1863,7 +2025,7 @@ export default function Employee() {
                     onChange={(e) =>
                       handleFileChange(
                         "aadhar.aadhar_back_image",
-                        e.target.files[0]
+                        e.target.files[0],
                       )
                     }
                     className="w-full p-2 border border-gray-300 rounded-lg text-sm"
@@ -1943,18 +2105,18 @@ export default function Employee() {
                   formData.work_location?.work_state || "",
                   (e) => {
                     const selectedState = workStates.find(
-                      (s) => s.name === e.target.value
+                      (s) => s.name === e.target.value,
                     );
                     handleWorkLocationChange(
                       "work_state",
                       e.target.value,
-                      selectedState?.id
+                      selectedState?.id,
                     );
                   },
                   workStates,
                   workLocationLoading.states,
                   false,
-                  ""
+                  "",
                 )}
 
                 {/* Work District Dropdown */}
@@ -1963,12 +2125,12 @@ export default function Employee() {
                   formData.work_location?.work_district || "",
                   (e) => {
                     const selectedDistrict = workDistricts.find(
-                      (d) => d.name === e.target.value
+                      (d) => d.name === e.target.value,
                     );
                     handleWorkLocationChange(
                       "work_district",
                       e.target.value,
-                      selectedDistrict?.id
+                      selectedDistrict?.id,
                     );
                   },
                   workDistricts,
@@ -1976,7 +2138,7 @@ export default function Employee() {
                   !workLocationIds.stateId,
                   !formData.work_location?.work_state
                     ? "Please select a state first"
-                    : ""
+                    : "",
                 )}
 
                 {/* Work Mandal Dropdown */}
@@ -1985,12 +2147,12 @@ export default function Employee() {
                   formData.work_location?.work_mandal || "",
                   (e) => {
                     const selectedMandal = workMandals.find(
-                      (m) => m.name === e.target.value
+                      (m) => m.name === e.target.value,
                     );
                     handleWorkLocationChange(
                       "work_mandal",
                       e.target.value,
-                      selectedMandal?.id
+                      selectedMandal?.id,
                     );
                   },
                   workMandals,
@@ -1998,7 +2160,7 @@ export default function Employee() {
                   !workLocationIds.districtId,
                   !formData.work_location?.work_district
                     ? "Please select a district first"
-                    : ""
+                    : "",
                 )}
 
                 {/* Work Village Dropdown */}
@@ -2007,12 +2169,12 @@ export default function Employee() {
                   formData.work_location?.work_village || "",
                   (e) => {
                     const selectedVillage = workVillages.find(
-                      (v) => v.name === e.target.value
+                      (v) => v.name === e.target.value,
                     );
                     handleWorkLocationChange(
                       "work_village",
                       e.target.value,
-                      selectedVillage?.id
+                      selectedVillage?.id,
                     );
                   },
                   workVillages,
@@ -2020,7 +2182,7 @@ export default function Employee() {
                   !workLocationIds.mandalId,
                   !formData.work_location?.work_mandal
                     ? "Please select a mandal first"
-                    : ""
+                    : "",
                 )}
               </div>
 
@@ -2075,7 +2237,7 @@ export default function Employee() {
                       handleNestedChange(
                         "vehicle",
                         "vehicle_type",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
@@ -2092,7 +2254,7 @@ export default function Employee() {
                       handleNestedChange(
                         "vehicle",
                         "license_plate",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
@@ -2102,48 +2264,25 @@ export default function Employee() {
               </div>
             </div>
 
-            {/* PERSONAL ASSIGNMENT SECTION */}
+            {/* PERSONAL ASSIGNMENT SECTION - UPDATED WITH DROPDOWNS */}
             <div className="space-y-3 lg:space-y-4 mb-4 lg:mb-6">
               <h3 className="font-semibold text-base lg:text-lg border-b pb-2">
                 Personal Assignment
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Report To
-                  </label>
-                  <input
-                    value={formData.personal_assignment?.report_to || ""}
-                    onChange={(e) =>
-                      handleNestedChange(
-                        "personal_assignment",
-                        "report_to",
-                        e.target.value
-                      )
-                    }
-                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                    placeholder="Person to report to"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Assigned Employee
-                  </label>
-                  <input
-                    value={
-                      formData.personal_assignment?.assigned_employee || ""
-                    }
-                    onChange={(e) =>
-                      handleNestedChange(
-                        "personal_assignment",
-                        "assigned_employee",
-                        e.target.value
-                      )
-                    }
-                    className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                    placeholder="Assigned employee"
-                  />
-                </div>
+                {/* Report To Dropdown */}
+                {renderEmployeeDropdown(
+                  "Report To",
+                  "report_to",
+                  formData.personal_assignment?.report_to || ""
+                )}
+
+                {/* Assigned Employee Dropdown */}
+                {renderEmployeeDropdown(
+                  "Assigned Employee",
+                  "assigned_employee",
+                  formData.personal_assignment?.assigned_employee || ""
+                )}
               </div>
             </div>
 
@@ -2581,6 +2720,9 @@ export default function Employee() {
               <div>
                 <input
                   type="tel"
+                  pattern="[0-9]{10}"
+                  inputMode="numeric"
+                  maxLength={10}
                   name="phone"
                   placeholder="Phone Number"
                   value={signupData.phone}
@@ -2664,33 +2806,58 @@ export default function Employee() {
 
               <div>
                 <div className="relative">
-                <input
-                  type={showSignupPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  value={signupData.password}
-                  onChange={handleSignupChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 text-sm lg:text-base"
-                  required
-                  minLength="6"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowSignupPassword(!showSignupPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showSignupPassword ? (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
-                </button>
-              </div>
+                  <input
+                    type={showSignupPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Password"
+                    value={signupData.password}
+                    onChange={handleSignupChange}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 text-sm lg:text-base"
+                    required
+                    minLength="6"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPassword(!showSignupPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showSignupPassword ? (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-start space-x-3">
@@ -2745,7 +2912,48 @@ export default function Employee() {
                   "CREATE ACCOUNT"
                 )}
               </button>
+              {/* Submit button tooltip */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 p-3 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                <p className="font-medium mb-1">
+                  After creation, you can edit user details like:
+                </p>
+                <ul className="mt-1 space-y-1 text-gray-300">
+                  <li className="flex items-start">
+                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                    <span>Address, contact info, and location details</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                    <span>Profile picture and documents (Aadhar, etc.)</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                    <span>Bank details and salary information</span>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                    <span>Work location and vehicle information</span>
+                  </li>
+                </ul>
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 transform rotate-45" />
+              </div>
             </form>
+            {/* Additional Info Panel */}
+            <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="text-emerald-600 mr-3">💡</div>
+                <div>
+                  <h4 className="font-medium text-emerald-800">
+                    Complete Profile Later
+                  </h4>
+                  <p className="text-xs text-emerald-700 mt-1">
+                    After creating the basic account, you can use the edit form
+                    to add: address, profile picture, Aadhar details, bank
+                    information, work location, vehicle info, and more.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

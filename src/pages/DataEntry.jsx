@@ -718,7 +718,10 @@ export const DataEntry = () => {
                 name="phone"
                 value={form.phone}
                 onChange={handleInput}
-                type="text"
+                type="tel"
+                pattern="[0-9]{10}"
+                inputMode="numeric"
+                maxLength={10}
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50"
               />
             </div>
@@ -730,7 +733,10 @@ export const DataEntry = () => {
               name="whatsapp_number"
               value={form.whatsapp_number}
               onChange={handleInput}
-              type="text"
+              type="tel"
+              pattern="[0-9]{10}"
+              inputMode="numeric"
+              maxLength={10}
               className="w-full mt-1 p-2 rounded-xl bg-gray-50"
             />
           </div>
@@ -1194,7 +1200,7 @@ export const DataEntry = () => {
             {/* Border Coordinates */}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 space-y-1">
-                <label className="text-gray-700 text-sm">Border Latitude</label>
+                <label className="text-gray-700 text-sm">Board Latitude</label>
                 <input
                   type="text"
                   name="border_latitude"
@@ -1205,7 +1211,7 @@ export const DataEntry = () => {
                 />
               </div>
               <div className="flex-1 space-y-1">
-                <label className="text-gray-700 text-sm">Border Longitude</label>
+                <label className="text-gray-700 text-sm">Board Longitude</label>
                 <input
                   type="text"
                   name="border_longitude"
@@ -1224,20 +1230,20 @@ export const DataEntry = () => {
                 onClick={getCurrentBorderLocation}
                 className="bg-blue-500 text-white px-6 py-3 rounded-full hover:bg-blue-600 transition-colors flex items-center gap-2"
               >
-                <span>📍</span> Track Current Border Location
+                <span>📍</span> Track Current Board Location
               </button>
             </div>
 
             {/* Border Photos */}
             <div className="space-y-3">
-              <label className="text-gray-700 text-sm">Border Photos</label>
+              <label className="text-gray-700 text-sm">Board Photos</label>
               <div className="flex flex-col md:flex-row gap-4 pt-2">
                 <button
                   type="button"
                   onClick={() => document.getElementById('border-photo-upload').click()}
                   className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-300 hover:bg-gray-100 active:scale-95 transition"
                 >
-                  <span>⤴️</span> Upload Border Photo
+                  <span>⤴️</span> Upload Board Photo
                 </button>
                 <input
                   type="file"

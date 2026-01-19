@@ -88,7 +88,7 @@ const Signup = () => {
           email, 
           phone, 
           password, 
-          role: role // Send exact role name
+          role: role
         }),
       });
 

@@ -10,7 +10,7 @@ export const UpdateLandPurchaseModal = ({ purchase, onClose, refreshTable }) => 
 
   const statusOptions = [
     { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-800", icon: FiLoader },
-    { value: "approved", label: "Approved", color: "bg-green-100 text-green-800", icon: FiCheckCircle },
+    { value: "contacted", label: "Contacted", color: "bg-green-100 text-green-800", icon: FiCheckCircle },
     { value: "rejected", label: "Rejected", color: "bg-red-100 text-red-800", icon: FiAlertCircle },
     { value: "processing", label: "Processing", color: "bg-blue-100 text-blue-800", icon: FiLoader },
     { value: "completed", label: "Completed", color: "bg-purple-100 text-purple-800", icon: FiCheckCircle },
@@ -165,7 +165,7 @@ export const UpdateLandPurchaseModal = ({ purchase, onClose, refreshTable }) => 
                           px-3 py-1 rounded-full text-sm font-medium border
                           ${(() => {
                             switch (purchase.status?.toLowerCase()) {
-                              case "approved": return "bg-green-100 text-green-800 border-green-200";
+                              case "contacted": return "bg-green-100 text-green-800 border-green-200";
                               case "pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
                               case "rejected": return "bg-red-100 text-red-800 border-red-200";
                               default: return "bg-gray-100 text-gray-800 border-gray-200";
@@ -198,7 +198,7 @@ export const UpdateLandPurchaseModal = ({ purchase, onClose, refreshTable }) => 
                   <div className="flex items-center space-x-3">
                     <div className="flex items-center">
                       <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
-                      <span className="text-gray-600">Approved</span>
+                      <span className="text-gray-600">Contacted</span>
                     </div>
                     <div className="flex items-center">
                       <div className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></div>

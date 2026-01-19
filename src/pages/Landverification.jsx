@@ -203,6 +203,7 @@ export default function LandVerification() {
   const [verificationChecks, setVerificationChecks] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [adminVerificationFilter, setAdminVerificationFilter] = useState("all");
   const isBuyerSelecting = !!state?.buyer_id;
   const [mapModalOpen, setMapModalOpen] = useState(false);
   const [selectedLandForMap, setSelectedLandForMap] = useState(null);
@@ -339,7 +340,7 @@ export default function LandVerification() {
 
   const fetchLand = async () => {
     try {
-      const res = await axios.get("http://72.61.169.226/admin/land", {
+      const res = await axios.get(`${API_BASE}/admin/land`, {
         headers: { Authorization: `Bearer ${getToken()}` },
         params: {
           district: state?.district || "",
@@ -372,10 +373,27 @@ export default function LandVerification() {
       statusFilter === "all" ||
       land.land_location?.verification?.toLowerCase() === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesAdminVerification =
+      adminVerificationFilter === "all" ||
+      land.land_location?.admin_verification?.toLowerCase() === adminVerificationFilter;
+
+    return matchesSearch && matchesStatus && matchesAdminVerification;
   });
 
   const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "verified":
+        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case "pending":
+        return "bg-amber-100 text-amber-800 border-amber-200";
+      case "rejected":
+        return "bg-rose-100 text-rose-800 border-rose-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getAdminVerificationColor = (status) => {
     switch (status?.toLowerCase()) {
       case "verified":
         return "bg-emerald-100 text-emerald-800 border-emerald-200";
@@ -407,7 +425,7 @@ export default function LandVerification() {
       };
 
       const response = await axios.post(
-        "http://72.61.169.226/admin/wishlist",
+        `${API_BASE}/admin/wishlist`,
         payload,
         {
           headers: {
@@ -458,6 +476,7 @@ export default function LandVerification() {
         location: land.land_location.location,
         status: land.land_location.status,
         verification: land.land_location.verification,
+        admin_verification: land.land_location.admin_verification,
         unique_id: land.land_location.unique_id,
       }) || {}),
       ...((land.farmer_details && {
@@ -651,7 +670,7 @@ export default function LandVerification() {
 
     try {
       const token = getToken();
-      const url = `http://72.61.169.226/admin/land/data/${encodeURIComponent(landId)}`;
+      const url = `${API_BASE}/admin/land/data/${encodeURIComponent(landId)}`;
       
       await axios.delete(url, {
         headers: {
@@ -680,34 +699,50 @@ export default function LandVerification() {
   };
 
   const updateLand = async () => {
-    let verificationStatus = "verified";
+    let adminVerificationStatus = "pending"; // Default to pending
+    
     try {
       if (!formData.land_id) {
         alert("Missing land_id");
         return;
       }
 
+      // Determine admin verification status based on verification checks
+      const allChecks = Object.values(verificationChecks);
+      if (allChecks.length > 0) {
+        // If any check is "fail", set to rejected
+        if (allChecks.includes("fail")) {
+          adminVerificationStatus = "rejected";
+        } 
+        // If all checks are "ok", set to verified
+        else if (allChecks.every(check => check === "ok")) {
+          adminVerificationStatus = "verified";
+        }
+        // If mixed or some are not checked, keep as pending
+        else {
+          adminVerificationStatus = "pending";
+        }
+      }
+
       const fd = new FormData();
       
-      // Check verification status first
-      Object.values(verificationChecks).forEach((v) => {
-        if (v === "fail") {
-          verificationStatus = "rejected";
-        }
-      });
-
+      // Add all form data
       Object.keys(formData).forEach((k) => {
         const v = formData[k];
         
-        // Skip verification field from formData since we'll add it separately
-        if (k === 'verification') {
-          return;
+        // Handle special cases
+        if (k === 'admin_verification' || k === 'verification') {
+          return; // We'll add admin_verification separately
         }
         
         if (Array.isArray(v)) {
-          fd.append(k, v.join(', '));
-        } else if (k === 'visitors') {
-          fd.append(k, JSON.stringify(v || []));
+          // For arrays, join with comma and space
+          if (k === 'visitors') {
+            // Special handling for visitors - send as JSON string
+            fd.append(k, JSON.stringify(v || []));
+          } else {
+            fd.append(k, v.join(', '));
+          }
         } else if (k === 'mediator_name') {
           return; // Don't send mediator_name to backend
         } else {
@@ -715,9 +750,10 @@ export default function LandVerification() {
         }
       });
 
-      // Add verification status separately (overrides any existing value)
-      fd.append("verification", verificationStatus);
+      // Add admin verification status
+      fd.append("admin_verification", adminVerificationStatus);
       
+      // Add file uploads
       if (passbookPhoto) fd.append("passbook_photo", passbookPhoto);
       if (landBorder) fd.append("land_border", landBorder);
       landPhotos.forEach((f) => fd.append("land_photo", f));
@@ -730,16 +766,15 @@ export default function LandVerification() {
       };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const url = `http://72.61.169.226/admin/land/${encodeURIComponent(
-        formData.land_id
-      )}`;
+      const url = `${API_BASE}/admin/land/${encodeURIComponent(formData.land_id)}`;
       
-      console.log("Sending verification status:", verificationStatus); // Debug log
+      console.log("Updating land with admin_verification:", adminVerificationStatus);
       
       const res = await axios.put(url, fd, { headers });
 
       alert("Update successful");
       await fetchLand();
+      setVerificationChecks({}); // Reset verification checks after successful update
     } catch (err) {
       console.error("Update failed:", err);
       const msg = err.response?.data?.message || err.message || "Update failed";
@@ -875,6 +910,17 @@ export default function LandVerification() {
                   </h1>
                 </div>
               </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/land-purchase`);
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm"
+                title="View purchase requests"
+              >
+                <FiEye className="w-4 h-4" />
+                Enquiry
+              </button>
 
               {isBuyerSelecting && (
                 <div className="flex items-center gap-3">
@@ -917,6 +963,18 @@ export default function LandVerification() {
                   </p>
                 </div>
               </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/land-purchase`);
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm"
+                title="View purchase requests"
+              >
+                <FiEye className="w-4 h-4" />
+                Enquiry
+              </button>
 
               {isBuyerSelecting && (
                 <div className="flex items-center gap-3">
@@ -966,11 +1024,11 @@ export default function LandVerification() {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">Verified</p>
+                  <p className="text-gray-500 text-sm font-medium">Admin Verified</p>
                   <p className="text-3xl font-bold text-gray-800 mt-2">
                     {
                       lands.filter(
-                        (l) => l.land_location?.verification === "verified"
+                        (l) => l.land_location?.admin_verification === "verified"
                       ).length
                     }
                   </p>
@@ -984,11 +1042,11 @@ export default function LandVerification() {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">Pending</p>
+                  <p className="text-gray-500 text-sm font-medium">Admin Pending</p>
                   <p className="text-3xl font-bold text-gray-800 mt-2">
                     {
                       lands.filter(
-                        (l) => l.land_location?.verification === "pending"
+                        (l) => l.land_location?.admin_verification === "pending"
                       ).length
                     }
                   </p>
@@ -1040,6 +1098,17 @@ export default function LandVerification() {
                   <option value="verified">Verified</option>
                   <option value="pending">Pending</option>
                   <option value="rejected">Rejected</option>
+                </select>
+                
+                <select
+                  value={adminVerificationFilter}
+                  onChange={(e) => setAdminVerificationFilter(e.target.value)}
+                  className="px-4 py-3 rounded-xl border border-gray-300 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none"
+                >
+                  <option value="all">All Admin Status</option>
+                  <option value="verified">Admin Verified</option>
+                  <option value="pending">Admin Pending</option>
+                  <option value="rejected">Admin Rejected</option>
                 </select>
               </div>
             </div>
@@ -1113,6 +1182,9 @@ export default function LandVerification() {
                     <th className="text-left p-7 text-gray-700 font-semibold">
                       Status
                     </th>
+                    <th className="text-left p-7 text-gray-700 font-semibold">
+                      Admin Status
+                    </th>
                   </tr>
                 </thead>
 
@@ -1176,18 +1248,6 @@ export default function LandVerification() {
                             >
                               <Trash2 className="w-4 h-4" />
                               Delete
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/land-purchase/${item.land_id}`);
-                              }}
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors"
-                              title="View purchase requests"
-                            >
-                              <FiEye className="w-4 h-4" />
-                              Enquiry
                             </button>
                           </div>
                         </td>
@@ -1266,13 +1326,25 @@ export default function LandVerification() {
                             {item.land_location?.verification || "Unknown"}
                           </span>
                         </td>
+
+                        <td className="p-7">
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${getAdminVerificationColor(
+                              item.land_location?.admin_verification
+                            )}`}
+                          >
+                            {item.land_location?.admin_verification ===
+                              "verified" && <Check className="w-3 h-3" />}
+                            {item.land_location?.admin_verification || "Pending"}
+                          </span>
+                        </td>
                       </tr>
 
                       {/* Expanded Details */}
                       {openRow === index && (
                         <tr>
                           <td
-                            colSpan={isBuyerSelecting ? 8 : 7}
+                            colSpan={isBuyerSelecting ? 9 : 8}
                             className="p-0"
                           >
                             <div className="px-8 py-6 bg-gradient-to-b from-white to-gray-50">
@@ -1848,6 +1920,7 @@ export default function LandVerification() {
                                                 name="package_name"
                                                 onChange={handleInput}
                                                 value={formData.package_name || ""}
+                                                placeholder="e.g. Hot Deal"
                                                 className="w-full p-2 rounded-lg border border-gray-300"
                                               />
                                             </div>
@@ -1859,6 +1932,7 @@ export default function LandVerification() {
                                                 name="package_remarks"
                                                 onChange={handleInput}
                                                 value={formData.package_remarks || ""}
+                                                placeholder="e.g. Limited time, urgent"
                                                 className="w-full p-2 rounded-lg border border-gray-300"
                                               />
                                             </div>
@@ -1967,11 +2041,11 @@ export default function LandVerification() {
 
                                       {/* Border Coordinates */}
                                       <div className="space-y-3">
-                                        <h6 className="text-sm font-medium text-gray-700">Border Coordinates</h6>
+                                        <h6 className="text-sm font-medium text-gray-700">Board Coordinates</h6>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                           <div>
                                             <label className="block text-xs text-gray-500 mb-1">
-                                              Border Latitude
+                                              Board Latitude
                                             </label>
                                             <div className="flex gap-2">
                                               <input
@@ -1992,7 +2066,7 @@ export default function LandVerification() {
                                           </div>
                                           <div>
                                             <label className="block text-xs text-gray-500 mb-1">
-                                              Border Longitude
+                                              Board Longitude
                                             </label>
                                             <input
                                               name="border_longitude"
@@ -2007,7 +2081,7 @@ export default function LandVerification() {
                                       {/* Border Photos */}
                                       <div className="space-y-3">
                                         <label className="block text-sm font-medium text-gray-700">
-                                          Border Photos
+                                          Board Photos
                                         </label>
                                         <input
                                           type="file"

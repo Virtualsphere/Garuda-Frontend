@@ -563,7 +563,7 @@ export default function NewLand() {
                 name="phone"
                 value={form.phone}
                 onChange={handleInput}
-                type="text"
+                type="tel"
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50"
               />
             </div>
@@ -575,7 +575,7 @@ export default function NewLand() {
               name="whatsapp_number"
               value={form.whatsapp_number}
               onChange={handleInput}
-              type="text"
+              type="tel"
               className="w-full mt-1 p-2 rounded-xl bg-gray-50"
             />
           </div>

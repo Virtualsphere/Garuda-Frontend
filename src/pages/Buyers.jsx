@@ -33,7 +33,7 @@ export const Buyers = () => {
   const [stateFilter, setStateFilter] = useState("");
   const [districtFilter, setDistrictFilter] = useState("");
   const [townFilter, setTownFilter] = useState("");
-  const [sectorFilter, setSectorFilter] = useState("");
+  const [mandalFilter, setMandalFilter] = useState("");
   const [tab, setTab] = useState("requirement");
 
   // Fetch Buyers
@@ -49,7 +49,7 @@ export const Buyers = () => {
           state: stateFilter,
           district: districtFilter,
           town: townFilter,
-          sectors: sectorFilter,
+          mandal: mandalFilter,
         },
       });
       setBuyers(res.data.data || []);
@@ -91,7 +91,7 @@ export const Buyers = () => {
     setStateFilter("");
     setDistrictFilter("");
     setTownFilter("");
-    setSectorFilter("");
+    setMandalFilter("");
     fetchBuyers();
   };
 
@@ -270,9 +270,9 @@ export const Buyers = () => {
 
                     <div className="relative">
                       <input
-                        value={sectorFilter}
-                        onChange={(e) => setSectorFilter(e.target.value)}
-                        placeholder="Enter sector"
+                        value={mandalFilter}
+                        onChange={(e) => setMandalFilter(e.target.value)}
+                        placeholder="Enter mandal"
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white text-sm"
                       />
                       <Target className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
@@ -341,9 +341,9 @@ export const Buyers = () => {
 
                 <div className="relative">
                   <input
-                    value={sectorFilter}
-                    onChange={(e) => setSectorFilter(e.target.value)}
-                    placeholder="Enter sector"
+                    value={mandalFilter}
+                    onChange={(e) => setMandalFilter(e.target.value)}
+                    placeholder="Enter mandal"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
                   />
                   <Target className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
@@ -457,7 +457,7 @@ export const Buyers = () => {
                           <div className="flex items-center gap-1 sm:gap-2 text-gray-600">
                             <Target className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
                             <span className="text-xs sm:text-sm truncate">
-                              <strong className="text-gray-700">Sector:</strong> {b.sectors}
+                              <strong className="text-gray-700">Mandal:</strong> {b.mandal}
                             </span>
                           </div>
                           {b.price_per_acres && (
@@ -534,7 +534,7 @@ export const Buyers = () => {
                                   <span className="text-xs sm:text-sm font-medium text-gray-700">{b.acres} acres</span>
                                 </div>
                                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded truncate block max-w-[120px] sm:max-w-none">
-                                  {b.sectors}
+                                  {b.mandal}
                                 </span>
                               </div>
                             </td>

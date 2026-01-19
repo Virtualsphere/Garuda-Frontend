@@ -67,7 +67,7 @@ function App() {
           <Route path="banner" element={<Banner />} />
           <Route path="review" element={<Review />} />
           <Route path="notification" element={<Notification />} />
-          <Route path="/land-purchase/:landId" element={<LandPurchaseDetail />} />
+          <Route path="/land-purchase" element={<LandPurchaseDetail />} />
           <Route path="/land-purchase/modal" element={<UpdateLandPurchaseModal />} />
           <Route path="map" element={<GarudaMap />} />
         </Route>
