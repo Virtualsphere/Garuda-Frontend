@@ -864,10 +864,24 @@ export default function Employee() {
   // Handle signup form changes
   const handleSignupChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setSignupData({
-      ...signupData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    
+    // Handle phone number validation
+    if (name === "phone") {
+      // Remove all non-digit characters
+      const numericValue = value.replace(/\D/g, "");
+      // Limit to 10 digits
+      if (numericValue.length <= 10) {
+        setSignupData({
+          ...signupData,
+          [name]: numericValue,
+        });
+      }
+    } else {
+      setSignupData({
+        ...signupData,
+        [name]: type === "checkbox" ? checked : value,
+      });
+    }
   };
 
   // Handle HOME location change
@@ -1051,8 +1065,18 @@ export default function Employee() {
 
   // Top-level fields
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    
+    if (name === "phone") {
+      // Remove all non-digit characters
+      const numericValue = value.replace(/\D/g, "");
+      // Limit to 10 digits
+      if (numericValue.length <= 10) {
+        setFormData((prev) => ({ ...prev, [name]: numericValue }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   // File inputs
@@ -1495,7 +1519,7 @@ export default function Employee() {
                             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors"
                           >
                             <Edit size={14} />
-                            Edit
+                            View/Edit
                           </button>
                           {emp.role !== "admin" && emp.role !== "Admin" && (
                             <button
@@ -1568,7 +1592,7 @@ export default function Employee() {
                         title="Edit Employee"
                       >
                         <Edit size={14} />
-                        Edit
+                        View/Edit
                       </button>
                       {emp.role !== "admin" && emp.role !== "Admin" && (
                         <button
@@ -2294,7 +2318,7 @@ export default function Employee() {
               >
                 Cancel
               </button>
-              {formData.role !== "admin" && (
+              {(
                 <button
                   onClick={openPasswordForm}
                   type="button"

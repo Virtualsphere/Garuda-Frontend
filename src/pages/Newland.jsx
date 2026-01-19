@@ -263,6 +263,19 @@ export default function NewLand() {
       if (num < 0) num = 0;
       setForm(prev => ({ ...prev, [name]: num }));
     }
+
+    else if (name == "phone"){
+      const value= e.target.value.replace(/\D/g, "");
+      if(value.length <=10){
+        setForm({ ...form, phone: value});
+      }
+    }
+    else if (name == "whatsapp_number"){
+      const value= e.target.value.replace(/\D/g, "");
+      if(value.length <=10){
+        setForm({ ...form, whatsapp_number: value});
+      }
+    }
     // Handle other fields
     else {
       setForm(prev => ({ ...prev, [name]: value }));
@@ -383,8 +396,8 @@ export default function NewLand() {
             onClick={() => handleMultiSelectToggle(field, option)}
             className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
               form[field]?.includes(option)
-                ? 'bg-green-600 text-white' 
-                : 'bg-green-500 hover:bg-green-600 text-white'
+                ? 'bg-green-500 text-white' 
+                : 'bg-gray-200 hover:bg-green-600 text-black'
             }`}
           >
             {option}
@@ -411,8 +424,8 @@ export default function NewLand() {
             onClick={() => handleSelectButton(field, v)}
             className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
               form[field] === v 
-                ? 'bg-green-600 text-white' 
-                : 'bg-green-500 hover:bg-green-600 text-white'
+                ? 'bg-green-500 text-white' 
+                : 'bg-gray-200 hover:bg-green-600 text-black'
             }`}
           >
             {v}
@@ -564,6 +577,9 @@ export default function NewLand() {
                 value={form.phone}
                 onChange={handleInput}
                 type="tel"
+                pattern="[0-9]{10}"
+                inputMode="numeric"
+                maxLength={10}
                 className="w-full mt-1 p-2 rounded-xl bg-gray-50"
               />
             </div>
@@ -576,6 +592,9 @@ export default function NewLand() {
               value={form.whatsapp_number}
               onChange={handleInput}
               type="tel"
+              pattern="[0-9]{10}"
+              inputMode="numeric"
+              maxLength={10}
               className="w-full mt-1 p-2 rounded-xl bg-gray-50"
             />
           </div>

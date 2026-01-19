@@ -50,7 +50,7 @@ export const WishlistView = () => {
   const fetchLandData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://72.61.169.226/land/data", {
+      const response = await axios.get("http://72.61.169.226/admin/land/data", {
         params: {
           land_id: wishlistLand.land_id
         },
@@ -156,76 +156,11 @@ export const WishlistView = () => {
                 <p className="text-gray-600 text-sm">View saved land and buyer requirements</p>
               </div>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition-colors">
-                <Download className="h-4 w-4" />
-                Export
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl font-medium transition-colors">
-                <Share2 className="h-4 w-4" />
-                Share
-              </button>
-            </div>
           </div>
         </div>
       </header>
 
       <div className="p-4 sm:p-6 lg:p-8">
-        {/* Match Score Banner */}
-        <div className="mb-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-1">Match Analysis</h2>
-                <p className="text-gray-600">How well this land matches the buyer's requirements</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="h-24 w-24">
-                    <svg className="h-full w-full" viewBox="0 0 100 100">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#e5e7eb"
-                        strokeWidth="8"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke={matchPercentage >= 80 ? "#10b981" : matchPercentage >= 60 ? "#f59e0b" : "#ef4444"}
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                        strokeDasharray={`${matchPercentage * 2.513} 251.3`}
-                        transform="rotate(-90 50 50)"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className={`text-2xl font-bold ${matchPercentage >= 80 ? 'text-green-600' : matchPercentage >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
-                        {matchPercentage}%
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full ${matchPercentage >= 80 ? 'bg-green-100 text-green-800' : matchPercentage >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'}`}>
-                    <Star className="h-3 w-3" />
-                    <span className="text-sm font-medium">
-                      {matchPercentage >= 80 ? 'Excellent Match' : matchPercentage >= 60 ? 'Good Match' : 'Fair Match'}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 text-sm mt-2">
-                    Based on location, budget, and requirements
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Buyer Requirements */}
@@ -316,21 +251,21 @@ export const WishlistView = () => {
                     </div>
                   </div>
 
-                  {/* Sector Requirements */}
+                  {/* Mandal Requirements */}
                   <div>
                     <h5 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
                       <Target className="h-4 w-4 text-gray-500" />
-                      Sector Preference
+                      Mandal Preference
                     </h5>
                     <div className="flex flex-wrap gap-2">
-                      {(wishlistLand.buyer_details?.sectors || 'Not specified')
+                      {(wishlistLand.buyer_details?.mandal || 'Not specified')
                         .split(',')
-                        .map((sector, idx) => (
+                        .map((mandal, idx) => (
                           <span
                             key={idx}
                             className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
                           >
-                            {sector.trim()}
+                            {mandal.trim()}
                           </span>
                         ))}
                     </div>
@@ -362,7 +297,7 @@ export const WishlistView = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                     <div>
                       <h2 className="text-2xl font-bold text-gray-800">
-                        {landData?.land_location?.location || 'Land Property'}
+                        {landData?.land_location?.state || 'Land Property'}
                       </h2>
                       <div className="flex items-center gap-2 mt-1">
                         <MapPin className="h-4 w-4 text-gray-400" />
@@ -780,24 +715,6 @@ export const WishlistView = () => {
                     )}
                   </>
                 )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="border-t border-gray-200 p-6">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 px-6 rounded-xl font-semibold hover:shadow-lg transition-all">
-                    <CheckCircle className="h-5 w-5" />
-                    Contact Buyer
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-50 transition-all">
-                    <Phone className="h-5 w-5" />
-                    Call Seller
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 bg-blue-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-blue-600 transition-all">
-                    <Share2 className="h-5 w-5" />
-                    Share Details
-                  </button>
-                </div>
               </div>
             </div>
           </div>

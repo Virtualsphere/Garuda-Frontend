@@ -44,7 +44,7 @@ export const BuyerForm = () => {
   const [locationIds, setLocationIds] = useState({
     stateId: "",
     districtId: "",
-    sectorId: ""
+    mandalId: ""
   });
 
   const initialForm = {
@@ -52,7 +52,7 @@ export const BuyerForm = () => {
     phone: "",
     state: "",
     district: "",
-    sector: "",
+    mandal: "",
     near_town_1: "",
     near_town_2: "",
     acres: "",
@@ -79,7 +79,7 @@ export const BuyerForm = () => {
       setForm(prev => ({ 
         ...prev, 
         district: "",
-        sector: ""
+        mandal: ""
       }));
     }
   }, [locationIds.stateId]);
@@ -90,7 +90,7 @@ export const BuyerForm = () => {
       fetchMandal(locationIds.districtId);
     } else {
       setMandal([]);
-      setForm(prev => ({ ...prev, sector: "" }));
+      setForm(prev => ({ ...prev, mandal: "" }));
     }
   }, [locationIds.districtId]);
 
@@ -182,13 +182,13 @@ export const BuyerForm = () => {
         ...prev, 
         [name]: value,
         district: "",
-        sector: ""
+        mandal: ""
       }));
       setLocationIds(prev => ({
         ...prev,
         stateId: selectedState?.id || "",
         districtId: "",
-        sectorId: ""
+        mandalId: ""
       }));
     } 
     else if (name === "district") {
@@ -196,21 +196,27 @@ export const BuyerForm = () => {
       setForm(prev => ({ 
         ...prev, 
         [name]: value,
-        sector: ""
+        mandal: ""
       }));
       setLocationIds(prev => ({
         ...prev,
         districtId: selectedDistrict?.id || "",
-        sectorId: ""
+        mandalId: ""
       }));
     }
-    else if (name === "sector") {
-      const selectedSector = mandal.find(s => s.name === value);
+    else if (name === "mandal") {
+      const selectedMandal = mandal.find(s => s.name === value);
       setForm(prev => ({ ...prev, [name]: value }));
       setLocationIds(prev => ({
         ...prev,
-        sectorId: selectedSector?.id || ""
+        mandalId: selectedMandal?.id || ""
       }));
+    }
+    else if (name == "phone"){
+      const value= e.target.value.replace(/\D/g, "");
+      if(value.length <=10){
+        setForm({ ...form, phone: value});
+      }
     }
     else {
       setForm({ ...form, [name]: value });
@@ -227,6 +233,7 @@ export const BuyerForm = () => {
       setLoading(false);
       return;
     }
+    
 
     try {
       const response = await fetch("http://72.61.169.226/admin/buyers", {
@@ -249,7 +256,7 @@ export const BuyerForm = () => {
         setLocationIds({
           stateId: "",
           districtId: "",
-          sectorId: ""
+          mandalId: ""
         });
         setTimeout(() => {
           navigate("/buyers");
@@ -270,7 +277,7 @@ export const BuyerForm = () => {
     setLocationIds({
       stateId: "",
       districtId: "",
-      sectorId: ""
+      mandalId: ""
     });
     toast("Form cleared", {
       icon: "🔄",
@@ -290,7 +297,7 @@ export const BuyerForm = () => {
     phone: { icon: Phone, label: "Phone Number", required: true, placeholder: "Enter 10-digit mobile number", type: "tel", pattern: "[0-9]{10}", inputMode: "numeric" },
     state: { icon: Globe, label: "State", placeholder: "Select state", type: "select" },
     district: { icon: Landmark, label: "District", placeholder: "Select district", type: "select" },
-    sector: { icon: Grid, label: "Sector", placeholder: "Select sector", type: "select" },
+    mandal: { icon: Grid, label: "Mandal", placeholder: "Select mandal", type: "select" },
     near_town_1: { icon: Navigation, label: "Nearest Town 1", placeholder: "Primary nearby town" },
     near_town_2: { icon: Navigation, label: "Nearest Town 2", placeholder: "Secondary nearby town" },
     acres: { icon: Trees, label: "Required Acres", placeholder: "Enter land area in acres", type: "number" },
@@ -303,7 +310,7 @@ export const BuyerForm = () => {
   const getSectionFields = (sectionId) => {
     const sectionMap = {
       basic: ["name", "phone"],
-      location: ["state", "district", "sector", "near_town_1", "near_town_2"],
+      location: ["state", "district", "mandal", "near_town_1", "near_town_2"],
       requirements: ["acres", "type_of_soil"],
       budget: ["total_budget", "price_per_acres"],
       additional: ["remarks"],
@@ -316,7 +323,7 @@ export const BuyerForm = () => {
     const Icon = config.icon;
     
     // Render dropdown for location fields
-    if (["state", "district", "sector"].includes(fieldKey)) {
+    if (["state", "district", "mandal"].includes(fieldKey)) {
       let options = [];
       let isLoading = false;
       let isDisabled = false;
@@ -333,7 +340,7 @@ export const BuyerForm = () => {
           isDisabled = !locationIds.stateId;
           helpText = "Please select state first";
           break;
-        case "sector":
+        case "mandal":
           options = mandal;
           isLoading = loadingLocation.mandal;
           isDisabled = !locationIds.districtId;

@@ -231,12 +231,21 @@ export default function LandVerification() {
 
   const [mediators, setMediators] = useState([]);
   const [loadingMediators, setLoadingMediators] = useState(false);
+  
+  // New states for verification
+  const [telecallers, setTelecallers] = useState([]);
+  const [townIncharges, setTownIncharges] = useState([]);
+  const [loadingTelecallers, setLoadingTelecallers] = useState(false);
+  const [loadingTownIncharges, setLoadingTownIncharges] = useState(false);
+  const [boardPhoto, setBoardPhoto] = useState(null);
 
   const API_BASE = "http://72.61.169.226";
   const getToken = () => localStorage.getItem("token") || "";
 
   useEffect(() => {
     fetchLand();
+    fetchTelecallers();
+    fetchTownIncharges();
   }, []);
 
   const openRoadPathMap = (landData) => {
@@ -257,6 +266,104 @@ export default function LandVerification() {
       roadPath: landData.gps_tracking?.road_path
     });
     setMapModalOpen(true);
+  };
+
+  const fetchTelecallers = async () => {
+    try {
+      setLoadingTelecallers(true);
+      const token = getToken();
+      
+      const res = await fetch(`${API_BASE}/admin/personal/details`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        if (!data?.users) {
+          setTelecallers([]);
+          return;
+        }
+
+        // Filter users by role (telecaller)
+        const filteredTelecallers = data.users
+          .filter(user => {
+            const userRole = user.role?.toLowerCase();
+            return userRole === 'telecaller';
+          })
+          .map(user => ({
+            id: user.unique_id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            role: user.role,
+          }));
+
+        setTelecallers(filteredTelecallers);
+        
+      } else {
+        console.error("Failed to fetch telecallers");
+        setTelecallers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching telecallers:", error);
+      setTelecallers([]);
+    } finally {
+      setLoadingTelecallers(false);
+    }
+  };
+
+  const fetchTownIncharges = async () => {
+    try {
+      setLoadingTownIncharges(true);
+      const token = getToken();
+      
+      const res = await fetch(`${API_BASE}/admin/personal/details`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        if (!data?.users) {
+          setTownIncharges([]);
+          return;
+        }
+
+        // Filter users by role (town incharge)
+        const filteredTownIncharges = data.users
+          .filter(user => {
+            const userRole = user.role?.toLowerCase();
+            return userRole === 'town_incharge' || userRole === 'town incharge';
+          })
+          .map(user => ({
+            id: user.unique_id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            role: user.role,
+          }));
+
+        setTownIncharges(filteredTownIncharges);
+        
+      } else {
+        console.error("Failed to fetch town incharges");
+        setTownIncharges([]);
+      }
+    } catch (error) {
+      console.error("Error fetching town incharges:", error);
+      setTownIncharges([]);
+    } finally {
+      setLoadingTownIncharges(false);
+    }
   };
 
   const fetchMediators = async (districtName) => {
@@ -310,8 +417,6 @@ export default function LandVerification() {
 
         setMediators(filteredMediators);
         
-        console.log(`Found ${filteredMediators.length} mediators in district: ${districtName}`);
-        
       } else {
         console.error("Failed to fetch users for mediators");
         setMediators([]);
@@ -345,7 +450,7 @@ export default function LandVerification() {
         params: {
           district: state?.district || "",
           land_state: state?.state || "",
-          price_per_acre: state?.price_per_acres || "",
+          price_per_acres: state?.price_per_acres || "",
           total_land_price: state?.total_land_price || "",
           land_area: state?.land_area || "",
           comparison: "lessOrEqual",
@@ -381,19 +486,6 @@ export default function LandVerification() {
   });
 
   const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case "verified":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "pending":
-        return "bg-amber-100 text-amber-800 border-amber-200";
-      case "rejected":
-        return "bg-rose-100 text-rose-800 border-rose-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getAdminVerificationColor = (status) => {
     switch (status?.toLowerCase()) {
       case "verified":
         return "bg-emerald-100 text-emerald-800 border-emerald-200";
@@ -477,6 +569,7 @@ export default function LandVerification() {
         status: land.land_location.status,
         verification: land.land_location.verification,
         admin_verification: land.land_location.admin_verification,
+        recheck: land.land_location.recheck,
         unique_id: land.land_location.unique_id,
       }) || {}),
       ...((land.farmer_details && {
@@ -527,6 +620,10 @@ export default function LandVerification() {
         package_name: land.office_work.package_name,
         package_remarks: land.office_work.package_remarks,
         mediator_id: land.office_work.mediator?.mediator_id || '',
+        verified_by_telecaller: land.office_work.verified_by_telecaller?.verified_by_telecaller_unique_id || '',
+        date_of_verification_telecaller: land.office_work.date_of_verification_telecaller || '',
+        verified_by_town_incharge: land.office_work.verified_by_town_incharge?.verified_by_town_incharge_unique_id || '',
+        date_of_verification_town_incharge: land.office_work.date_of_verification_town_incharge || '',
         certification_willingness: land.office_work.certification_willingness,
         certification_location: land.office_work.certification_location,
         board_start_date: land.office_work.board_start_date,
@@ -581,7 +678,20 @@ export default function LandVerification() {
     if (name === "district") {
       setFormData((prev) => ({ ...prev, [name]: value }));
       fetchMediators(value);
-    } else {
+    }
+    else if (name == "phone"){
+      const value= e.target.value.replace(/\D/g, "");
+      if(value.length <=10){
+        setForm({ ...form, phone: value});
+      }
+    }
+    else if (name == "whatsapp_number"){
+      const value= e.target.value.replace(/\D/g, "");
+      if(value.length <=10){
+        setForm({ ...form, whatsapp_number: value});
+      }
+    }
+    else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
@@ -627,6 +737,13 @@ export default function LandVerification() {
 
   const removeBorderPhoto = (index) => {
     setBorderPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleBoardPhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setBoardPhoto(file);
+    }
   };
 
   const [visitorName, setVisitorName] = useState("");
@@ -699,7 +816,7 @@ export default function LandVerification() {
   };
 
   const updateLand = async () => {
-    let adminVerificationStatus = "pending"; // Default to pending
+    let verificationStatus = "verified"; // For field verification
     
     try {
       if (!formData.land_id) {
@@ -707,32 +824,21 @@ export default function LandVerification() {
         return;
       }
 
-      // Determine admin verification status based on verification checks
-      const allChecks = Object.values(verificationChecks);
-      if (allChecks.length > 0) {
-        // If any check is "fail", set to rejected
-        if (allChecks.includes("fail")) {
-          adminVerificationStatus = "rejected";
-        } 
-        // If all checks are "ok", set to verified
-        else if (allChecks.every(check => check === "ok")) {
-          adminVerificationStatus = "verified";
-        }
-        // If mixed or some are not checked, keep as pending
-        else {
-          adminVerificationStatus = "pending";
-        }
-      }
-
       const fd = new FormData();
       
-      // Add all form data
+      // Check verification status first (for field verification)
+      Object.values(verificationChecks).forEach((v) => {
+        if (v === "fail") {
+          verificationStatus = "rejected";
+        }
+      });
+
       Object.keys(formData).forEach((k) => {
         const v = formData[k];
         
-        // Handle special cases
-        if (k === 'admin_verification' || k === 'verification') {
-          return; // We'll add admin_verification separately
+        // Skip verification fields from formData since we'll add them separately
+        if (k === 'verification' || k === 'admin_verification' || k === 'recheck') {
+          return;
         }
         
         if (Array.isArray(v)) {
@@ -744,14 +850,34 @@ export default function LandVerification() {
             fd.append(k, v.join(', '));
           }
         } else if (k === 'mediator_name') {
-          return; // Don't send mediator_name to backend
+          return;
+        } else {
+        // Handle boolean/checkbox fields
+        if (k === 'keep_in_special_package') {
+          // Ensure it's either "true" or "false", not null
+          fd.append(k, v === "true" ? "true" : "false");
         } else {
           fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v || ''));
         }
+      }
       });
 
-      // Add admin verification status
-      fd.append("admin_verification", adminVerificationStatus);
+      // Add field verification status (from OK/Fail buttons)
+      fd.append("verification", verificationStatus);
+
+      if (formData.admin_verification) {
+        fd.append("admin_verification", formData.admin_verification);
+      }
+      
+      // Add recheck status if requested
+      if (formData.recheck === "true") {
+        fd.append("recheck", "true");
+      }
+      
+      // Add board photo if exists
+      if (boardPhoto) {
+        fd.append("board_photo", boardPhoto);
+      }
       
       // Add file uploads
       if (passbookPhoto) fd.append("passbook_photo", passbookPhoto);
@@ -768,7 +894,7 @@ export default function LandVerification() {
 
       const url = `${API_BASE}/admin/land/${encodeURIComponent(formData.land_id)}`;
       
-      console.log("Updating land with admin_verification:", adminVerificationStatus);
+      console.log("Sending verification status:", verificationStatus);
       
       const res = await axios.put(url, fd, { headers });
 
@@ -780,6 +906,14 @@ export default function LandVerification() {
       const msg = err.response?.data?.message || err.message || "Update failed";
       alert(msg);
     }
+  };
+
+  const handleRequestRecheck = () => {
+    setFormData(prev => ({
+      ...prev,
+      recheck: "true"
+    }));
+    alert("Re-check requested. Click Save Land Details to apply.");
   };
 
   const getCurrentLocation = (field) => {
@@ -884,6 +1018,180 @@ export default function LandVerification() {
           <p className="text-xs text-gray-500 mt-2">
             Click to view the road path to this land location on map
           </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderVerificationDetailsSection = () => (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-purple-50 rounded-lg">
+          <Shield className="w-5 h-5 text-purple-600" />
+        </div>
+        <h4 className="text-lg font-semibold text-gray-800">
+          Verification Details
+        </h4>
+      </div>
+
+      <div className="space-y-6">
+        {/* Telecaller Verification */}
+        <div className="space-y-3">
+          <h5 className="text-sm font-semibold text-gray-700">Telecaller Verification</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Verified By
+              </label>
+              <select
+                name="verified_by_telecaller"
+                onChange={handleInput}
+                value={formData.verified_by_telecaller || ""}
+                disabled={loadingTelecallers}
+                className="w-full p-2 text-sm rounded-lg border border-gray-300"
+              >
+                <option value="">Select Telecaller...</option>
+                {telecallers.map((telecaller) => (
+                  <option key={telecaller.id} value={telecaller.id}>
+                    {telecaller.name} - {telecaller.phone}
+                  </option>
+                ))}
+              </select>
+              {loadingTelecallers && (
+                <p className="text-xs text-gray-500 mt-1">Loading telecallers...</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Date of Verification
+              </label>
+              <input
+                type="date"
+                name="date_of_verification_telecaller"
+                onChange={handleInput}
+                value={formData.date_of_verification_telecaller || ""}
+                className="w-full p-2 text-sm rounded-lg border border-gray-300"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleRequestRecheck}
+              className="px-3 py-1.5 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600"
+            >
+              Request Re-check
+            </button>
+            <div className="text-xs text-gray-500">
+              {formData.recheck === "true" && (
+                <span className="text-amber-600 font-medium">Re-check requested ✓</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Town Incharge Verification */}
+        <div className="space-y-3">
+          <h5 className="text-sm font-semibold text-gray-700">Town Incharge Verification</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Verified By
+              </label>
+              <select
+                name="verified_by_town_incharge"
+                onChange={handleInput}
+                value={formData.verified_by_town_incharge || ""}
+                disabled={loadingTownIncharges}
+                className="w-full p-2 text-sm rounded-lg border border-gray-300"
+              >
+                <option value="">Select Town Incharge...</option>
+                {townIncharges.map((incharge) => (
+                  <option key={incharge.id} value={incharge.id}>
+                    {incharge.name} - {incharge.phone}
+                  </option>
+                ))}
+              </select>
+              {loadingTownIncharges && (
+                <p className="text-xs text-gray-500 mt-1">Loading town incharges...</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Date of Verification
+              </label>
+              <input
+                type="date"
+                name="date_of_verification_town_incharge"
+                onChange={handleInput}
+                value={formData.date_of_verification_town_incharge || ""}
+                className="w-full p-2 text-sm rounded-lg border border-gray-300"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-gray-700">Status</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    admin_verification: "pending"
+                  }));
+                }}
+                className={`px-3 py-1.5 text-sm rounded-lg ${
+                  (!formData.admin_verification || formData.admin_verification === "pending")
+                    ? "bg-amber-500 text-white" 
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                Pending
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    admin_verification: "verified"
+                  }));
+                }}
+                className={`px-3 py-1.5 text-sm rounded-lg ${
+                  formData.admin_verification === "verified"
+                    ? "bg-emerald-500 text-white" 
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                Approved
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    admin_verification: "rejected"
+                  }));
+                }}
+                className={`px-3 py-1.5 text-sm rounded-lg ${
+                  formData.admin_verification === "rejected"
+                    ? "bg-rose-500 text-white" 
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                Rejected
+              </button>
+            </div>
+            <div className="text-xs text-gray-500">
+              Current Status: <span className={`font-medium ${
+                formData.admin_verification === "verified" ? "text-emerald-600" :
+                formData.admin_verification === "rejected" ? "text-rose-600" :
+                "text-amber-600"
+              }`}>
+                {formData.admin_verification?.toUpperCase() || "PENDING"}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1024,11 +1332,11 @@ export default function LandVerification() {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">Admin Verified</p>
+                  <p className="text-gray-500 text-sm font-medium">Field Verified</p>
                   <p className="text-3xl font-bold text-gray-800 mt-2">
                     {
                       lands.filter(
-                        (l) => l.land_location?.admin_verification === "verified"
+                        (l) => l.land_location?.verification === "verified"
                       ).length
                     }
                   </p>
@@ -1042,17 +1350,17 @@ export default function LandVerification() {
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm font-medium">Admin Pending</p>
+                  <p className="text-gray-500 text-sm font-medium">Admin Verified</p>
                   <p className="text-3xl font-bold text-gray-800 mt-2">
                     {
                       lands.filter(
-                        (l) => l.land_location?.admin_verification === "pending"
+                        (l) => l.land_location?.admin_verification === "verified"
                       ).length
                     }
                   </p>
                 </div>
-                <div className="p-3 bg-amber-50 rounded-xl">
-                  <Clock className="w-8 h-8 text-amber-600" />
+                <div className="p-3 bg-purple-50 rounded-xl">
+                  <Check className="w-8 h-8 text-purple-600" />
                 </div>
               </div>
             </div>
@@ -1065,8 +1373,8 @@ export default function LandVerification() {
                     {selectedLand.length}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-50 rounded-xl">
-                  <Star className="w-8 h-8 text-purple-600" />
+                <div className="p-3 bg-amber-50 rounded-xl">
+                  <Star className="w-8 h-8 text-amber-600" />
                 </div>
               </div>
             </div>
@@ -1094,10 +1402,10 @@ export default function LandVerification() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-4 py-3 rounded-xl border border-gray-300 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none"
                 >
-                  <option value="all">All Status</option>
-                  <option value="verified">Verified</option>
-                  <option value="pending">Pending</option>
-                  <option value="rejected">Rejected</option>
+                  <option value="all">All Field Status</option>
+                  <option value="verified">Field Verified</option>
+                  <option value="pending">Field Pending</option>
+                  <option value="rejected">Field Rejected</option>
                 </select>
                 
                 <select
@@ -1180,7 +1488,7 @@ export default function LandVerification() {
                       Land Code
                     </th>
                     <th className="text-left p-7 text-gray-700 font-semibold">
-                      Status
+                      Field Status
                     </th>
                     <th className="text-left p-7 text-gray-700 font-semibold">
                       Admin Status
@@ -1323,13 +1631,13 @@ export default function LandVerification() {
                           >
                             {item.land_location?.verification ===
                               "verified" && <Check className="w-3 h-3" />}
-                            {item.land_location?.verification || "Unknown"}
+                            {item.land_location?.verification || "Pending"}
                           </span>
                         </td>
 
                         <td className="p-7">
                           <span
-                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${getAdminVerificationColor(
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${getStatusColor(
                               item.land_location?.admin_verification
                             )}`}
                           >
@@ -1833,375 +2141,427 @@ export default function LandVerification() {
                                   </div>
                                 </div>
 
-                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                                    <div className="flex items-center gap-3 mb-4">
-                                      <div className="p-2 bg-red-50 rounded-lg">
-                                        <Target className="w-5 h-5 text-red-600" />
+                                {/* Office Work Section */}
+                                <div className="mt-8">
+                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* Left Column - Office Work */}
+                                    <div className="space-y-6">
+                                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                        <div className="flex items-center gap-3 mb-4">
+                                          <div className="p-2 bg-red-50 rounded-lg">
+                                            <Target className="w-5 h-5 text-red-600" />
+                                          </div>
+                                          <h4 className="text-lg font-semibold text-gray-800">
+                                            Office Work
+                                          </h4>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                          {/* New Land Suggestion */}
+                                          <div className="space-y-3">
+                                            <h5 className="font-medium text-gray-700">New Land Suggestion</h5>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              <div>
+                                                <label className="block text-xs text-gray-500 mb-1">
+                                                  Suggested Farmer Name
+                                                </label>
+                                                <input
+                                                  name="suggested_farmer_name"
+                                                  onChange={handleInput}
+                                                  value={formData.suggested_farmer_name || ""}
+                                                  className="w-full p-2 rounded-lg border border-gray-300"
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="block text-xs text-gray-500 mb-1">
+                                                  Suggested Farmer Phone
+                                                </label>
+                                                <input
+                                                  name="suggested_farmer_phone"
+                                                  onChange={handleInput}
+                                                  value={formData.suggested_farmer_phone || ""}
+                                                  className="w-full p-2 rounded-lg border border-gray-300"
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="block text-xs text-gray-500 mb-1">
+                                                  Suggested Village
+                                                </label>
+                                                <input
+                                                  name="suggested_village"
+                                                  onChange={handleInput}
+                                                  value={formData.suggested_village || ""}
+                                                  className="w-full p-2 rounded-lg border border-gray-300"
+                                                />
+                                              </div>
+                                              <div>
+                                                <label className="block text-xs text-gray-500 mb-1">
+                                                  Suggested Mandal
+                                                </label>
+                                                <input
+                                                  name="suggested_mandal"
+                                                  onChange={handleInput}
+                                                  value={formData.suggested_mandal || ""}
+                                                  className="w-full p-2 rounded-lg border border-gray-300"
+                                                />
+                                              </div>
+                                            </div>
+                                          </div>
+
+                                          {/* Special Package */}
+                                          <div className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                              <input
+                                                type="checkbox"
+                                                name="keep_in_special_package"
+                                                checked={formData.keep_in_special_package === "true"}
+                                                onChange={(e) => handleCheckboxChange("keep_in_special_package", e.target.checked)}
+                                                className="w-4 h-4"
+                                              />
+                                              <label className="text-sm text-gray-700">
+                                                Keep in Special Package
+                                              </label>
+                                            </div>
+                                            
+                                            {formData.keep_in_special_package === "true" && (
+                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                                                <div>
+                                                  <label className="block text-xs text-gray-500 mb-1">
+                                                    Package Name
+                                                  </label>
+                                                  <input
+                                                    name="package_name"
+                                                    onChange={handleInput}
+                                                    value={formData.package_name || ""}
+                                                    placeholder="e.g. Hot Deal"
+                                                    className="w-full p-2 rounded-lg border border-gray-300"
+                                                  />
+                                                </div>
+                                                <div>
+                                                  <label className="block text-xs text-gray-500 mb-1">
+                                                    Package Remarks
+                                                  </label>
+                                                  <input
+                                                    name="package_remarks"
+                                                    onChange={handleInput}
+                                                    value={formData.package_remarks || ""}
+                                                    placeholder="e.g. Limited time, urgent"
+                                                    className="w-full p-2 rounded-lg border border-gray-300"
+                                                  />
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          {/* Assign Mediator */}
+                                          <div className="space-y-3">
+                                            <label className="block text-sm font-medium text-gray-700">
+                                              Assign Mediator
+                                            </label>
+                                            <div className="space-y-2">
+                                              <div className="text-sm text-gray-600 mb-1">
+                                                Current Mediator: <span className="font-medium">{formData.mediator_name || "Not assigned"}</span>
+                                              </div>
+                                              <select
+                                                name="mediator_id"
+                                                onChange={handleInput}
+                                                value={formData.mediator_id || ""}
+                                                disabled={loadingMediators}
+                                                className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+                                              >
+                                                <option value="">Select a mediator...</option>
+                                                {mediators.map((mediator) => (
+                                                  <option key={mediator.id} value={mediator.id}>
+                                                    {mediator.name} - {mediator.phone} ({mediator.role})
+                                                  </option>
+                                                ))}
+                                              </select>
+                                              <p className="text-xs text-gray-500">
+                                                {loadingMediators 
+                                                  ? "Loading mediators..." 
+                                                  : mediators.length === 0
+                                                    ? `No mediators found in ${formData.district || "selected"} district`
+                                                    : `Found ${mediators.length} mediator(s) in ${formData.district || "selected"} district`}
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          {/* Land Certification Process */}
+                                          <div className="space-y-3">
+                                            <h5 className="font-medium text-gray-700">Land Certification Process</h5>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                              <div>
+                                                <label className="block text-xs text-gray-500 mb-1">
+                                                  Certification Willingness
+                                                </label>
+                                                <select
+                                                  name="certification_willingness"
+                                                  onChange={handleInput}
+                                                  value={formData.certification_willingness || ""}
+                                                  className="w-full p-2 rounded-lg border border-gray-300"
+                                                >
+                                                  <option value="">Select...</option>
+                                                  <option value="Thinking">Thinking</option>
+                                                  <option value="Interested">Interested</option>
+                                                  <option value="Not Interested">Not Interested</option>
+                                                  <option value="Already Certified">Already Certified</option>
+                                                </select>
+                                              </div>
+                                              <div>
+                                                <label className="block text-xs text-gray-500 mb-1">
+                                                  Board Location
+                                                </label>
+                                                <input
+                                                  name="certification_location"
+                                                  onChange={handleInput}
+                                                  value={formData.certification_location || ""}
+                                                  className="w-full p-2 rounded-lg border border-gray-300"
+                                                />
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
                                       </div>
-                                      <h4 className="text-lg font-semibold text-gray-800">
-                                        Office Work
-                                      </h4>
                                     </div>
 
-                                    <div className="space-y-4">
-                                      {/* New Land Suggestion */}
-                                      <div className="space-y-3">
-                                        <h5 className="font-medium text-gray-700">New Land Suggestion</h5>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Suggested Farmer Name
-                                            </label>
-                                            <input
-                                              name="suggested_farmer_name"
-                                              onChange={handleInput}
-                                              value={formData.suggested_farmer_name || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Suggested Farmer Phone
-                                            </label>
-                                            <input
-                                              name="suggested_farmer_phone"
-                                              onChange={handleInput}
-                                              value={formData.suggested_farmer_phone || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Suggested Village
-                                            </label>
-                                            <input
-                                              name="suggested_village"
-                                              onChange={handleInput}
-                                              value={formData.suggested_village || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Suggested Mandal
-                                            </label>
-                                            <input
-                                              name="suggested_mandal"
-                                              onChange={handleInput}
-                                              value={formData.suggested_mandal || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      {/* Special Package */}
-                                      <div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                          <input
-                                            type="checkbox"
-                                            name="keep_in_special_package"
-                                            checked={formData.keep_in_special_package === "true"}
-                                            onChange={(e) => handleCheckboxChange("keep_in_special_package", e.target.checked)}
-                                            className="w-4 h-4"
-                                          />
-                                          <label className="text-sm text-gray-700">
-                                            Keep in Special Package
-                                          </label>
-                                        </div>
-                                        
-                                        {formData.keep_in_special_package === "true" && (
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
-                                            <div>
-                                              <label className="block text-xs text-gray-500 mb-1">
-                                                Package Name
-                                              </label>
-                                              <input
-                                                name="package_name"
-                                                onChange={handleInput}
-                                                value={formData.package_name || ""}
-                                                placeholder="e.g. Hot Deal"
-                                                className="w-full p-2 rounded-lg border border-gray-300"
-                                              />
-                                            </div>
-                                            <div>
-                                              <label className="block text-xs text-gray-500 mb-1">
-                                                Package Remarks
-                                              </label>
-                                              <input
-                                                name="package_remarks"
-                                                onChange={handleInput}
-                                                value={formData.package_remarks || ""}
-                                                placeholder="e.g. Limited time, urgent"
-                                                className="w-full p-2 rounded-lg border border-gray-300"
-                                              />
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-
-                                      {/* Assign Mediator */}
-                                      <div className="space-y-3">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                          Assign Mediator
-                                        </label>
-                                        <div className="space-y-2">
-                                          <div className="text-sm text-gray-600 mb-1">
-                                            Current Mediator: <span className="font-medium">{formData.mediator_name || "Not assigned"}</span>
-                                          </div>
-                                          <select
-                                            name="mediator_id"
-                                            onChange={handleInput}
-                                            value={formData.mediator_id || ""}
-                                            disabled={loadingMediators}
-                                            className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
-                                          >
-                                            <option value="">Select a mediator...</option>
-                                            {mediators.map((mediator) => (
-                                              <option key={mediator.id} value={mediator.id}>
-                                                {mediator.name} - {mediator.phone} ({mediator.role})
-                                              </option>
-                                            ))}
-                                          </select>
-                                          <p className="text-xs text-gray-500">
-                                            {loadingMediators 
-                                              ? "Loading mediators..." 
-                                              : mediators.length === 0
-                                                ? `No mediators found in ${formData.district || "selected"} district`
-                                                : `Found ${mediators.length} mediator(s) in ${formData.district || "selected"} district`}
-                                          </p>
-                                        </div>
-                                      </div>
-
-                                      {/* Land Certification Process */}
-                                      <div className="space-y-3">
-                                        <h5 className="font-medium text-gray-700">Land Certification Process</h5>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Certification Willingness
-                                            </label>
-                                            <select
-                                              name="certification_willingness"
-                                              onChange={handleInput}
-                                              value={formData.certification_willingness || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            >
-                                              <option value="">Select...</option>
-                                              <option value="Thinking">Thinking</option>
-                                              <option value="Interested">Interested</option>
-                                              <option value="Not Interested">Not Interested</option>
-                                              <option value="Already Certified">Already Certified</option>
-                                            </select>
-                                          </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Certification Location
-                                            </label>
-                                            <input
-                                              name="certification_location"
-                                              onChange={handleInput}
-                                              value={formData.certification_location || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
-                                          </div>
-                                        </div>
-                                      </div>
+                                    {/* Right Column - Verification Details */}
+                                    <div className="space-y-6">
+                                      {renderVerificationDetailsSection()}
 
                                       {/* Board Duration */}
-                                      <div className="space-y-3">
-                                        <h6 className="text-sm font-medium text-gray-700">Board Duration</h6>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Start Date
-                                            </label>
-                                            <input
-                                              type="date"
-                                              name="board_start_date"
-                                              onChange={handleInput}
-                                              value={formData.board_start_date || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
+                                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                        <div className="flex items-center gap-3 mb-4">
+                                          <div className="p-2 bg-indigo-50 rounded-lg">
+                                            <Calendar className="w-5 h-5 text-indigo-600" />
                                           </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              End Date
-                                            </label>
-                                            <input
-                                              type="date"
-                                              name="board_end_date"
-                                              onChange={handleInput}
-                                              value={formData.board_end_date || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
+                                          <h4 className="text-lg font-semibold text-gray-800">
+                                            Board Duration
+                                          </h4>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                Start Date
+                                              </label>
+                                              <input
+                                                type="date"
+                                                name="board_start_date"
+                                                onChange={handleInput}
+                                                value={formData.board_start_date || ""}
+                                                className="w-full p-2 rounded-lg border border-gray-300"
+                                              />
+                                            </div>
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                End Date
+                                              </label>
+                                              <input
+                                                type="date"
+                                                name="board_end_date"
+                                                onChange={handleInput}
+                                                value={formData.board_end_date || ""}
+                                                className="w-full p-2 rounded-lg border border-gray-300"
+                                              />
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
 
                                       {/* Border Coordinates */}
-                                      <div className="space-y-3">
-                                        <h6 className="text-sm font-medium text-gray-700">Board Coordinates</h6>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Board Latitude
-                                            </label>
-                                            <div className="flex gap-2">
+                                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                        <div className="flex items-center gap-3 mb-4">
+                                          <div className="p-2 bg-blue-50 rounded-lg">
+                                            <MapPin className="w-5 h-5 text-blue-600" />
+                                          </div>
+                                          <h4 className="text-lg font-semibold text-gray-800">
+                                            Board Coordinates
+                                          </h4>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                Board Latitude
+                                              </label>
+                                              <div className="flex gap-2">
+                                                <input
+                                                  name="border_latitude"
+                                                  onChange={handleInput}
+                                                  value={formData.border_latitude || ""}
+                                                  className="w-full p-2 rounded-lg border border-gray-300"
+                                                />
+                                                <button
+                                                  type="button"
+                                                  onClick={() => getCurrentLocation('border')}
+                                                  className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
+                                                  title="Get current border location"
+                                                >
+                                                  <Navigation size={14} />
+                                                </button>
+                                              </div>
+                                            </div>
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                Board Longitude
+                                              </label>
                                               <input
-                                                name="border_latitude"
+                                                name="border_longitude"
                                                 onChange={handleInput}
-                                                value={formData.border_latitude || ""}
+                                                value={formData.border_longitude || ""}
                                                 className="w-full p-2 rounded-lg border border-gray-300"
                                               />
-                                              <button
-                                                type="button"
-                                                onClick={() => getCurrentLocation('border')}
-                                                className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
-                                                title="Get current border location"
-                                              >
-                                                <Navigation size={14} />
-                                              </button>
                                             </div>
-                                          </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Board Longitude
-                                            </label>
-                                            <input
-                                              name="border_longitude"
-                                              onChange={handleInput}
-                                              value={formData.border_longitude || ""}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
                                           </div>
                                         </div>
                                       </div>
 
                                       {/* Border Photos */}
-                                      <div className="space-y-3">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                          Board Photos
-                                        </label>
-                                        <input
-                                          type="file"
-                                          multiple
-                                          accept="image/*"
-                                          onChange={addBorderPhotos}
-                                          className="w-full p-2 rounded-lg border border-gray-300"
-                                        />
-                                        <MediaPreview
-                                          files={borderPhotos}
-                                          existingUrls={existingBorderPhotos}
-                                          onRemove={removeBorderPhoto}
-                                          type="image"
-                                        />
+                                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                        <div className="flex items-center gap-3 mb-4">
+                                          <div className="p-2 bg-green-50 rounded-lg">
+                                            <FileImage className="w-5 h-5 text-green-600" />
+                                          </div>
+                                          <h4 className="text-lg font-semibold text-gray-800">
+                                            Board Photos
+                                          </h4>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                          <input
+                                            type="file"
+                                            multiple
+                                            accept="image/*"
+                                            onChange={addBorderPhotos}
+                                            className="w-full p-2 rounded-lg border border-gray-300"
+                                          />
+                                          <MediaPreview
+                                            files={borderPhotos}
+                                            existingUrls={existingBorderPhotos}
+                                            onRemove={removeBorderPhoto}
+                                            type="image"
+                                          />
+                                        </div>
                                       </div>
 
                                       {/* Visitor Details */}
-                                      <div className="space-y-3">
-                                        <h6 className="text-sm font-medium text-gray-700">Visitor Details</h6>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Visitor Name
-                                            </label>
-                                            <input
-                                              type="text"
-                                              value={visitorName}
-                                              onChange={(e) => setVisitorName(e.target.value)}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
+                                      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                        <div className="flex items-center gap-3 mb-4">
+                                          <div className="p-2 bg-orange-50 rounded-lg">
+                                            <User className="w-5 h-5 text-orange-600" />
                                           </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Visitor Phone
-                                            </label>
-                                            <input
-                                              type="text"
-                                              value={visitorPhone}
-                                              onChange={(e) => setVisitorPhone(e.target.value)}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            />
-                                          </div>
-                                          <div>
-                                            <label className="block text-xs text-gray-500 mb-1">
-                                              Status
-                                            </label>
-                                            <select
-                                              value={visitorStatus}
-                                              onChange={(e) => setVisitorStatus(e.target.value)}
-                                              className="w-full p-2 rounded-lg border border-gray-300"
-                                            >
-                                              <option value="Interested">Interested</option>
-                                              <option value="Not Interested">Not Interested</option>
-                                              <option value="Follow up">Follow up</option>
-                                            </select>
-                                          </div>
+                                          <h4 className="text-lg font-semibold text-gray-800">
+                                            Visitor Details
+                                          </h4>
                                         </div>
-                                        <button
-                                          type="button"
-                                          onClick={handleAddVisitor}
-                                          className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
-                                        >
-                                          + Add Visitor
-                                        </button>
 
-                                        {/* Visitors List */}
-                                        {(formData.visitors || []).length > 0 && (
-                                          <div className="mt-3">
-                                            <div className="text-xs text-gray-500 mb-1">
-                                              Previous Visitors ({formData.visitors.length})
+                                        <div className="space-y-3">
+                                          <h6 className="text-sm font-medium text-gray-700">Add New Visitor</h6>
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                Visitor Name
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={visitorName}
+                                                onChange={(e) => setVisitorName(e.target.value)}
+                                                className="w-full p-2 rounded-lg border border-gray-300"
+                                              />
                                             </div>
-                                            <div className="max-h-32 overflow-y-auto">
-                                              {(formData.visitors || []).map((visitor, index) => (
-                                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded mb-1">
-                                                  <div className="text-xs">
-                                                    <div className="font-medium">{visitor.name}</div>
-                                                    <div className="text-gray-500">{visitor.phone} • {visitor.date}</div>
-                                                  </div>
-                                                  <div className="flex items-center gap-2">
-                                                    <span className={`px-2 py-1 rounded text-xs ${
-                                                      visitor.status === "Interested" 
-                                                        ? "bg-green-100 text-green-700"
-                                                        : visitor.status === "Not Interested"
-                                                        ? "bg-red-100 text-red-700"
-                                                        : "bg-yellow-100 text-yellow-700"
-                                                    }`}>
-                                                      {visitor.status}
-                                                    </span>
-                                                    <button
-                                                      type="button"
-                                                      onClick={() => handleRemoveVisitor(index)}
-                                                      className="text-red-500 hover:text-red-700"
-                                                    >
-                                                      <X size={14} />
-                                                    </button>
-                                                  </div>
-                                                </div>
-                                              ))}
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                Visitor Phone
+                                              </label>
+                                              <input
+                                                type="text"
+                                                value={visitorPhone}
+                                                onChange={(e) => setVisitorPhone(e.target.value)}
+                                                className="w-full p-2 rounded-lg border border-gray-300"
+                                              />
+                                            </div>
+                                            <div>
+                                              <label className="block text-xs text-gray-500 mb-1">
+                                                Status
+                                              </label>
+                                              <select
+                                                value={visitorStatus}
+                                                onChange={(e) => setVisitorStatus(e.target.value)}
+                                                className="w-full p-2 rounded-lg border border-gray-300"
+                                              >
+                                                <option value="Interested">Interested</option>
+                                                <option value="Not Interested">Not Interested</option>
+                                                <option value="Follow up">Follow up</option>
+                                              </select>
                                             </div>
                                           </div>
-                                        )}
+                                          <button
+                                            type="button"
+                                            onClick={handleAddVisitor}
+                                            className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+                                          >
+                                            + Add Visitor
+                                          </button>
+
+                                          {/* Visitors List */}
+                                          {(formData.visitors || []).length > 0 && (
+                                            <div className="mt-3">
+                                              <h6 className="text-sm font-medium text-gray-700 mb-2">
+                                                Previous Visitors ({formData.visitors.length})
+                                              </h6>
+                                              <div className="max-h-32 overflow-y-auto">
+                                                {(formData.visitors || []).map((visitor, index) => (
+                                                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded mb-1">
+                                                    <div className="text-xs">
+                                                      <div className="font-medium">{visitor.name}</div>
+                                                      <div className="text-gray-500">{visitor.phone} • {visitor.date}</div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                      <span className={`px-2 py-1 rounded text-xs ${
+                                                        visitor.status === "Interested" 
+                                                          ? "bg-green-100 text-green-700"
+                                                          : visitor.status === "Not Interested"
+                                                          ? "bg-red-100 text-red-700"
+                                                          : "bg-yellow-100 text-yellow-700"
+                                                      }`}>
+                                                        {visitor.status}
+                                                      </span>
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveVisitor(index)}
+                                                        className="text-red-500 hover:text-red-700"
+                                                      >
+                                                        <X size={14} />
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
+                                </div>
 
                                 {/* Save Button */}
-                                 <div className="mt-8 pt-6 border-t border-gray-200">
-                                <div className="flex items-center justify-between">
-                                  <div className="text-sm text-gray-500">
-                                    All changes will be saved to the database
+                                <div className="mt-8 pt-6 border-t border-gray-200">
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-sm text-gray-500">
+                                      All changes will be saved to the database
+                                    </div>
+                                    <button
+                                      onClick={updateLand}
+                                      className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold flex items-center gap-2"
+                                    >
+                                      <Check className="w-5 h-5" />
+                                      Save Land Details
+                                    </button>
                                   </div>
-                                  <button
-                                    onClick={updateLand}
-                                    className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-semibold flex items-center gap-2"
-                                  >
-                                    <Check className="w-5 h-5" />
-                                    Save Land Details
-                                  </button>
                                 </div>
-                              </div>
                               </div>
                             </div>
                           </td>
@@ -2457,6 +2817,17 @@ const Clock = (props) => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const Calendar = (props) => (
+  <svg {...props} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
     />
   </svg>
 );

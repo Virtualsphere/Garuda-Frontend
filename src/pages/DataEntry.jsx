@@ -368,6 +368,19 @@ export const DataEntry = () => {
       const boolValue = value === "true" ? "true" : "false";
       setForm((prev) => ({ ...prev, [name]: boolValue }));
     }
+
+    else if (name == "phone"){
+      const value= e.target.value.replace(/\D/g, "");
+      if(value.length <=10){
+        setForm({ ...form, phone: value});
+      }
+    }
+    else if (name == "whatsapp_number"){
+      const value= e.target.value.replace(/\D/g, "");
+      if(value.length <=10){
+        setForm({ ...form, whatsapp_number: value});
+      }
+    }
     // Handle other fields
     else {
       setForm((prev) => ({ ...prev, [name]: value }));
@@ -537,8 +550,8 @@ export const DataEntry = () => {
             onClick={() => handleMultiSelectToggle(field, option)}
             className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
               form[field]?.includes(option)
-                ? "bg-green-600 text-white"
-                : "bg-green-500 hover:bg-green-600 text-white"
+                ? 'bg-green-500 text-white' 
+                : 'bg-gray-200 hover:bg-green-600 text-black'
             }`}
           >
             {option}
@@ -565,8 +578,8 @@ export const DataEntry = () => {
             onClick={() => handleSelectButton(field, v)}
             className={`px-3 py-1 text-xs lg:px-4 lg:py-1 lg:text-sm rounded-full transition-colors ${
               form[field] === v
-                ? "bg-green-600 text-white"
-                : "bg-green-500 hover:bg-green-600 text-white"
+                ? 'bg-green-500 text-white' 
+                : 'bg-gray-200 hover:bg-green-600 text-black'
             }`}
           >
             {v}
@@ -1159,7 +1172,7 @@ export const DataEntry = () => {
                 </div>
                 <div>
                   <label className="text-gray-700 text-sm">
-                    Certification Location
+                    Board Location
                   </label>
                   <input
                     type="text"
