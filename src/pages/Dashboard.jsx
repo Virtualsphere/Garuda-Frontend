@@ -8,7 +8,8 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import { PanelRight } from "lucide-react";
+import { PanelRight, LogOut } from "lucide-react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 
 const generateData = () => [
   { name: "Jan", total: Math.floor(Math.random() * 5000) + 1000 },
@@ -27,10 +28,21 @@ const generateData = () => [
 
 export default function Dashboard() {
   const [data, setData] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setData(generateData());
   }, []);
+
+  const handleLogout = () => {
+    // Clear all authentication data
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    sessionStorage.clear();
+    
+    // Redirect to signin page
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -39,6 +51,15 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           <PanelRight />
           <h1 className="text-xl font-semibold">Dashboard</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+            >
+              <LogOut size={18} />
+              <span>Logout</span>
+          </button>
         </div>
       </header>
 

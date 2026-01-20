@@ -551,6 +551,11 @@ export default function LandVerification() {
   const populateForm = (land) => {
     if (!land) return;
 
+    const cleanValue = (value) => {
+      if (value === null || value === undefined || value === "null") return "";
+      return value;
+    };
+
     const visitors = (land.office_work?.visitors || []).map(visitor => ({
       date: visitor.visit_date,
       name: visitor.visitor_name,
@@ -559,35 +564,35 @@ export default function LandVerification() {
     }));
 
     const flattened = {
-      land_id: land.land_id,
+      land_id: cleanValue(land.land_id),
       ...((land.land_location && {
-        state: land.land_location.state,
-        district: land.land_location.district,
-        mandal: land.land_location.mandal,
-        village: land.land_location.village,
-        location: land.land_location.location,
-        status: land.land_location.status,
-        verification: land.land_location.verification,
-        admin_verification: land.land_location.admin_verification,
-        recheck: land.land_location.recheck,
-        unique_id: land.land_location.unique_id,
+        state: cleanValue(land.land_location.state),
+        district: cleanValue(land.land_location.district),
+        mandal: cleanValue(land.land_location.mandal),
+        village: cleanValue(land.land_location.village),
+        location: cleanValue(land.land_location.location),
+        status: cleanValue(land.land_location.status),
+        verification: cleanValue(land.land_location.verification),
+        admin_verification: cleanValue(land.land_location.admin_verification),
+        recheck: cleanValue(land.land_location.recheck),
+        unique_id: cleanValue(land.land_location.unique_id),
       }) || {}),
       ...((land.farmer_details && {
-        name: land.farmer_details.name,
-        phone: land.farmer_details.phone,
-        whatsapp_number: land.farmer_details.whatsapp_number,
-        literacy: land.farmer_details.literacy,
-        age_group: land.farmer_details.age_group,
-        nature: land.farmer_details.nature,
-        land_ownership: land.farmer_details.land_ownership,
-        mortgage: land.farmer_details.mortgage,
+        name: cleanValue(land.farmer_details.name),
+        phone: cleanValue(land.farmer_details.phone),
+        whatsapp_number: cleanValue(land.farmer_details.whatsapp_number),
+        literacy: cleanValue(land.farmer_details.literacy),
+        age_group: cleanValue(land.farmer_details.age_group),
+        nature: cleanValue(land.farmer_details.nature),
+        land_ownership: cleanValue(land.farmer_details.land_ownership),
+        mortgage: cleanValue(land.farmer_details.mortgage),
       }) || {}),
       ...((land.land_details && {
-        land_area: land.land_details.land_area,
-        guntas: land.land_details.guntas,
-        price_per_acre: land.land_details.price_per_acre,
-        total_land_price: land.land_details.total_land_price,
-        land_type: land.land_details.land_type,
+        land_area: cleanValue(land.land_details.land_area),
+        guntas: cleanValue(land.land_details.guntas),
+        price_per_acre: cleanValue(land.land_details.price_per_acre),
+        total_land_price: cleanValue(land.land_details.total_land_price),
+        land_type: cleanValue(land.land_details.land_type),
         water_source: Array.isArray(land.land_details.water_source) 
           ? land.land_details.water_source 
           : land.land_details.water_source?.split(',').map(item => item.trim()).filter(Boolean) || [],
@@ -597,39 +602,41 @@ export default function LandVerification() {
         shed_details: Array.isArray(land.land_details.shed_details) 
           ? land.land_details.shed_details 
           : land.land_details.shed_details?.split(',').map(item => item.trim()).filter(Boolean) || [],
-        farm_pond: land.land_details.farm_pond,
-        residental: land.land_details.residental,
-        fencing: land.land_details.fencing,
+        farm_pond: cleanValue(land.land_details.farm_pond),
+        residental: cleanValue(land.land_details.residental),
+        fencing: cleanValue(land.land_details.fencing),
       }) || {}),
       ...((land.gps_tracking && {
-        road_path: land.gps_tracking.road_path,
-        latitude: land.gps_tracking.latitude,
-        longitude: land.gps_tracking.longitude,
+        road_path: cleanValue(land.gps_tracking.road_path),
+        latitude: cleanValue(land.gps_tracking.latitude),
+        longitude: cleanValue(land.gps_tracking.longitude),
       }) || {}),
       ...((land.dispute_details && {
-        dispute_type: land.dispute_details.dispute_type,
-        siblings_involve_in_dispute: land.dispute_details.siblings_involve_in_dispute,
-        path_to_land: land.dispute_details.path_to_land,
+        dispute_type: cleanValue(land.dispute_details.dispute_type),
+        siblings_involve_in_dispute: cleanValue(land.dispute_details.siblings_involve_in_dispute),
+        path_to_land: cleanValue(land.dispute_details.path_to_land),
       }) || {}),
       ...((land.office_work && {
-        suggested_farmer_name: land.office_work.suggested_farmer_name,
-        suggested_farmer_phone: land.office_work.suggested_farmer_phone,
-        suggested_village: land.office_work.suggested_village,
-        suggested_mandal: land.office_work.suggested_mandal,
-        keep_in_special_package: land.office_work.keep_in_special_package,
-        package_name: land.office_work.package_name,
-        package_remarks: land.office_work.package_remarks,
-        mediator_id: land.office_work.mediator?.mediator_id || '',
-        verified_by_telecaller: land.office_work.verified_by_telecaller?.verified_by_telecaller_unique_id || '',
-        date_of_verification_telecaller: land.office_work.date_of_verification_telecaller || '',
-        verified_by_town_incharge: land.office_work.verified_by_town_incharge?.verified_by_town_incharge_unique_id || '',
-        date_of_verification_town_incharge: land.office_work.date_of_verification_town_incharge || '',
-        certification_willingness: land.office_work.certification_willingness,
-        certification_location: land.office_work.certification_location,
-        board_start_date: land.office_work.board_start_date,
-        board_end_date: land.office_work.board_end_date,
-        border_latitude: land.office_work.border_latitude,
-        border_longitude: land.office_work.border_longitude,
+        suggested_farmer_name: cleanValue(land.office_work.suggested_farmer_name),
+        suggested_farmer_phone: cleanValue(land.office_work.suggested_farmer_phone),
+        suggested_village: cleanValue(land.office_work.suggested_village),
+        suggested_mandal: cleanValue(land.office_work.suggested_mandal),
+        keep_in_special_package: land.office_work.keep_in_special_package === true ? "true" : 
+                                land.office_work.keep_in_special_package === false ? "false" : 
+                                cleanValue(land.office_work.keep_in_special_package),
+        package_name: cleanValue(land.office_work.package_name),
+        package_remarks: cleanValue(land.office_work.package_remarks),
+        mediator_id: cleanValue(land.office_work.mediator?.mediator_id),
+        verified_by_telecaller: cleanValue(land.office_work.verified_by_telecaller?.verified_by_telecaller_unique_id),
+        date_of_verification_telecaller: cleanValue(land.office_work.date_of_verification_telecaller),
+        verified_by_town_incharge: cleanValue(land.office_work.verified_by_town_incharge?.verified_by_town_incharge_unique_id),
+        date_of_verification_town_incharge: cleanValue(land.office_work.date_of_verification_town_incharge),
+        certification_willingness: cleanValue(land.office_work.certification_willingness),
+        certification_location: cleanValue(land.office_work.certification_location),
+        board_start_date: cleanValue(land.office_work.board_start_date),
+        board_end_date: cleanValue(land.office_work.board_end_date),
+        border_latitude: cleanValue(land.office_work.border_latitude),
+        border_longitude: cleanValue(land.office_work.border_longitude),
         visitors: visitors || [],
       }) || {}),
     };
@@ -2237,20 +2244,23 @@ export default function LandVerification() {
                                                     className="w-full p-2 rounded-lg border border-gray-300"
                                                   />
                                                 </div>
+
                                                 <div>
                                                   <label className="block text-xs text-gray-500 mb-1">
                                                     Package Remarks
                                                   </label>
-                                                  <input
+                                                  <textarea
                                                     name="package_remarks"
                                                     onChange={handleInput}
                                                     value={formData.package_remarks || ""}
                                                     placeholder="e.g. Limited time, urgent"
-                                                    className="w-full p-2 rounded-lg border border-gray-300"
+                                                    rows={3}
+                                                    className="w-full p-2 rounded-lg border border-gray-300 resize-none"
                                                   />
                                                 </div>
                                               </div>
                                             )}
+
                                           </div>
 
                                           {/* Assign Mediator */}

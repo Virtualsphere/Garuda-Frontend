@@ -18,7 +18,10 @@ import {
   ArrowRight,
   ChevronRight,
   Menu,
-  X as XIcon
+  X as XIcon,
+  Globe,
+  Grid as GridIcon,
+  ChevronDown
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -29,12 +32,128 @@ export const Buyers = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Filters
+  // Location states
+  const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [mandals, setMandals] = useState([]);
+  const [loadingLocation, setLoadingLocation] = useState({
+    states: false,
+    districts: false,
+    mandals: false
+  });
+
+  // Filters with IDs
   const [stateFilter, setStateFilter] = useState("");
   const [districtFilter, setDistrictFilter] = useState("");
-  const [townFilter, setTownFilter] = useState("");
   const [mandalFilter, setMandalFilter] = useState("");
+  const [townFilter, setTownFilter] = useState("");
   const [tab, setTab] = useState("requirement");
+
+  // Store location IDs
+  const [locationIds, setLocationIds] = useState({
+    stateId: "",
+    districtId: ""
+  });
+
+  // Fetch states on component mount
+  useEffect(() => {
+    fetchStates();
+    fetchBuyers();
+  }, []);
+
+  // Fetch districts when state changes
+  useEffect(() => {
+    if (locationIds.stateId) {
+      fetchDistricts(locationIds.stateId);
+    } else {
+      setDistricts([]);
+      setMandals([]);
+      setDistrictFilter("");
+      setMandalFilter("");
+    }
+  }, [locationIds.stateId]);
+
+  // Fetch mandals when district changes
+  useEffect(() => {
+    if (locationIds.districtId) {
+      fetchMandals(locationIds.districtId);
+    } else {
+      setMandals([]);
+      setMandalFilter("");
+    }
+  }, [locationIds.districtId]);
+
+  const fetchStates = async () => {
+    try {
+      setLoadingLocation(prev => ({ ...prev, states: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://72.61.169.226/admin/states", {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setStates(data);
+      } else {
+        console.error("Failed to fetch states");
+      }
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    } finally {
+      setLoadingLocation(prev => ({ ...prev, states: false }));
+    }
+  };
+
+  const fetchDistricts = async (stateId) => {
+    try {
+      setLoadingLocation(prev => ({ ...prev, districts: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/states/${stateId}/districts`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setDistricts(data);
+      } else {
+        console.error("Failed to fetch districts");
+      }
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+    } finally {
+      setLoadingLocation(prev => ({ ...prev, districts: false }));
+    }
+  };
+
+  const fetchMandals = async (districtId) => {
+    try {
+      setLoadingLocation(prev => ({ ...prev, mandals: true }));
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://72.61.169.226/admin/districts/${districtId}/mandals`, {
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setMandals(data);
+      } else {
+        console.error("Failed to fetch mandals");
+      }
+    } catch (error) {
+      console.error("Error fetching mandals:", error);
+    } finally {
+      setLoadingLocation(prev => ({ ...prev, mandals: false }));
+    }
+  };
 
   // Fetch Buyers
   const fetchBuyers = async () => {
@@ -84,24 +203,148 @@ export const Buyers = () => {
   };
 
   useEffect(() => {
-    fetchBuyers();
-  }, []);
+    if (tab === "requirement") {
+      fetchBuyers();
+    }
+  }, [stateFilter, districtFilter, townFilter, mandalFilter, tab]);
 
   const clearFilters = () => {
     setStateFilter("");
     setDistrictFilter("");
     setTownFilter("");
     setMandalFilter("");
-    fetchBuyers();
+    setLocationIds({
+      stateId: "",
+      districtId: ""
+    });
+    setDistricts([]);
+    setMandals([]);
   };
 
   const handleTabChange = (newTab) => {
     setTab(newTab);
-    if (newTab === "requirement") {
-      fetchBuyers();
-    } else {
+    if (newTab === "wishlist") {
       fetchWishlist();
     }
+  };
+
+  const handleStateChange = (e) => {
+    const value = e.target.value;
+    setStateFilter(value);
+    
+    if (value) {
+      const selectedState = states.find(s => s.name === value);
+      setLocationIds(prev => ({
+        ...prev,
+        stateId: selectedState?.id || "",
+        districtId: ""
+      }));
+    } else {
+      setLocationIds({
+        stateId: "",
+        districtId: ""
+      });
+    }
+  };
+
+  const handleDistrictChange = (e) => {
+    const value = e.target.value;
+    setDistrictFilter(value);
+    
+    if (value) {
+      const selectedDistrict = districts.find(d => d.name === value);
+      setLocationIds(prev => ({
+        ...prev,
+        districtId: selectedDistrict?.id || ""
+      }));
+    } else {
+      setLocationIds(prev => ({
+        ...prev,
+        districtId: ""
+      }));
+    }
+  };
+
+  const handleMandalChange = (e) => {
+    setMandalFilter(e.target.value);
+  };
+
+  const renderLocationDropdown = (type) => {
+    let options = [];
+    let icon;
+    let placeholder = "";
+    let value = "";
+    let onChange = () => {};
+    let isLoading = false;
+    let isDisabled = false;
+    let helpText = "";
+
+    switch(type) {
+      case "state":
+        options = states;
+        icon = Globe;
+        placeholder = "Select state";
+        value = stateFilter;
+        onChange = handleStateChange;
+        isLoading = loadingLocation.states;
+        break;
+      case "district":
+        options = districts;
+        icon = Landmark;
+        placeholder = "Select district";
+        value = districtFilter;
+        onChange = handleDistrictChange;
+        isLoading = loadingLocation.districts;
+        isDisabled = !locationIds.stateId;
+        helpText = "Please select state first";
+        break;
+      case "mandal":
+        options = mandals;
+        icon = GridIcon;
+        placeholder = "Select mandal";
+        value = mandalFilter;
+        onChange = handleMandalChange;
+        isLoading = loadingLocation.mandals;
+        isDisabled = !locationIds.districtId;
+        helpText = "Please select district first";
+        break;
+      default:
+        return null;
+    }
+
+    const Icon = icon;
+
+    return (
+      <div className="space-y-1">
+        <div className="relative">
+          <select
+            value={value}
+            onChange={onChange}
+            disabled={isDisabled || isLoading}
+            className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all appearance-none bg-white disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            <option value="">{placeholder}</option>
+            {options.map(option => (
+              <option key={option.id} value={option.name}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+          <Icon className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+          <ChevronDown className="absolute right-3 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
+          {isLoading && (
+            <div className="absolute right-10 top-3.5">
+              <div className="h-4 w-4 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+            </div>
+          )}
+        </div>
+        {isDisabled && type !== "state" && (
+          <p className="text-xs text-gray-500 px-1">
+            {helpText}
+          </p>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -219,7 +462,7 @@ export const Buyers = () => {
                 onClick={() => handleTabChange("wishlist")}
                 className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-medium transition-all text-sm sm:text-base flex-1 sm:flex-none ${
                   tab === "wishlist"
-                    ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md"
+                    ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
@@ -238,26 +481,16 @@ export const Buyers = () => {
                   </div>
               
                   <div className="space-y-3 mb-4">
-                    <div className="relative">
-                      <input
-                        value={stateFilter}
-                        onChange={(e) => setStateFilter(e.target.value)}
-                        placeholder="Enter state"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white text-sm"
-                      />
-                      <Building className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                    </div>
+                    {/* State Dropdown */}
+                    {renderLocationDropdown("state")}
 
-                    <div className="relative">
-                      <input
-                        value={districtFilter}
-                        onChange={(e) => setDistrictFilter(e.target.value)}
-                        placeholder="Enter district"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white text-sm"
-                      />
-                      <Landmark className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                    </div>
+                    {/* District Dropdown */}
+                    {renderLocationDropdown("district")}
 
+                    {/* Mandal Dropdown */}
+                    {renderLocationDropdown("mandal")}
+
+                    {/* Town Input (unchanged) */}
                     <div className="relative">
                       <input
                         value={townFilter}
@@ -266,16 +499,6 @@ export const Buyers = () => {
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white text-sm"
                       />
                       <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                    </div>
-
-                    <div className="relative">
-                      <input
-                        value={mandalFilter}
-                        onChange={(e) => setMandalFilter(e.target.value)}
-                        placeholder="Enter mandal"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white text-sm"
-                      />
-                      <Target className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                     </div>
                   </div>
 
@@ -309,44 +532,24 @@ export const Buyers = () => {
               </div>
           
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div className="relative">
-                  <input
-                    value={stateFilter}
-                    onChange={(e) => setStateFilter(e.target.value)}
-                    placeholder="Enter state"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white"
-                  />
-                  <Building className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                </div>
+                {/* State Dropdown */}
+                {renderLocationDropdown("state")}
 
-                <div className="relative">
-                  <input
-                    value={districtFilter}
-                    onChange={(e) => setDistrictFilter(e.target.value)}
-                    placeholder="Enter district"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white"
-                  />
-                  <Landmark className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                </div>
+                {/* District Dropdown */}
+                {renderLocationDropdown("district")}
 
+                {/* Mandal Dropdown */}
+                {renderLocationDropdown("mandal")}
+
+                {/* Town Input */}
                 <div className="relative">
                   <input
                     value={townFilter}
                     onChange={(e) => setTownFilter(e.target.value)}
                     placeholder="Enter town"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white text-sm"
                   />
                   <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                </div>
-
-                <div className="relative">
-                  <input
-                    value={mandalFilter}
-                    onChange={(e) => setMandalFilter(e.target.value)}
-                    placeholder="Enter mandal"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                  />
-                  <Target className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                 </div>
               </div>
 
@@ -484,13 +687,16 @@ export const Buyers = () => {
                                   },
                                 })
                               : navigate("/wishlist-view", {
-                                  state: { land: b.wishlist_land },
+                                  state: {
+                                    buyerId: b.id,
+                                    land: b.wishlist_land
+                                  },
                                 })
                           }
                           className={`group w-full flex items-center justify-center gap-1 sm:gap-2 py-2.5 sm:py-3 rounded-xl font-medium transition-all text-sm sm:text-base ${
                             tab === "requirement"
                               ? "bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white"
-                              : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+                              : "bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white"
                           }`}
                         >
                           <span className="truncate">
@@ -578,7 +784,10 @@ export const Buyers = () => {
                                         },
                                       })
                                     : navigate("/wishlist-view", {
-                                        state: { land: b.wishlist_land },
+                                        state: {
+                                          buyerId: b.id,
+                                          land: b.wishlist_land
+                                        },
                                       })
                                 }
                                 className={`group flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${

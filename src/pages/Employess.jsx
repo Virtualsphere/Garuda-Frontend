@@ -1743,14 +1743,16 @@ export default function Employee() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Status
                   </label>
-                  <input
+                  <select
                     name="status"
-                    type="text"
                     value={formData.status || ""}
                     onChange={handleChange}
                     className="w-full p-2 lg:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                    placeholder="Status"
-                  />
+                  >
+                    <option value="">Select Status</option>
+                    <option value="Permanent">Permanent</option>
+                    <option value="Testing">Testing</option>
+                  </select>
                 </div>
 
                 <div>

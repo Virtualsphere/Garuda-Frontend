@@ -116,9 +116,6 @@ export const SessionDetails = ({ data }) => {
                   {data.end_sessions.length} End Session{data.end_sessions.length > 1 ? 's' : ''}
                 </div>
               )}
-              <div className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
-                Distance: {calculateTotalDistance()}
-              </div>
             </div>
           </div>
         </div>
@@ -138,10 +135,6 @@ export const SessionDetails = ({ data }) => {
                     <div>
                       <p className="text-sm text-gray-500">Date</p>
                       <p className="font-medium">{data.date || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Starting Time</p>
-                      <p className="font-medium">{formatTime(data.starting_time)}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Starting KM</p>
@@ -200,10 +193,6 @@ export const SessionDetails = ({ data }) => {
                   {!expandedEndSessions ? (
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <p className="text-sm text-gray-500">Last End Time</p>
-                        <p className="font-medium">{formatTime(data.end_sessions[data.end_sessions.length - 1].end_time)}</p>
-                      </div>
-                      <div>
                         <p className="text-sm text-gray-500">Last End KM</p>
                         <p className="font-medium">{data.end_sessions[data.end_sessions.length - 1].end_km}</p>
                       </div>
@@ -214,7 +203,6 @@ export const SessionDetails = ({ data }) => {
                         <div key={index} className="border border-gray-200 rounded-lg p-3 bg-white">
                           <div className="flex justify-between items-start mb-2">
                             <span className="font-medium text-sm">End Session #{index + 1}</span>
-                            <span className="text-sm text-gray-500">{formatTime(session.end_time)}</span>
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div>

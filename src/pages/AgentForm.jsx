@@ -238,33 +238,34 @@ export const AgentForm = ({ agent, onClose, onSuccess }) => {
   };
 
   const handleDistrictChange = (district) => {
-    const updatedDistricts = formData.preferred_districts.includes(district)
-      ? formData.preferred_districts.filter(d => d !== district)
-      : [...formData.preferred_districts, district];
+  const updatedDistricts = formData.preferred_districts.includes(district)
+    ? formData.preferred_districts.filter(d => d !== district)
+    : [...formData.preferred_districts, district];
 
-    const updatedMandals = { ...formData.preferred_mandals };
-    const updatedVillages = { ...formData.preferred_villages };
-    
-    if (!updatedDistricts.includes(district)) {
-      delete updatedMandals[district];
-      // Remove villages associated with this district's mandals
-      Object.keys(updatedVillages).forEach(mandal => {
-        if (updatedMandals[district]?.includes(mandal)) {
-          delete updatedVillages[mandal];
-        }
+  const updatedMandals = { ...formData.preferred_mandals };
+  const updatedVillages = { ...formData.preferred_villages };
+  
+  if (!updatedDistricts.includes(district)) {
+    // Remove the district and all its mandals
+    if (updatedMandals[district]) {
+      // Remove villages for each mandal in this district
+      updatedMandals[district].forEach(mandal => {
+        delete updatedVillages[mandal];
       });
+      delete updatedMandals[district];
     }
+  }
 
-    setFormData(prev => ({
-      ...prev,
-      preferred_districts: updatedDistricts,
-      preferred_mandals: updatedMandals,
-      preferred_villages: updatedVillages
-    }));
+  setFormData(prev => ({
+    ...prev,
+    preferred_districts: updatedDistricts,
+    preferred_mandals: updatedMandals,
+    preferred_villages: updatedVillages
+  }));
 
-    // Update mandals list based on selected districts
-    updateMandalsList(updatedDistricts);
-  };
+  // Update mandals list based on selected districts
+  updateMandalsList(updatedDistricts);
+};
 
   const updateMandalsList = (selectedDistricts) => {
     if (selectedDistricts.length === 0) {
@@ -284,49 +285,72 @@ export const AgentForm = ({ agent, onClose, onSuccess }) => {
   };
 
   const handleMandalChange = (district, mandal) => {
-    const updatedMandals = { ...formData.preferred_mandals };
+  const updatedMandals = { ...formData.preferred_mandals };
+  
+  if (!updatedMandals[district]) {
+    updatedMandals[district] = [];
+  }
+  
+  if (updatedMandals[district].includes(mandal)) {
+    // Remove mandal
+    updatedMandals[district] = updatedMandals[district].filter(m => m !== mandal);
     
-    if (!updatedMandals[district]) {
-      updatedMandals[district] = [];
+    // Remove villages associated with this mandal
+    const updatedVillages = { ...formData.preferred_villages };
+    delete updatedVillages[mandal];
+    
+    // Remove district if no mandals left
+    if (updatedMandals[district].length === 0) {
+      delete updatedMandals[district];
     }
     
-    if (updatedMandals[district].includes(mandal)) {
-      updatedMandals[district] = updatedMandals[district].filter(m => m !== mandal);
-      
-      // Remove villages associated with this mandal
-      const updatedVillages = { ...formData.preferred_villages };
-      delete updatedVillages[mandal];
-      setFormData(prev => ({
-        ...prev,
-        preferred_villages: updatedVillages
-      }));
-    } else {
-      updatedMandals[district] = [...updatedMandals[district], mandal];
-    }
-
+    setFormData(prev => ({
+      ...prev,
+      preferred_mandals: updatedMandals,
+      preferred_villages: updatedVillages
+    }));
+  } else {
+    // Add mandal
+    updatedMandals[district] = [...updatedMandals[district], mandal];
+    
     setFormData(prev => ({
       ...prev,
       preferred_mandals: updatedMandals
     }));
+  }
 
-    // Update villages list based on selected mandals
-    updateVillagesList(Object.values(updatedMandals).flat());
-  };
+  // Update villages list based on ALL selected mandals
+  const allSelectedMandals = Object.values(updatedMandals).flat();
+  updateVillagesList(allSelectedMandals);
+};
 
   const updateVillagesList = (selectedMandals) => {
     if (selectedMandals.length === 0) {
-      setVillages([]);
+      setVillages({}); // Change to empty object, not array
       return;
     }
 
-    const villagesFromLands = [...new Set(
-      allLands
-        .filter(land => selectedMandals.includes(land.land_location?.mandal))
-        .map(land => land.land_location?.village)
-        .filter(Boolean)
-    )].sort();
-
-    setVillages(villagesFromLands);
+    const villagesMap = {};
+    
+    allLands.forEach(land => {
+      const mandal = land.land_location?.mandal;
+      const village = land.land_location?.village;
+      
+      if (selectedMandals.includes(mandal) && village) {
+        if (!villagesMap[mandal]) {
+          villagesMap[mandal] = [];
+        }
+        if (!villagesMap[mandal].includes(village)) {
+          villagesMap[mandal].push(village);
+        }
+      }
+    });
+    
+    Object.keys(villagesMap).forEach(mandal => {
+      villagesMap[mandal].sort();
+    });
+    
+    setVillages(villagesMap);
   };
 
   const handleVillageChange = (mandal, village) => {
@@ -650,41 +674,68 @@ export const AgentForm = ({ agent, onClose, onSuccess }) => {
           )}
 
           {Object.keys(formData.preferred_mandals).length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Villages ({villages.length} available)
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {villages.map((village, index) => {
-                  // Find the mandal for this village
-                  const mandalForVillage = Object.keys(formData.preferred_mandals).find(m =>
-                    allLands.some(land => 
-                      land.land_location?.mandal === m && 
-                      land.land_location?.village === village
-                    )
-                  );
-
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => mandalForVillage && handleVillageChange(mandalForVillage, village)}
-                      className={`px-4 py-2 rounded-lg border transition-colors flex items-center ${
-                        Object.values(formData.preferred_villages).flat().includes(village)
-                          ? 'bg-purple-100 border-purple-500 text-purple-700'
-                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span>{village}</span>
-                      {Object.values(formData.preferred_villages).flat().includes(village) && (
-                        <Check className="w-4 h-4 ml-2" />
-                      )}
-                    </button>
-                  );
-                })}
+  <div>
+    <h4 className="text-md font-medium text-gray-800 mb-4">Villages</h4>
+    
+    {Object.entries(formData.preferred_mandals).map(([district, mandalsList]) => (
+      mandalsList.map(mandal => {
+        // Get villages for this specific mandal from villages object
+        const villagesForMandal = villages[mandal] || [];
+        
+        if (villagesForMandal.length === 0) {
+          return null;
+        }
+        
+        // Count how many villages are available for this mandal
+        const totalVillagesCount = villagesForMandal.length;
+        const selectedVillagesCount = formData.preferred_villages[mandal]?.length || 0;
+        
+        return (
+          <div key={`${mandal}-villages`} className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <span className="text-sm font-medium text-gray-700">
+                  {mandal}
+                </span>
+                <span className="text-xs text-gray-500 ml-2">
+                  (District: {district})
+                </span>
+              </div>
+              <div className="text-xs text-gray-500">
+                {selectedVillagesCount} of {totalVillagesCount} selected
               </div>
             </div>
-          )}
+            
+            <div className="flex flex-wrap gap-2">
+              {villagesForMandal.map((village, index) => {
+                // Check if this village is selected
+                const isSelected = formData.preferred_villages[mandal]?.includes(village) || false;
+                
+                return (
+                  <button
+                    key={`${mandal}-${village}-${index}`}
+                    type="button"
+                    onClick={() => handleVillageChange(mandal, village)}
+                    className={`px-4 py-2 rounded-lg border transition-colors flex items-center ${
+                      isSelected
+                        ? 'bg-purple-100 border-purple-500 text-purple-700'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>{village}</span>
+                    {isSelected && (
+                      <Check className="w-4 h-4 ml-2" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })
+    ))}
+  </div>
+)}
         </div>
 
         {/* Attach Lands */}

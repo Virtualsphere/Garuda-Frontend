@@ -25,20 +25,30 @@ import {
   Users,
   Wallet,
   Clock,
-  Star
+  Star,
+  Loader2
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export const WishlistView = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { land: wishlistLand } = location.state || {};
+  const { buyerId, land: wishlistLand } = location.state || {};
   
   const [loading, setLoading] = useState(false);
+  const [loadingBuyer, setLoadingBuyer] = useState(false);
   const [landData, setLandData] = useState(null);
+  const [buyerData, setBuyerData] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedImage, setSelectedImage] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
+
+  // Fetch buyer data based on ID
+  useEffect(() => {
+    if (buyerId) {
+      fetchBuyerData();
+    }
+  }, [buyerId]);
 
   // Fetch land data based on wishlist
   useEffect(() => {
@@ -46,6 +56,26 @@ export const WishlistView = () => {
       fetchLandData();
     }
   }, [wishlistLand]);
+
+  const fetchBuyerData = async () => {
+    setLoadingBuyer(true);
+    try {
+      const response = await axios.get(`http://72.61.169.226/admin/buyer/${buyerId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        }
+      });
+      
+      if (response.data.data) {
+        setBuyerData(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching buyer data:", error);
+    } finally {
+      setLoadingBuyer(false);
+    }
+  };
 
   const fetchLandData = async () => {
     setLoading(true);
@@ -70,7 +100,7 @@ export const WishlistView = () => {
     }
   };
 
-  if (!wishlistLand) {
+  if (!buyerId || !wishlistLand) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
         <div className="text-center">
@@ -89,41 +119,38 @@ export const WishlistView = () => {
     );
   }
 
-  // Calculate match percentage (simplified)
+  // Calculate match percentage
   const calculateMatchPercentage = () => {
-    if (!landData || !wishlistLand.buyer_details) return 0;
-    
-    const buyer = wishlistLand.buyer_details;
-    const land = landData;
+    if (!landData || !buyerData) return 0;
     
     let score = 0;
     const totalPoints = 5;
     
     // District match
-    if (land.land_location?.district?.toLowerCase().includes(buyer.district?.toLowerCase() || '')) {
+    if (landData.land_location?.district?.toLowerCase().includes(buyerData.district?.toLowerCase() || '')) {
       score++;
     }
     
     // Budget match (within 10%)
-    if (land.land_details?.total_land_price && buyer.total_budget) {
-      const budgetDiff = Math.abs(land.land_details.total_land_price - buyer.total_budget) / buyer.total_budget;
+    if (landData.land_details?.total_land_price && buyerData.total_budget) {
+      const budgetDiff = Math.abs(landData.land_details.total_land_price - buyerData.total_budget) / buyerData.total_budget;
       if (budgetDiff <= 0.1) score++;
     }
     
     // Land area match (within 20%)
-    if (land.land_details?.land_area && buyer.acres) {
-      const areaDiff = Math.abs(land.land_details.land_area - buyer.acres) / buyer.acres;
+    if (landData.land_details?.land_area && buyerData.acres) {
+      const areaDiff = Math.abs(landData.land_details.land_area - buyerData.acres) / buyerData.acres;
       if (areaDiff <= 0.2) score++;
     }
     
     // Price per acre match (within 15%)
-    if (land.land_details?.price_per_acre && buyer.price_per_acres) {
-      const priceDiff = Math.abs(land.land_details.price_per_acre - buyer.price_per_acres) / buyer.price_per_acres;
+    if (landData.land_details?.price_per_acre && buyerData.price_per_acres) {
+      const priceDiff = Math.abs(landData.land_details.price_per_acre - buyerData.price_per_acres) / buyerData.price_per_acres;
       if (priceDiff <= 0.15) score++;
     }
     
     // State match
-    if (land.land_location?.state?.toLowerCase().includes(buyer.state?.toLowerCase() || '')) {
+    if (landData.land_location?.state?.toLowerCase().includes(buyerData.state?.toLowerCase() || '')) {
       score++;
     }
     
@@ -156,18 +183,22 @@ export const WishlistView = () => {
                 <p className="text-gray-600 text-sm">View saved land and buyer requirements</p>
               </div>
             </div>
+            
+            {/* Match Percentage Badge */}
+            <div className={`px-4 py-2 rounded-full text-white font-semibold ${getMatchColor(matchPercentage)}`}>
+              {matchPercentage}% Match
+            </div>
           </div>
         </div>
       </header>
 
       <div className="p-4 sm:p-6 lg:p-8">
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Buyer Requirements */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden sticky top-6">
               {/* Buyer Header */}
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-6">
+              <div className="bg-gradient-to-r from-emerald-500 to-green-500 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center">
@@ -175,7 +206,16 @@ export const WishlistView = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-white">Buyer Requirements</h3>
-                      <p className="text-blue-100 text-sm">Saved by {wishlistLand.buyer_details?.name || 'Buyer'}</p>
+                      {loadingBuyer ? (
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-3 w-3 text-blue-100 animate-spin" />
+                          <p className="text-blue-100 text-sm">Loading buyer data...</p>
+                        </div>
+                      ) : (
+                        <p className="text-blue-100 text-sm">
+                          Saved by {buyerData?.name || 'Buyer'}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <Heart className="h-5 w-5 text-white fill-current" />
@@ -184,111 +224,132 @@ export const WishlistView = () => {
 
               {/* Buyer Details */}
               <div className="p-6">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-semibold text-gray-800 text-lg">
-                        {wishlistLand.buyer_details?.name || 'Not specified'}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Phone className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-600">{wishlistLand.buyer_details?.phone || 'Not provided'}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-500">Priority</div>
-                      <div className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 rounded-md text-sm font-medium">
-                        <Clock className="h-3 w-3" />
-                        High
-                      </div>
-                    </div>
+                {loadingBuyer ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-blue-50 p-3 rounded-xl">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Target className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-700">Land Area</span>
-                      </div>
-                      <div className="text-lg font-bold text-gray-800">
-                        {wishlistLand.buyer_details?.acres || 'N/A'} acres
-                      </div>
-                    </div>
-
-                    <div className="bg-emerald-50 p-3 rounded-xl">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Wallet className="h-4 w-4 text-emerald-600" />
-                        <span className="text-sm font-medium text-emerald-700">Total Budget</span>
-                      </div>
-                      <div className="text-lg font-bold text-gray-800">
-                        ₹{(wishlistLand.buyer_details?.total_budget || 0).toLocaleString()}
-                      </div>
-                    </div>
+                ) : !buyerData ? (
+                  <div className="text-center py-8">
+                    <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Unable to load buyer data</p>
                   </div>
-
-                  {/* Location Requirements */}
-                  <div className="space-y-3">
-                    <h5 className="font-semibold text-gray-700 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      Location Requirements
-                    </h5>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">State</span>
-                        <span className="font-medium">{wishlistLand.buyer_details?.state || 'Any'}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">District</span>
-                        <span className="font-medium">{wishlistLand.buyer_details?.district || 'Any'}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600">Near Towns</span>
-                        <span className="font-medium text-right">
-                          {wishlistLand.buyer_details?.near_town_1 || 'N/A'}, {wishlistLand.buyer_details?.near_town_2 || ''}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mandal Requirements */}
-                  <div>
-                    <h5 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                      <Target className="h-4 w-4 text-gray-500" />
-                      Mandal Preference
-                    </h5>
-                    <div className="flex flex-wrap gap-2">
-                      {(wishlistLand.buyer_details?.mandal || 'Not specified')
-                        .split(',')
-                        .map((mandal, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
-                          >
-                            {mandal.trim()}
-                          </span>
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Price per Acre */}
-                  <div className="bg-gray-50 p-4 rounded-xl">
-                    <div className="flex items-center justify-between">
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <div className="text-sm text-gray-600">Price per Acre</div>
-                        <div className="text-xl font-bold text-gray-800">
-                          ₹{(wishlistLand.buyer_details?.price_per_acres || 0).toLocaleString()}
+                        <h4 className="font-semibold text-gray-800 text-lg">
+                          {buyerData.name || 'Not specified'}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Phone className="h-4 w-4 text-gray-400" />
+                          <span className="text-gray-600">{buyerData.phone || 'Not provided'}</span>
                         </div>
                       </div>
-                      <Calendar className="h-5 w-5 text-gray-400" />
                     </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-blue-50 p-3 rounded-xl">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Target className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-700">Land Area</span>
+                        </div>
+                        <div className="text-lg font-bold text-gray-800">
+                          {buyerData.acres || 'N/A'} acres
+                        </div>
+                      </div>
+
+                      <div className="bg-emerald-50 p-3 rounded-xl">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Wallet className="h-4 w-4 text-emerald-600" />
+                          <span className="text-sm font-medium text-emerald-700">Total Budget</span>
+                        </div>
+                        <div className="text-lg font-bold text-gray-800">
+                          ₹{(buyerData.total_budget || 0).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Location Requirements */}
+                    <div className="space-y-3">
+                      <h5 className="font-semibold text-gray-700 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-gray-500" />
+                        Location Requirements
+                      </h5>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">State</span>
+                          <span className="font-medium">{buyerData.state || 'Any'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">District</span>
+                          <span className="font-medium">{buyerData.district || 'Any'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-600">Near Towns</span>
+                          <span className="font-medium text-right">
+                            {buyerData.near_town_1 || 'N/A'}, {buyerData.near_town_2 || ''}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mandal Requirements */}
+                    <div>
+                      <h5 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Target className="h-4 w-4 text-gray-500" />
+                        Mandal Preference
+                      </h5>
+                      <div className="flex flex-wrap gap-2">
+                        {(buyerData.mandal || 'Not specified')
+                          .split(',')
+                          .map((mandal, idx) => (
+                            <span
+                              key={idx}
+                              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium"
+                            >
+                              {mandal.trim()}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Price per Acre */}
+                    <div className="bg-gray-50 p-4 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm text-gray-600">Price per Acre</div>
+                          <div className="text-xl font-bold text-gray-800">
+                            ₹{(buyerData.price_per_acres || 0).toLocaleString()}
+                          </div>
+                        </div>
+                        <Calendar className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </div>
+
+                    {/* Additional Buyer Info */}
+                    {buyerData.type_of_soil && (
+                      <div className="bg-gray-50 p-3 rounded-xl">
+                        <div className="text-sm text-gray-600 mb-1">Soil Type Preference</div>
+                        <div className="font-medium text-gray-800 capitalize">
+                          {buyerData.type_of_soil}
+                        </div>
+                      </div>
+                    )}
+
+                    {buyerData.remarks && (
+                      <div className="bg-gray-50 p-3 rounded-xl">
+                        <div className="text-sm text-gray-600 mb-1">Remarks</div>
+                        <div className="font-medium text-gray-800">{buyerData.remarks}</div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Right Column - Land Details */}
+          {/* Right Column - Land Details (This remains the same as before) */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
               {/* Land Header with Tabs */}

@@ -1104,13 +1104,13 @@ export const DataEntry = () => {
 
                 <div className="space-y-1">
                   <label className="text-gray-700 text-sm">Package Remarks</label>
-                  <input
-                    type="text"
+                  <textarea
                     name="package_remarks"
                     value={form.package_remarks}
                     onChange={handleInput}
                     placeholder="e.g. Limited time, urgent"
-                    className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400"
+                    rows={4}
+                    className="w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
                   />
                 </div>
               </div>
