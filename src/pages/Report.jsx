@@ -17,10 +17,17 @@ import {
   FiArrowUp,
   FiSearch,
   FiRefreshCw,
+  FiEdit2
 } from "react-icons/fi";
 import { FaRupeeSign } from "react-icons/fa";
 import { PanelRight, Menu } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
+import { UpdateModal } from "./UpdateModal";
+import { UpdateLandModal } from "./UpdateLandModal";
+import { UpdatePhysicalVerificationModal } from "./UpdatePhysicalVerificationModal";
+import { UpdatePosterModal } from "./UpdatePosterModal";
+import { UpdateJobModal } from "./UpdateJobModal";
+import { UpdateAdsModal } from "./UpdateAdsModal";
 
 export const Report = () => {
   const [allData, setAllData] = useState([]);
@@ -35,6 +42,9 @@ export const Report = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [walletTypeFilter, setWalletTypeFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [currentWalletType, setCurrentWalletType] = useState("");
   
   // Track if data has been fetched
   const [dataFetched, setDataFetched] = useState(false);
@@ -106,6 +116,24 @@ export const Report = () => {
       api: "/ads-wallet",
       idField: "ads_wallet_id"
     }
+  };
+
+  const handleUpdateClick = (row, walletType) => {
+    setSelectedRow(row);
+    setCurrentWalletType(walletType);
+    setShowUpdateModal(true);
+  };
+
+  const handleUpdateSuccess = () => {
+    fetchWalletData(); // Refresh the table data
+    setShowUpdateModal(false);
+    setSelectedRow(null);
+  };
+
+  const handleCloseModal = () => {
+    setShowUpdateModal(false);
+    setSelectedRow(null);
+    setCurrentWalletType("");
   };
 
   const fetchWalletData = async () => {
@@ -625,13 +653,14 @@ export const Report = () => {
                           <th className="py-3 px-4 border-b border-gray-100">PHONE</th>
                           <th className="py-3 px-4 border-b border-gray-100">AMOUNT</th>
                           <th className="py-3 px-4 border-b border-gray-100">STATUS</th>
+                          <th className="py-3 px-4 border-b border-gray-100 text-center">ACTION</th>
                         </tr>
                       </thead>
 
                       <tbody className="divide-y divide-gray-100">
                         {filteredData.length === 0 ? (
                           <tr>
-                            <td colSpan="8" className="py-8 text-center">
+                            <td colSpan="9" className="py-8 text-center">
                               <div className="flex flex-col items-center justify-center text-gray-400">
                                 <FiCreditCard className="text-4xl mb-2" />
                                 <p className="text-lg">No records found</p>
@@ -707,11 +736,31 @@ export const Report = () => {
                                       {row.status}
                                     </span>
                                   </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateClick(row, row.wallet_type);
+                                      }}
+                                      className="
+                                        bg-gradient-to-r from-blue-500 to-blue-600 
+                                        text-white px-3 py-1.5 rounded-lg text-sm
+                                        hover:from-blue-600 hover:to-blue-700
+                                        transition-all duration-200
+                                        flex items-center justify-center mx-auto
+                                        shadow-sm hover:shadow-md
+                                        min-w-[80px]
+                                      "
+                                    >
+                                      <FiEdit2 className="mr-1.5 text-xs" />
+                                      Action
+                                    </button>
+                                  </td>
                                 </tr>
 
                                 {isExpanded && (
                                   <tr className="bg-blue-50/50">
-                                    <td colSpan="8" className="p-0">
+                                    <td colSpan="9" className="p-0">
                                       <div className="px-4 py-3 border-t border-blue-100">
                                         <div className="flex items-center justify-between mb-2">
                                           <div className="flex items-center text-blue-600 text-sm">
@@ -871,6 +920,67 @@ export const Report = () => {
           </div>
         </div>
       </div>
+      {showUpdateModal && selectedRow && (
+        <>
+          {currentWalletType === "travel" && (
+            <UpdateModal
+              row={selectedRow}
+              onClose={handleCloseModal}
+              refreshTable={fetchWalletData}
+            />
+          )}
+          
+          {currentWalletType === "land" && (
+            <UpdateLandModal
+              row={selectedRow}
+              onClose={handleCloseModal}
+              onSuccess={handleUpdateSuccess}
+              isLandMonth={false}
+            />
+          )}
+          
+          {currentWalletType === "land_month" && (
+            <UpdateLandModal
+              row={selectedRow}
+              onClose={handleCloseModal}
+              onSuccess={handleUpdateSuccess}
+              isLandMonth={true}
+            />
+          )}
+          
+          {currentWalletType === "physical" && (
+            <UpdatePhysicalVerificationModal
+              row={selectedRow}
+              onClose={handleCloseModal}
+              onSuccess={handleUpdateSuccess}
+            />
+          )}
+          
+          {currentWalletType === "poster" && (
+            <UpdatePosterModal
+              row={selectedRow}
+              onClose={handleCloseModal}
+              onSuccess={handleUpdateSuccess}
+            />
+          )}
+          
+          {currentWalletType === "job" && (
+            <UpdateJobModal
+              row={selectedRow}
+              onClose={handleCloseModal}
+              onSuccess={handleUpdateSuccess}
+            />
+          )}
+          
+          {currentWalletType === "ads" && (
+            <UpdateAdsModal
+              row={selectedRow}
+              onClose={handleCloseModal}
+              onSuccess={handleUpdateSuccess}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };

@@ -18,7 +18,7 @@ import {
   Edit,
   Menu,
   Trash2,
-  X as XIcon
+  X as XIcon,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { locationApi } from "../api/LocationApi";
@@ -69,7 +69,7 @@ export const Location = () => {
             onClick={() => setIsAdding(!isAdding)}
             className="flex items-center gap-1 sm:gap-2 px-3 py-2 rounded-xl shadow-sm bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white text-sm font-medium"
           >
-            <PlusCircle size={16} /> 
+            <PlusCircle size={16} />
             <span className="hidden sm:inline">Add New</span>
             <span className="sm:hidden">Add</span>
           </button>
@@ -82,12 +82,14 @@ export const Location = () => {
             className="w-full flex items-center justify-between p-3 bg-gray-100 rounded-xl"
           >
             <div className="flex items-center gap-2">
-              {tabs.find(tab => tab.name === activeTab)?.icon}
+              {tabs.find((tab) => tab.name === activeTab)?.icon}
               <span className="font-medium text-gray-800">{activeTab}</span>
             </div>
-            <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${mobileTabOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`h-5 w-5 text-gray-500 transition-transform ${mobileTabOpen ? "rotate-180" : ""}`}
+            />
           </button>
-          
+
           {mobileTabOpen && (
             <div className="mt-2 bg-white border border-gray-200 rounded-xl shadow-lg">
               {tabs.map((tab) => (
@@ -241,8 +243,12 @@ export const Location = () => {
           <div className="lg:hidden p-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="flex-1">
-                <h2 className="text-lg font-bold text-gray-800">Geographical Hierarchy</h2>
-                <p className="text-sm text-gray-600">Manage locations in the system</p>
+                <h2 className="text-lg font-bold text-gray-800">
+                  Geographical Hierarchy
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Manage locations in the system
+                </p>
               </div>
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg">
                 <button
@@ -255,10 +261,18 @@ export const Location = () => {
                   title="Cards View"
                 >
                   <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
-                    <div className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}></div>
-                    <div className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}></div>
-                    <div className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}></div>
-                    <div className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}></div>
+                    <div
+                      className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}
+                    ></div>
+                    <div
+                      className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}
+                    ></div>
+                    <div
+                      className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}
+                    ></div>
+                    <div
+                      className={`rounded-sm ${viewMode === "cards" ? "bg-green-600" : "bg-gray-400"}`}
+                    ></div>
                   </div>
                 </button>
                 <button
@@ -271,9 +285,15 @@ export const Location = () => {
                   title="Table View"
                 >
                   <div className="w-4 h-4">
-                    <div className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"} mb-1`}></div>
-                    <div className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"} mb-1`}></div>
-                    <div className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"}`}></div>
+                    <div
+                      className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"} mb-1`}
+                    ></div>
+                    <div
+                      className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"} mb-1`}
+                    ></div>
+                    <div
+                      className={`h-0.5 ${viewMode === "table" ? "bg-green-600" : "bg-gray-400"}`}
+                    ></div>
                   </div>
                 </button>
               </div>
@@ -352,7 +372,9 @@ function PageHeader({
     <div className="mb-6 lg:mb-8">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 lg:mb-6">
         <div>
-          <h2 className="text-xl lg:text-2xl font-bold text-gray-800">{title}</h2>
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-800">
+            {title}
+          </h2>
           <p className="text-gray-600 text-sm lg:text-base mt-1">
             Manage and organize {title.toLowerCase()} in the system
           </p>
@@ -393,7 +415,7 @@ function PageHeader({
 // Helper function to parse JSON string names
 const parseJsonName = (name) => {
   try {
-    if (typeof name === 'string' && name.startsWith('{')) {
+    if (typeof name === "string" && name.startsWith("{")) {
       const parsed = JSON.parse(name);
       return parsed.name || name;
     }
@@ -427,11 +449,11 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
 
   const handleDeleteState = async (stateId) => {
     if (!window.confirm("Are you sure you want to delete this state?")) {
-        return;
+      return;
     }
     try {
       await locationApi.deleteState(stateId);
-      setStates(states.filter(state => state.id !== stateId));
+      setStates(states.filter((state) => state.id !== stateId));
     } catch (error) {
       throw error;
     }
@@ -482,7 +504,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
   const filteredStates = states.filter(
     (state) =>
       state.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      state.code.toLowerCase().includes(searchQuery.toLowerCase())
+      state.code.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -513,7 +535,10 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newStates.map((state, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                >
                   <div className="flex-1">
                     <div className="relative">
                       <input
@@ -523,7 +548,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
                           handleStateChange(
                             index,
                             "code",
-                            e.target.value.toUpperCase()
+                            e.target.value.toUpperCase(),
                           )
                         }
                         placeholder="State Code"
@@ -596,7 +621,9 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-8 lg:py-12">
           <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
-          <p className="text-gray-600 text-sm lg:text-base">Loading states data...</p>
+          <p className="text-gray-600 text-sm lg:text-base">
+            Loading states data...
+          </p>
         </div>
       ) : filteredStates.length === 0 ? (
         <div className="text-center py-8 lg:py-12">
@@ -624,7 +651,12 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredStates.map((state) => (
-            <CardItem key={state.id} item={state} type="state" onDelete={handleDeleteState}/>
+            <CardItem
+              key={state.id}
+              item={state}
+              type="state"
+              onDelete={handleDeleteState}
+            />
           ))}
         </div>
       ) : (
@@ -645,12 +677,12 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredStates.map((state) => (
-                  <TableRow 
-                    key={state.id} 
-                    item={state} 
-                    type="state" 
-                    onDelete={handleDeleteState}
-                  />
+                <TableRow
+                  key={state.id}
+                  item={state}
+                  type="state"
+                  onDelete={handleDeleteState}
+                />
               ))}
             </tbody>
           </table>
@@ -662,7 +694,7 @@ function StatesPage({ viewMode, isAdding, setIsAdding }) {
 
 function TableRow({ item, type, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const handleDelete = async () => {
     if (!window.confirm(`Are you sure you want to delete this ${type}?`)) {
       return;
@@ -671,7 +703,9 @@ function TableRow({ item, type, onDelete }) {
     setIsDeleting(true);
     try {
       await onDelete(item.id);
-      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+      toast.success(
+        `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`,
+      );
     } catch (error) {
       toast.error(error.message || `Failed to delete ${type}`);
     } finally {
@@ -705,7 +739,9 @@ function TableRow({ item, type, onDelete }) {
     <tr className="hover:bg-gray-50 transition-colors">
       <td className="p-3 lg:p-4">
         {item.code && (
-          <div className={`inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r ${styles.bg} rounded-lg`}>
+          <div
+            className={`inline-flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r ${styles.bg} rounded-lg`}
+          >
             <span className={`font-bold ${styles.text} text-sm lg:text-base`}>
               {item.code}
             </span>
@@ -741,7 +777,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
   const [districts, setDistricts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [newDistricts, setNewDistricts] = useState([""]);
+  const [newDistricts, setNewDistricts] = useState([{ code: "", name: "" }]);
 
   useEffect(() => {
     fetchStates();
@@ -755,11 +791,11 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
 
   const handleDeleteDistrict = async (districtId) => {
     if (!window.confirm("Are you sure you want to delete this district?")) {
-        return;
+      return;
     }
     try {
       await locationApi.deleteDistrict(districtId);
-      setDistricts(districts.filter(district => district.id !== districtId));
+      setDistricts(districts.filter((district) => district.id !== districtId));
     } catch (error) {
       throw error;
     }
@@ -790,7 +826,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
   };
 
   const handleAddDistrictField = () => {
-    setNewDistricts([...newDistricts, ""]);
+    setNewDistricts([...newDistricts, { code: "", name: "" }]);
   };
 
   const handleRemoveDistrictField = (index) => {
@@ -800,9 +836,13 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
     }
   };
 
-  const handleDistrictChange = (index, value) => {
+  const handleDistrictChange = (index, field, value) => {
     const updated = [...newDistricts];
-    updated[index] = value;
+    if (field === "code") {
+      updated[index][field] = value.toUpperCase();
+    } else {
+      updated[index][field] = value;
+    }
     setNewDistricts(updated);
   };
 
@@ -814,31 +854,63 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
       return;
     }
 
-    const validDistricts = newDistricts.filter((d) => d.trim());
+    // Validate all districts have both code and name
+    const validDistricts = newDistricts.filter(
+      (d) => d.code.trim() && d.name.trim(),
+    );
     if (validDistricts.length === 0) {
-      toast.error("Please enter at least one district name");
+      toast.error("Please enter at least one valid district");
       return;
     }
 
-    const districtsArray = validDistricts.map((name) => ({
-      code: name.substring(0, 2).toUpperCase(),
-      name,
-    }));
+    // Check for duplicate codes in the new batch
+    const codes = validDistricts.map((d) => d.code.toUpperCase());
+    const duplicateCodes = codes.filter(
+      (code, index) => codes.indexOf(code) !== index,
+    );
+
+    if (duplicateCodes.length > 0) {
+      toast.error(
+        `Duplicate district codes found: ${[...new Set(duplicateCodes)].join(", ")}`,
+      );
+      return;
+    }
+
+    // Check if any codes already exist in the current state
+    const existingCodes = districts.map((d) => d.code.toUpperCase());
+    const conflictingCodes = codes.filter((code) =>
+      existingCodes.includes(code),
+    );
+
+    if (conflictingCodes.length > 0) {
+      toast.error(
+        `District code(s) already exist in this state: ${conflictingCodes.join(", ")}`,
+      );
+      return;
+    }
 
     try {
-      await locationApi.addMultipleDistricts(selectedState, districtsArray);
+      // Make sure to send the correct payload
+      await locationApi.addMultipleDistricts(selectedState, validDistricts);
+
       toast.success("District(s) added successfully");
-      setNewDistricts([""]);
+      setNewDistricts([{ code: "", name: "" }]);
       setIsAdding(false);
       fetchDistricts(selectedState);
     } catch (error) {
-      toast.error(error.message || "Failed to add district(s)");
+      if (error.message && error.message.includes("duplicate")) {
+        toast.error(
+          "One or more district codes already exist. Please use different codes.",
+        );
+      } else {
+        toast.error(error.message || "Failed to add district(s)");
+      }
     }
   };
 
   const selectedStateName = states.find((s) => s.id == selectedState)?.name;
   const filteredDistricts = districts.filter((district) =>
-    district.name.toLowerCase().includes(searchQuery.toLowerCase())
+    district.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -911,23 +983,39 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newDistricts.map((district, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                  <div className="flex-1 relative">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                >
+                  <div className="flex-1">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={district.code}
+                        onChange={(e) =>
+                          handleDistrictChange(index, "code", e.target.value)
+                        }
+                        placeholder="District Code"
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
+                        maxLength="10"
+                        required
+                      />
+                      <span className="absolute right-3 top-3 text-xs text-gray-500 font-medium">
+                        {district.code.length}/10
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
                     <input
                       type="text"
-                      value={district}
+                      value={district.name}
                       onChange={(e) =>
-                        handleDistrictChange(index, e.target.value)
+                        handleDistrictChange(index, "name", e.target.value)
                       }
                       placeholder="District Name"
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
                     />
-                    <div className="absolute right-3 top-3">
-                      <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-1 rounded">
-                        {district.substring(0, 2).toUpperCase()}
-                      </span>
-                    </div>
                   </div>
                   {newDistricts.length > 1 && (
                     <button
@@ -956,7 +1044,7 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
                   type="button"
                   onClick={() => {
                     setIsAdding(false);
-                    setNewDistricts([""]);
+                    setNewDistricts([{ code: "", name: "" }]);
                   }}
                   className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm lg:text-base"
                 >
@@ -989,7 +1077,9 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
       ) : loading ? (
         <div className="flex flex-col items-center justify-center py-8 lg:py-12">
           <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
-          <p className="text-gray-600 text-sm lg:text-base">Loading districts...</p>
+          <p className="text-gray-600 text-sm lg:text-base">
+            Loading districts...
+          </p>
         </div>
       ) : filteredDistricts.length === 0 ? (
         <div className="text-center py-8 lg:py-12">
@@ -1017,7 +1107,12 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredDistricts.map((district) => (
-            <CardItem key={district.id} item={district} type="district" onDelete={handleDeleteDistrict}/>
+            <CardItem
+              key={district.id}
+              item={district}
+              type="district"
+              onDelete={handleDeleteDistrict}
+            />
           ))}
         </div>
       ) : (
@@ -1035,10 +1130,10 @@ function DistrictsPage({ viewMode, isAdding, setIsAdding }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredDistricts.map((district) => (
-                <TableRow 
-                  key={district.id} 
-                  item={district} 
-                  type="district" 
+                <TableRow
+                  key={district.id}
+                  item={district}
+                  type="district"
                   onDelete={handleDeleteDistrict}
                 />
               ))}
@@ -1083,11 +1178,11 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
 
   const handleDeleteSector = async (sectorId) => {
     if (!window.confirm("Are you sure you want to delete this sector?")) {
-        return;
+      return;
     }
     try {
       await locationApi.deleteSector(sectorId);
-      setSectors(sectors.filter(sector => sector.id !== sectorId));
+      setSectors(sectors.filter((sector) => sector.id !== sectorId));
     } catch (error) {
       throw error;
     }
@@ -1155,7 +1250,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
     }
 
     const validSectors = newSectors.filter(
-      (s) => s.code.trim() && s.name.trim()
+      (s) => s.code.trim() && s.name.trim(),
     );
     if (validSectors.length === 0) {
       toast.error("Please enter at least one valid sector");
@@ -1175,12 +1270,12 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
 
   const selectedStateName = states.find((s) => s.id == selectedState)?.name;
   const selectedDistrictName = districts.find(
-    (d) => d.id == selectedDistrict
+    (d) => d.id == selectedDistrict,
   )?.name;
   const filteredSectors = sectors.filter(
     (sector) =>
       sector.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sector.code.toLowerCase().includes(searchQuery.toLowerCase())
+      sector.code.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -1260,7 +1355,10 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newSectors.map((sector, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                >
                   <div className="flex-1">
                     <input
                       type="text"
@@ -1269,7 +1367,7 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
                         handleSectorChange(
                           index,
                           "code",
-                          e.target.value.toUpperCase()
+                          e.target.value.toUpperCase(),
                         )
                       }
                       placeholder="Sector Code"
@@ -1350,7 +1448,9 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
       ) : loading ? (
         <div className="flex flex-col items-center justify-center py-8 lg:py-12">
           <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
-          <p className="text-gray-600 text-sm lg:text-base">Loading sectors...</p>
+          <p className="text-gray-600 text-sm lg:text-base">
+            Loading sectors...
+          </p>
         </div>
       ) : filteredSectors.length === 0 ? (
         <div className="text-center py-8 lg:py-12">
@@ -1378,7 +1478,12 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredSectors.map((sector) => (
-            <CardItem key={sector.id} item={sector} type="sector" onDelete={handleDeleteSector}/>
+            <CardItem
+              key={sector.id}
+              item={sector}
+              type="sector"
+              onDelete={handleDeleteSector}
+            />
           ))}
         </div>
       ) : (
@@ -1399,10 +1504,10 @@ function SectorsPage({ viewMode, isAdding, setIsAdding }) {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredSectors.map((sector) => (
-                <TableRow 
-                  key={sector.id} 
-                  item={sector} 
-                  type="sector" 
+                <TableRow
+                  key={sector.id}
+                  item={sector}
+                  type="sector"
                   onDelete={handleDeleteSector}
                 />
               ))}
@@ -1421,7 +1526,9 @@ function CardItem({ item, type, onDelete }) {
     setIsDeleting(true);
     try {
       await onDelete(item.id);
-      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
+      toast.success(
+        `${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`,
+      );
     } catch (error) {
       toast.error(error.message || `Failed to delete ${type}`);
     } finally {
@@ -1492,7 +1599,9 @@ function CardItem({ item, type, onDelete }) {
     >
       <div className="flex items-start justify-between mb-3 lg:mb-4">
         <div className="flex items-center gap-3">
-          <div className={`p-2 lg:p-2.5 ${styles.text} bg-white rounded-lg lg:rounded-xl`}>
+          <div
+            className={`p-2 lg:p-2.5 ${styles.text} bg-white rounded-lg lg:rounded-xl`}
+          >
             {styles.icon}
           </div>
           <div className="min-w-0">
@@ -1501,7 +1610,9 @@ function CardItem({ item, type, onDelete }) {
             </h3>
             {item.code && (
               <div className="flex items-center gap-2 mt-1">
-                <span className={`text-xs lg:text-sm font-medium ${styles.text}`}>
+                <span
+                  className={`text-xs lg:text-sm font-medium ${styles.text}`}
+                >
                   Code: {item.code}
                 </span>
               </div>
@@ -1572,11 +1683,11 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
     if (!window.confirm("Are you sure you want to delete this town?")) {
       return;
     }
-    
+
     try {
       await locationApi.deleteTown(townId);
       toast.success("Town deleted successfully");
-      setTowns(towns.filter(town => town.id !== townId));
+      setTowns(towns.filter((town) => town.id !== townId));
     } catch (error) {
       toast.error(error.message || "Failed to delete town");
     }
@@ -1599,9 +1710,9 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
     try {
       const data = await locationApi.getTownsByDistrict(districtId);
       // Parse town names if they're stored as JSON strings
-      const parsedData = data.map(town => ({
+      const parsedData = data.map((town) => ({
         ...town,
-        name: parseJsonName(town.name)
+        name: parseJsonName(town.name),
       }));
       setTowns(parsedData);
     } catch (error) {
@@ -1655,10 +1766,10 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
 
   const selectedStateName = states.find((s) => s.id == selectedState)?.name;
   const selectedDistrictName = districts.find(
-    (d) => d.id == selectedDistrict
+    (d) => d.id == selectedDistrict,
   )?.name;
   const filteredTowns = towns.filter((town) =>
-    town.name.toLowerCase().includes(searchQuery.toLowerCase())
+    town.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -1738,7 +1849,10 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newTowns.map((town, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                >
                   <div className="flex-1">
                     <input
                       type="text"
@@ -1837,7 +1951,12 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredTowns.map((town) => (
-            <CardItem key={town.id} item={town} type="town" onDelete={handleDeleteTown}/>
+            <CardItem
+              key={town.id}
+              item={town}
+              type="town"
+              onDelete={handleDeleteTown}
+            />
           ))}
         </div>
       ) : (
@@ -1873,7 +1992,9 @@ function TownsPage({ viewMode, isAdding, setIsAdding }) {
                     </div>
                   </td>
                   <td className="p-3 lg:p-4">
-                    <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
+                    <span className="text-gray-600 text-sm lg:text-base">
+                      {selectedDistrictName}
+                    </span>
                   </td>
                   <td className="p-3 lg:p-4">
                     <button
@@ -1929,11 +2050,11 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
     if (!window.confirm("Are you sure you want to delete this mandal?")) {
       return;
     }
-    
+
     try {
       await locationApi.deleteMandal(mandalId);
       toast.success("mandal deleted successfully");
-      setMandals(mandals.filter(mandal => mandal.id !== mandalId));
+      setMandals(mandals.filter((mandal) => mandal.id !== mandalId));
     } catch (error) {
       toast.error(error.message || "Failed to delete mandal");
     }
@@ -2019,10 +2140,10 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
 
   const selectedStateName = states.find((s) => s.id == selectedState)?.name;
   const selectedDistrictName = districts.find(
-    (d) => d.id == selectedDistrict
+    (d) => d.id == selectedDistrict,
   )?.name;
   const filteredMandals = mandals.filter((mandal) =>
-    mandal.name.toLowerCase().includes(searchQuery.toLowerCase())
+    mandal.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -2102,12 +2223,17 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newMandals.map((mandal, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                >
                   <div className="flex-1">
                     <input
                       type="text"
                       value={mandal}
-                      onChange={(e) => handleMandalChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleMandalChange(index, e.target.value)
+                      }
                       placeholder="Mandal Name"
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
@@ -2173,7 +2299,9 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
       ) : loading ? (
         <div className="flex flex-col items-center justify-center py-8 lg:py-12">
           <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
-          <p className="text-gray-600 text-sm lg:text-base">Loading mandals...</p>
+          <p className="text-gray-600 text-sm lg:text-base">
+            Loading mandals...
+          </p>
         </div>
       ) : filteredMandals.length === 0 ? (
         <div className="text-center py-8 lg:py-12">
@@ -2201,7 +2329,12 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredMandals.map((mandal) => (
-            <CardItem key={mandal.id} item={mandal} type="mandal" onDelete={handleDeleteMandal}/>
+            <CardItem
+              key={mandal.id}
+              item={mandal}
+              type="mandal"
+              onDelete={handleDeleteMandal}
+            />
           ))}
         </div>
       ) : (
@@ -2237,7 +2370,9 @@ function MandalsPage({ viewMode, isAdding, setIsAdding }) {
                     </div>
                   </td>
                   <td className="p-3 lg:p-4">
-                    <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
+                    <span className="text-gray-600 text-sm lg:text-base">
+                      {selectedDistrictName}
+                    </span>
                   </td>
                   <td className="p-3 lg:p-4">
                     <button
@@ -2306,11 +2441,11 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
     if (!window.confirm("Are you sure you want to delete this village?")) {
       return;
     }
-    
+
     try {
       await locationApi.deleteVillage(villageId);
       toast.success("Village deleted successfully");
-      setVillages(villages.filter(village => village.id !== villageId));
+      setVillages(villages.filter((village) => village.id !== villageId));
     } catch (error) {
       toast.error(error.message || "Failed to delete village");
     }
@@ -2344,9 +2479,9 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
     try {
       const data = await locationApi.getMandalsByDistrict(districtId);
       // Parse mandal names if they're stored as JSON strings
-      const parsedData = data.map(mandal => ({
+      const parsedData = data.map((mandal) => ({
         ...mandal,
-        name: parseJsonName(mandal.name)
+        name: parseJsonName(mandal.name),
       }));
       setMandals(parsedData);
       if (parsedData.length > 0) {
@@ -2362,9 +2497,9 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
     try {
       const data = await locationApi.getVillagesByMandal(mandalId);
       // Parse village names if they're stored as JSON strings
-      const parsedData = data.map(village => ({
+      const parsedData = data.map((village) => ({
         ...village,
-        name: parseJsonName(village.name)
+        name: parseJsonName(village.name),
       }));
       setVillages(parsedData);
     } catch (error) {
@@ -2406,7 +2541,10 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
     }
 
     try {
-      await locationApi.addMultipleVillagesToMandal(selectedMandal, validVillages);
+      await locationApi.addMultipleVillagesToMandal(
+        selectedMandal,
+        validVillages,
+      );
       toast.success("Village(s) added successfully");
       setNewVillages([""]);
       setIsAdding(false);
@@ -2418,11 +2556,13 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
 
   const selectedStateName = states.find((s) => s.id == selectedState)?.name;
   const selectedDistrictName = districts.find(
-    (d) => d.id == selectedDistrict
+    (d) => d.id == selectedDistrict,
   )?.name;
-  const selectedMandalName = parseJsonName(mandals.find((m) => m.id == selectedMandal)?.name || "");
+  const selectedMandalName = parseJsonName(
+    mandals.find((m) => m.id == selectedMandal)?.name || "",
+  );
   const filteredVillages = villages.filter((village) =>
-    village.name.toLowerCase().includes(searchQuery.toLowerCase())
+    village.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -2523,12 +2663,17 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newVillages.map((village, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                >
                   <div className="flex-1">
                     <input
                       type="text"
                       value={village}
-                      onChange={(e) => handleVillageChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleVillageChange(index, e.target.value)
+                      }
                       placeholder="Village Name"
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
@@ -2594,7 +2739,9 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
       ) : loading ? (
         <div className="flex flex-col items-center justify-center py-8 lg:py-12">
           <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
-          <p className="text-gray-600 text-sm lg:text-base">Loading villages...</p>
+          <p className="text-gray-600 text-sm lg:text-base">
+            Loading villages...
+          </p>
         </div>
       ) : filteredVillages.length === 0 ? (
         <div className="text-center py-8 lg:py-12">
@@ -2622,7 +2769,12 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredVillages.map((village) => (
-            <CardItem key={village.id} item={village} type="village" onDelete={handleDeleteVillagesByMandal}/>
+            <CardItem
+              key={village.id}
+              item={village}
+              type="village"
+              onDelete={handleDeleteVillagesByMandal}
+            />
           ))}
         </div>
       ) : (
@@ -2661,10 +2813,14 @@ function VillagesByMandalPage({ viewMode, isAdding, setIsAdding }) {
                     </div>
                   </td>
                   <td className="p-3 lg:p-4">
-                    <span className="text-gray-600 text-sm lg:text-base">{selectedMandalName}</span>
+                    <span className="text-gray-600 text-sm lg:text-base">
+                      {selectedMandalName}
+                    </span>
                   </td>
                   <td className="p-3 lg:p-4">
-                    <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
+                    <span className="text-gray-600 text-sm lg:text-base">
+                      {selectedDistrictName}
+                    </span>
                   </td>
                   <td className="p-3 lg:p-4">
                     <button
@@ -2733,11 +2889,11 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
     if (!window.confirm("Are you sure you want to delete this village?")) {
       return;
     }
-    
+
     try {
       await locationApi.deleteVillage(villageId);
       toast.success("Village deleted successfully");
-      setVillages(villages.filter(village => village.id !== villageId));
+      setVillages(villages.filter((village) => village.id !== villageId));
     } catch (error) {
       toast.error(error.message || "Failed to delete village");
     }
@@ -2754,8 +2910,6 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
       toast.error("Failed to load states");
     }
   };
-
-
 
   const fetchDistricts = async (stateId) => {
     try {
@@ -2786,9 +2940,9 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
     try {
       const data = await locationApi.getVillagesBySector(sectorId);
       // Parse village names if they're stored as JSON strings
-      const parsedData = data.map(village => ({
+      const parsedData = data.map((village) => ({
         ...village,
-        name: parseJsonName(village.name)
+        name: parseJsonName(village.name),
       }));
       setVillages(parsedData);
     } catch (error) {
@@ -2830,7 +2984,10 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
     }
 
     try {
-      await locationApi.addMultipleVillagesToSector(selectedSector, validVillages);
+      await locationApi.addMultipleVillagesToSector(
+        selectedSector,
+        validVillages,
+      );
       toast.success("Village(s) added successfully");
       setNewVillages([""]);
       setIsAdding(false);
@@ -2842,11 +2999,11 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
 
   const selectedStateName = states.find((s) => s.id == selectedState)?.name;
   const selectedDistrictName = districts.find(
-    (d) => d.id == selectedDistrict
+    (d) => d.id == selectedDistrict,
   )?.name;
   const selectedSectorName = sectors.find((s) => s.id == selectedSector)?.name;
   const filteredVillages = villages.filter((village) =>
-    village.name.toLowerCase().includes(searchQuery.toLowerCase())
+    village.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -2947,12 +3104,17 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
           <form onSubmit={handleSubmit}>
             <div className="space-y-3">
               {newVillages.map((village, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                >
                   <div className="flex-1">
                     <input
                       type="text"
                       value={village}
-                      onChange={(e) => handleVillageChange(index, e.target.value)}
+                      onChange={(e) =>
+                        handleVillageChange(index, e.target.value)
+                      }
                       placeholder="Village Name"
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm lg:text-base"
                       required
@@ -3018,7 +3180,9 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
       ) : loading ? (
         <div className="flex flex-col items-center justify-center py-8 lg:py-12">
           <div className="animate-spin rounded-full h-10 w-10 lg:h-12 lg:w-12 border-b-2 border-emerald-500 mb-3 lg:mb-4"></div>
-          <p className="text-gray-600 text-sm lg:text-base">Loading villages...</p>
+          <p className="text-gray-600 text-sm lg:text-base">
+            Loading villages...
+          </p>
         </div>
       ) : filteredVillages.length === 0 ? (
         <div className="text-center py-8 lg:py-12">
@@ -3046,7 +3210,12 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredVillages.map((village) => (
-            <CardItem key={village.id} item={village} type="village" onDelete={handleDeleteVillagesBySector}/>
+            <CardItem
+              key={village.id}
+              item={village}
+              type="village"
+              onDelete={handleDeleteVillagesBySector}
+            />
           ))}
         </div>
       ) : (
@@ -3085,10 +3254,14 @@ function VillagesBySectorPage({ viewMode, isAdding, setIsAdding }) {
                     </div>
                   </td>
                   <td className="p-3 lg:p-4">
-                    <span className="text-gray-600 text-sm lg:text-base">{selectedSectorName}</span>
+                    <span className="text-gray-600 text-sm lg:text-base">
+                      {selectedSectorName}
+                    </span>
                   </td>
                   <td className="p-3 lg:p-4">
-                    <span className="text-gray-600 text-sm lg:text-base">{selectedDistrictName}</span>
+                    <span className="text-gray-600 text-sm lg:text-base">
+                      {selectedDistrictName}
+                    </span>
                   </td>
                   <td className="p-3 lg:p-4">
                     <button

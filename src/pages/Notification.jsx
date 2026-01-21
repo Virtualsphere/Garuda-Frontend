@@ -13,7 +13,10 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiCheckSquare,
-  FiAlertCircle
+  FiAlertCircle,
+  FiMail,
+  FiPhone,
+  FiUser
 } from "react-icons/fi";
 import { toast, Toaster } from "react-hot-toast";
 
@@ -62,7 +65,7 @@ export const Notification = () => {
       setNotifications(prev =>
         prev.map(notification =>
           notification.id === id
-            ? { ...notification, status: newStatus, updated_at: new Date().toISOString() }
+            ? { ...notification, status: newStatus }
             : notification
         )
       );
@@ -177,9 +180,10 @@ export const Notification = () => {
       if (search) {
         const searchLower = search.toLowerCase();
         return (
-          notification.title?.toLowerCase().includes(searchLower) ||
-          notification.message?.toLowerCase().includes(searchLower) ||
-          notification.type?.toLowerCase().includes(searchLower)
+          notification.description?.toLowerCase().includes(searchLower) ||
+          notification.email?.toLowerCase().includes(searchLower) ||
+          notification.role?.toLowerCase().includes(searchLower) ||
+          notification.phone_number?.toLowerCase().includes(searchLower)
         );
       }
       
@@ -307,7 +311,7 @@ export const Notification = () => {
                 <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search notifications..."
+                  placeholder="Search by description, email, phone, or role..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-all"
@@ -380,7 +384,7 @@ export const Notification = () => {
                       <div className="flex-1">
                         <div className="flex items-center flex-wrap gap-2 mb-1">
                           <h3 className="font-bold text-gray-800">
-                            {notification.title || "Untitled Notification"}
+                            {notification.description || "Untitled Notification"}
                           </h3>
                           <span className={`
                             px-2 py-0.5 rounded-full text-xs font-medium border
@@ -388,25 +392,31 @@ export const Notification = () => {
                           `}>
                             {notification.status || "unknown"}
                           </span>
-                          {notification.type && (
-                            <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">
-                              {notification.type}
+                          {notification.role && (
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs flex items-center">
+                              <FiUser className="mr-1" />
+                              {notification.role}
                             </span>
                           )}
                         </div>
                         
-                        <p className="text-gray-600 text-sm line-clamp-1">
-                          {notification.message || "No message provided"}
-                        </p>
-                        
-                        <div className="flex items-center mt-2 text-xs text-gray-500">
-                          <FiCalendar className="mr-1" />
-                          {getRelativeTime(notification.created_at)}
-                          {notification.updated_at && notification.updated_at !== notification.created_at && (
-                            <span className="ml-3">
-                              Updated: {getRelativeTime(notification.updated_at)}
-                            </span>
+                        <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-600">
+                          {notification.email && (
+                            <div className="flex items-center">
+                              <FiMail className="mr-1" />
+                              <span>{notification.email}</span>
+                            </div>
                           )}
+                          {notification.phone_number && (
+                            <div className="flex items-center">
+                              <FiPhone className="mr-1" />
+                              <span>{notification.phone_number}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center text-xs text-gray-500">
+                            <FiCalendar className="mr-1" />
+                            {getRelativeTime(notification.created_at)}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -425,47 +435,6 @@ export const Notification = () => {
                           <FiChevronDown className="text-gray-500" />
                         )}
                       </button>
-                      
-                      <div className="relative">
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="p-1 hover:bg-gray-200 rounded"
-                        >
-                          <FiMoreVertical className="text-gray-500" />
-                        </button>
-                        
-                        {/* Dropdown menu */}
-                        <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10 hidden group-hover:block">
-                          <div className="py-1">
-                            {notification.status === "pending" ? (
-                              <button
-                                onClick={() => updateNotificationStatus(notification.id, "complete")}
-                                disabled={updatingId === notification.id}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              >
-                                <FiCheckCircle className="mr-2 text-green-500" />
-                                Mark as Complete
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => updateNotificationStatus(notification.id, "pending")}
-                                disabled={updatingId === notification.id}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                              >
-                                <FiClock className="mr-2 text-yellow-500" />
-                                Mark as Pending
-                              </button>
-                            )}
-                            <button
-                              onClick={() => deleteNotification(notification.id)}
-                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
-                            >
-                              <FiXCircle className="mr-2" />
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -475,21 +444,41 @@ export const Notification = () => {
                       <div className="bg-white rounded-xl border border-gray-200 p-4">
                         <div className="space-y-3">
                           <div>
-                            <h4 className="font-semibold text-gray-700 mb-1">Full Message</h4>
+                            <h4 className="font-semibold text-gray-700 mb-1">Notification Details</h4>
                             <p className="text-gray-600 whitespace-pre-wrap">
-                              {notification.message || "No detailed message available"}
+                              {notification.description || "No detailed description available"}
                             </p>
                           </div>
                           
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3 border-t border-gray-100">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-gray-100">
                             <div>
                               <p className="text-xs text-gray-500">Notification ID</p>
                               <p className="text-sm font-mono font-medium">{notification.id}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-500">Type</p>
-                              <p className="text-sm font-medium">{notification.type || "General"}</p>
+                              <p className="text-xs text-gray-500">Role</p>
+                              <p className="text-sm font-medium flex items-center">
+                                <FiUser className="mr-2" />
+                                {notification.role || "Not specified"}
+                              </p>
                             </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Email</p>
+                              <p className="text-sm font-medium flex items-center">
+                                <FiMail className="mr-2" />
+                                {notification.email || "Not provided"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Phone</p>
+                              <p className="text-sm font-medium flex items-center">
+                                <FiPhone className="mr-2" />
+                                {notification.phone_number || "Not provided"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-gray-100">
                             <div>
                               <p className="text-xs text-gray-500">Created</p>
                               <p className="text-sm font-medium">{formatDate(notification.created_at)}</p>
@@ -498,10 +487,10 @@ export const Notification = () => {
                               <p className="text-xs text-gray-500">Status</p>
                               <div className="flex items-center">
                                 <span className={`
-                                  px-2 py-1 rounded text-xs font-medium
+                                  px-3 py-1 rounded-full text-sm font-medium border
                                   ${getStatusColor(notification.status)}
                                 `}>
-                                  {notification.status}
+                                  {notification.status || "unknown"}
                                 </span>
                               </div>
                             </div>
