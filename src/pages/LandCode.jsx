@@ -42,7 +42,7 @@ export const LandCode = () => {
     farmer_name: "",
     farmer_phone: "",
     village_name: "",
-    status: "Available",
+    status: "Inactive",
   });
 
   const generatePrefix = (stateName, districtName, townName) => {
@@ -183,7 +183,7 @@ export const LandCode = () => {
       farmer_name: code.farmer_name || "",
       farmer_phone: code.farmer_phone || "",
       village_name: code.village_name || "", // Just village name
-      status: code.status || "Available",
+      status: code.status || "Inactive",
     });
   };
 
@@ -222,7 +222,7 @@ export const LandCode = () => {
       farmer_name: "",
       farmer_phone: "",
       village_name: "",
-      status: "Available",
+      status: "Inactive",
     });
   };
 

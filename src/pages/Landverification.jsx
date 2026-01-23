@@ -207,6 +207,16 @@ export default function LandVerification() {
   const isBuyerSelecting = !!state?.buyer_id;
   const [mapModalOpen, setMapModalOpen] = useState(false);
   const [selectedLandForMap, setSelectedLandForMap] = useState(null);
+  const [filters, setFilters] = useState({
+    farmerName: '',
+    farmerPhone: '',
+    village: '',
+    mandal: '',
+    pricePerAcreMin: '',
+    pricePerAcreMax: '',
+    totalPriceMin: '',
+    totalPriceMax: '',
+  });
 
   // Form / edit states
   const [formData, setFormData] = useState({
@@ -482,7 +492,44 @@ export default function LandVerification() {
       adminVerificationFilter === "all" ||
       land.land_location?.admin_verification?.toLowerCase() === adminVerificationFilter;
 
-    return matchesSearch && matchesStatus && matchesAdminVerification;
+    // Apply the new filters
+    const matchesFarmerName = 
+      filters.farmerName === '' || 
+      land.farmer_details?.name?.toLowerCase().includes(filters.farmerName.toLowerCase());
+
+    const matchesFarmerPhone = 
+      filters.farmerPhone === '' || 
+      land.farmer_details?.phone?.includes(filters.farmerPhone);
+
+    const matchesVillage = 
+      filters.village === '' || 
+      land.land_location?.village?.toLowerCase().includes(filters.village.toLowerCase());
+
+    const matchesMandal = 
+      filters.mandal === '' || 
+      land.land_location?.mandal?.toLowerCase().includes(filters.mandal.toLowerCase());
+
+    // Price per Acre filter
+    const pricePerAcre = parseFloat(land.land_details?.price_per_acre) || 0;
+    const minPricePerAcre = filters.pricePerAcreMin ? parseFloat(filters.pricePerAcreMin) : 0;
+    const maxPricePerAcre = filters.pricePerAcreMax ? parseFloat(filters.pricePerAcreMax) : Infinity;
+    const matchesPricePerAcre = pricePerAcre >= minPricePerAcre && pricePerAcre <= maxPricePerAcre;
+
+    // Total Price filter
+    const totalPrice = parseFloat(land.land_details?.total_land_price) || 0;
+    const minTotalPrice = filters.totalPriceMin ? parseFloat(filters.totalPriceMin) : 0;
+    const maxTotalPrice = filters.totalPriceMax ? parseFloat(filters.totalPriceMax) : Infinity;
+    const matchesTotalPrice = totalPrice >= minTotalPrice && totalPrice <= maxTotalPrice;
+
+    return matchesSearch && 
+          matchesStatus && 
+          matchesAdminVerification && 
+          matchesFarmerName && 
+          matchesFarmerPhone && 
+          matchesVillage && 
+          matchesMandal && 
+          matchesPricePerAcre && 
+          matchesTotalPrice;
   });
 
   const getStatusColor = (status) => {
@@ -1389,42 +1436,194 @@ export default function LandVerification() {
 
           {/* Search and Filter Bar */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
-            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="flex-1 w-full">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search by district, village, or land code..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
-                  />
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <div className="space-y-6">
+              {/* Main Search Row */}
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="flex-1 w-full">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search by district, village, or land code..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    />
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-3 rounded-xl border border-gray-300 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none"
+                  >
+                    <option value="all">All Field Status</option>
+                    <option value="verified">Field Verified</option>
+                    <option value="pending">Field Pending</option>
+                    <option value="rejected">Field Rejected</option>
+                  </select>
+                  
+                  <select
+                    value={adminVerificationFilter}
+                    onChange={(e) => setAdminVerificationFilter(e.target.value)}
+                    className="px-4 py-3 rounded-xl border border-gray-300 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none"
+                  >
+                    <option value="all">All Admin Status</option>
+                    <option value="verified">Admin Verified</option>
+                    <option value="pending">Admin Pending</option>
+                    <option value="rejected">Admin Rejected</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="flex gap-3">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-3 rounded-xl border border-gray-300 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none"
-                >
-                  <option value="all">All Field Status</option>
-                  <option value="verified">Field Verified</option>
-                  <option value="pending">Field Pending</option>
-                  <option value="rejected">Field Rejected</option>
-                </select>
+              {/* Filter Form */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <Filter className="w-5 h-5" />
+                  Filter Properties
+                </h3>
                 
-                <select
-                  value={adminVerificationFilter}
-                  onChange={(e) => setAdminVerificationFilter(e.target.value)}
-                  className="px-4 py-3 rounded-xl border border-gray-300 bg-white focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none"
-                >
-                  <option value="all">All Admin Status</option>
-                  <option value="verified">Admin Verified</option>
-                  <option value="pending">Admin Pending</option>
-                  <option value="rejected">Admin Rejected</option>
-                </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Farmer Name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Farmer Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter farmer name"
+                      value={filters.farmerName}
+                      onChange={(e) => setFilters({...filters, farmerName: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Phone Number */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter phone number"
+                      value={filters.farmerPhone}
+                      onChange={(e) => setFilters({...filters, farmerPhone: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Village */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Village
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter village name"
+                      value={filters.village}
+                      onChange={(e) => setFilters({...filters, village: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Mandal */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Mandal
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter mandal name"
+                      value={filters.mandal}
+                      onChange={(e) => setFilters({...filters, mandal: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                    />
+                  </div>
+
+                  {/* Price per Acre Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Price per Acre (₹)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="Min"
+                        value={filters.pricePerAcreMin}
+                        onChange={(e) => setFilters({...filters, pricePerAcreMin: e.target.value})}
+                        className="w-1/2 px-4 py-2.5 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                        min="0"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Max"
+                        value={filters.pricePerAcreMax}
+                        onChange={(e) => setFilters({...filters, pricePerAcreMax: e.target.value})}
+                        className="w-1/2 px-4 py-2.5 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Total Price Range */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Total Price (₹)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="Min"
+                        value={filters.totalPriceMin}
+                        onChange={(e) => setFilters({...filters, totalPriceMin: e.target.value})}
+                        className="w-1/2 px-4 py-2.5 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                        min="0"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Max"
+                        value={filters.totalPriceMax}
+                        onChange={(e) => setFilters({...filters, totalPriceMax: e.target.value})}
+                        className="w-1/2 px-4 py-2.5 rounded-lg border border-gray-300 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter Actions */}
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => {
+                      setFilters({
+                        farmerName: '',
+                        farmerPhone: '',
+                        village: '',
+                        mandal: '',
+                        pricePerAcreMin: '',
+                        pricePerAcreMax: '',
+                        totalPriceMin: '',
+                        totalPriceMax: '',
+                      });
+                      setSearchTerm('');
+                    }}
+                    className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  >
+                    Clear All
+                  </button>
+                  <button
+                    onClick={() => {
+                      // The filter logic will be applied in the filteredLands calculation
+                      // Just trigger a re-render by updating state
+                      setFilters({...filters});
+                    }}
+                    className="px-5 py-2.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors font-medium flex items-center gap-2"
+                  >
+                    <Filter className="w-4 h-4" />
+                    Apply Filters
+                  </button>
+                </div>
               </div>
             </div>
           </div>

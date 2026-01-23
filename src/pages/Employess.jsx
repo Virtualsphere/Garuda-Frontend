@@ -155,7 +155,6 @@ export default function Employee() {
       createdUrls.current.push(url);
       return url;
     }
-    // backend already returns full URL like http://72.61.169.226/public/images/...
     return fileOrUrl;
   };
 
@@ -176,12 +175,9 @@ export default function Employee() {
         return;
       }
 
-      // Format employees for dropdown - EXCLUDE "user" role
       const formattedEmployees = data.users
         .filter(user => {
-          // Exclude current employee if provided
           if (excludeUniqueId && user.unique_id === excludeUniqueId) return false;
-          // Exclude employees with "user" role (case insensitive)
           const userRole = user.role?.toLowerCase() || "";
           return userRole !== "user";
         })
@@ -192,7 +188,6 @@ export default function Employee() {
           email: user.email || "",
           role: user.role || "",
           displayRole: formatRoleName(user.role),
-          // Get work district for filtering if needed
           work_location: data.work_location?.find((x) => x.unique_id === user.unique_id) || {},
         }))
         .sort((a, b) => a.name.localeCompare(b.name));

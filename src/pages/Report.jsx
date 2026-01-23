@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { 
+import {
   FiUser,
   FiPhone,
   FiCalendar,
@@ -17,7 +17,8 @@ import {
   FiArrowUp,
   FiSearch,
   FiRefreshCw,
-  FiEdit2
+  FiEdit2,
+  FiEye,
 } from "react-icons/fi";
 import { FaRupeeSign } from "react-icons/fa";
 import { PanelRight, Menu } from "lucide-react";
@@ -28,16 +29,18 @@ import { UpdatePhysicalVerificationModal } from "./UpdatePhysicalVerificationMod
 import { UpdatePosterModal } from "./UpdatePosterModal";
 import { UpdateJobModal } from "./UpdateJobModal";
 import { UpdateAdsModal } from "./UpdateAdsModal";
+import { useNavigate } from "react-router-dom";
 
 export const Report = () => {
   const [allData, setAllData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedRows, setExpandedRows] = useState(new Set());
-  
+  const navigate = useNavigate();
+
   // Filter states
   const [dateFilter, setDateFilter] = useState({
     startDate: "",
-    endDate: ""
+    endDate: "",
   });
   const [statusFilter, setStatusFilter] = useState("all");
   const [walletTypeFilter, setWalletTypeFilter] = useState("all");
@@ -45,7 +48,7 @@ export const Report = () => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [currentWalletType, setCurrentWalletType] = useState("");
-  
+
   // Track if data has been fetched
   const [dataFetched, setDataFetched] = useState(false);
 
@@ -60,7 +63,7 @@ export const Report = () => {
       bgColor: "bg-blue-50",
       textColor: "text-blue-700",
       api: "/travel/wallet",
-      idField: "travel_id"
+      idField: "travel_id",
     },
     land: {
       name: "Land Wallet",
@@ -69,7 +72,7 @@ export const Report = () => {
       bgColor: "bg-emerald-50",
       textColor: "text-emerald-700",
       api: "/land/wallet",
-      idField: "land_wallet_id"
+      idField: "land_wallet_id",
     },
     land_month: {
       name: "Land Month Wallet",
@@ -78,7 +81,7 @@ export const Report = () => {
       bgColor: "bg-purple-50",
       textColor: "text-purple-700",
       api: "/land/wallet/month",
-      idField: "land_wallet_id"
+      idField: "land_wallet_id",
     },
     physical: {
       name: "Physical Verification",
@@ -87,7 +90,7 @@ export const Report = () => {
       bgColor: "bg-orange-50",
       textColor: "text-orange-700",
       api: "/physical/wallet",
-      idField: "physical_verification_id"
+      idField: "physical_verification_id",
     },
     poster: {
       name: "Poster Wallet",
@@ -96,7 +99,7 @@ export const Report = () => {
       bgColor: "bg-red-50",
       textColor: "text-red-700",
       api: "/poster-wallet",
-      idField: "poster_wallet_id"
+      idField: "poster_wallet_id",
     },
     job: {
       name: "Job Post Wallet",
@@ -105,7 +108,7 @@ export const Report = () => {
       bgColor: "bg-indigo-50",
       textColor: "text-indigo-700",
       api: "/job-wallet",
-      idField: "job_post_wallet_id"
+      idField: "job_post_wallet_id",
     },
     ads: {
       name: "Ads Wallet",
@@ -114,8 +117,8 @@ export const Report = () => {
       bgColor: "bg-cyan-50",
       textColor: "text-cyan-700",
       api: "/ads-wallet",
-      idField: "ads_wallet_id"
-    }
+      idField: "ads_wallet_id",
+    },
   };
 
   const handleUpdateClick = (row, walletType) => {
@@ -139,10 +142,10 @@ export const Report = () => {
   const fetchWalletData = async () => {
     try {
       setLoading(true);
-      
+
       // Determine which wallet types to fetch
       let walletsToFetch = [];
-      
+
       if (walletTypeFilter === "all") {
         // Fetch all wallet types
         walletsToFetch = Object.entries(walletConfig);
@@ -156,31 +159,31 @@ export const Report = () => {
 
       // Build query parameters for backend filtering
       const queryParams = new URLSearchParams();
-      
+
       if (dateFilter.startDate) {
-        queryParams.append('startDate', dateFilter.startDate);
+        queryParams.append("startDate", dateFilter.startDate);
       }
       if (dateFilter.endDate) {
-        queryParams.append('endDate', dateFilter.endDate);
+        queryParams.append("endDate", dateFilter.endDate);
       }
       if (statusFilter !== "all") {
-        queryParams.append('status', statusFilter);
+        queryParams.append("status", statusFilter);
       }
       if (searchTerm) {
-        queryParams.append('search', searchTerm);
+        queryParams.append("search", searchTerm);
       }
 
       const allPromises = walletsToFetch.map(async ([type, config]) => {
         try {
           // Add query parameters to API call for backend filtering
-          const apiUrl = `${API_BASE}${config.api}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-          
+          const apiUrl = `${API_BASE}${config.api}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
           const res = await axios.get(apiUrl, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
           });
-          
+
           // Add wallet type to each record
-          return res.data.data.map(item => ({
+          return res.data.data.map((item) => ({
             ...item,
             wallet_type: type,
             wallet_name: config.name,
@@ -188,7 +191,7 @@ export const Report = () => {
             wallet_color: config.color,
             wallet_bgColor: config.bgColor,
             wallet_textColor: config.textColor,
-            id_field: config.idField
+            id_field: config.idField,
           }));
         } catch (error) {
           console.error(`Error fetching ${config.name}:`, error);
@@ -200,9 +203,8 @@ export const Report = () => {
       const combinedData = results.flat();
       setAllData(combinedData);
       setDataFetched(true);
-      
+
       toast.success(`Loaded ${combinedData.length} records`);
-      
     } catch (error) {
       console.error("Error fetching wallet data:", error);
       toast.error("Failed to fetch data");
@@ -222,33 +224,34 @@ export const Report = () => {
 
     // Date filter (additional frontend filtering)
     if (dateFilter.startDate && dateFilter.endDate) {
-      filtered = filtered.filter(item => {
+      filtered = filtered.filter((item) => {
         const itemDate = new Date(item.date);
         const startDate = new Date(dateFilter.startDate);
         const endDate = new Date(dateFilter.endDate);
         endDate.setHours(23, 59, 59, 999);
-        
+
         return itemDate >= startDate && itemDate <= endDate;
       });
     }
 
     // Status filter (additional frontend filtering)
     if (statusFilter !== "all") {
-      filtered = filtered.filter(item => 
-        item.status?.toLowerCase() === statusFilter.toLowerCase()
+      filtered = filtered.filter(
+        (item) => item.status?.toLowerCase() === statusFilter.toLowerCase(),
       );
     }
 
     // Search filter (additional frontend filtering)
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(item => 
-        item.name?.toLowerCase().includes(term) ||
-        item.phone?.toLowerCase().includes(term) ||
-        item.role?.toLowerCase().includes(term) ||
-        item.wallet_name?.toLowerCase().includes(term) ||
-        (item.land_id && item.land_id.toLowerCase().includes(term)) ||
-        (item.session_id && item.session_id.toLowerCase().includes(term))
+      filtered = filtered.filter(
+        (item) =>
+          item.name?.toLowerCase().includes(term) ||
+          item.phone?.toLowerCase().includes(term) ||
+          item.role?.toLowerCase().includes(term) ||
+          item.wallet_name?.toLowerCase().includes(term) ||
+          (item.land_id && item.land_id.toLowerCase().includes(term)) ||
+          (item.session_id && item.session_id.toLowerCase().includes(term)),
       );
     }
 
@@ -258,7 +261,13 @@ export const Report = () => {
   const filteredData = getFilteredData();
 
   const handleApplyFilters = () => {
-    if (!dateFilter.startDate && !dateFilter.endDate && !statusFilter && !walletTypeFilter && !searchTerm) {
+    if (
+      !dateFilter.startDate &&
+      !dateFilter.endDate &&
+      !statusFilter &&
+      !walletTypeFilter &&
+      !searchTerm
+    ) {
       toast.error("Please set at least one filter before fetching data");
       return;
     }
@@ -268,13 +277,13 @@ export const Report = () => {
   const handleRowClick = (row) => {
     const uniqueId = row[row.id_field] || row.id;
     const newExpanded = new Set(expandedRows);
-    
+
     if (newExpanded.has(uniqueId)) {
       newExpanded.delete(uniqueId);
     } else {
       newExpanded.add(uniqueId);
     }
-    
+
     setExpandedRows(newExpanded);
   };
 
@@ -292,11 +301,11 @@ export const Report = () => {
   };
 
   const formatAmount = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -320,16 +329,26 @@ export const Report = () => {
         rejectedCount: 0,
         uniqueUsers: 0,
         walletTypes: 0,
-        totalRecords: 0
+        totalRecords: 0,
       };
     }
 
-    const totalAmount = filteredData.reduce((sum, row) => sum + (parseFloat(row.amount) || 0), 0);
-    const approvedCount = filteredData.filter(row => row.status?.toLowerCase() === 'approved').length;
-    const pendingCount = filteredData.filter(row => row.status?.toLowerCase() === 'pending').length;
-    const rejectedCount = filteredData.filter(row => row.status?.toLowerCase() === 'rejected').length;
-    const uniqueUsers = new Set(filteredData.map(row => row.name)).size;
-    const walletTypes = new Set(filteredData.map(row => row.wallet_type)).size;
+    const totalAmount = filteredData.reduce(
+      (sum, row) => sum + (parseFloat(row.amount) || 0),
+      0,
+    );
+    const approvedCount = filteredData.filter(
+      (row) => row.status?.toLowerCase() === "approved",
+    ).length;
+    const pendingCount = filteredData.filter(
+      (row) => row.status?.toLowerCase() === "pending",
+    ).length;
+    const rejectedCount = filteredData.filter(
+      (row) => row.status?.toLowerCase() === "rejected",
+    ).length;
+    const uniqueUsers = new Set(filteredData.map((row) => row.name)).size;
+    const walletTypes = new Set(filteredData.map((row) => row.wallet_type))
+      .size;
 
     return {
       totalAmount,
@@ -338,7 +357,7 @@ export const Report = () => {
       rejectedCount,
       uniqueUsers,
       walletTypes,
-      totalRecords: filteredData.length
+      totalRecords: filteredData.length,
     };
   };
 
@@ -347,7 +366,7 @@ export const Report = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <Toaster position="top-right" />
-      
+
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white shadow-sm z-30">
         <div className="flex items-center justify-between p-4">
@@ -359,12 +378,23 @@ export const Report = () => {
               <Menu size={24} />
             </button>
             <div>
-              <h1 className="text-lg font-semibold">
-                Wallet Reports
-              </h1>
-              <p className="text-xs text-gray-500">Filter and view wallet transactions</p>
+              <h1 className="text-lg font-semibold">Wallet Reports</h1>
+              <p className="text-xs text-gray-500">
+                Filter and view wallet transactions
+              </p>
             </div>
           </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/land/report`);
+            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm"
+            title="View purchase requests"
+          >
+            <FiEye className="w-4 h-4" />
+            Land Repot
+          </button>
           {dataFetched && (
             <div className="text-sm text-gray-600">
               {allData.length} records
@@ -381,9 +411,22 @@ export const Report = () => {
           </div>
           <div>
             <h1 className="text-xl font-semibold">Wallet Reports Dashboard</h1>
-            <p className="text-xs text-gray-500">Filter and fetch wallet transactions as needed</p>
+            <p className="text-xs text-gray-500">
+              Filter and fetch wallet transactions as needed
+            </p>
           </div>
         </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/land/report`);
+          }}
+          className="flex items-center gap-2 px-3 py-2 rounded-full shadow-sm bg-green-500 hover:bg-green-600 text-white text-sm"
+          title="View purchase requests"
+        >
+          <FiEye className="w-4 h-4" />
+          Land Report
+        </button>
         <div className="flex items-center gap-4">
           {dataFetched && (
             <div className="text-sm text-gray-600">
@@ -464,14 +507,26 @@ export const Report = () => {
                       <input
                         type="date"
                         value={dateFilter.startDate}
-                        onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+                        onChange={(e) =>
+                          setDateFilter((prev) => ({
+                            ...prev,
+                            startDate: e.target.value,
+                          }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       />
-                      <span className="flex items-center text-gray-400">to</span>
+                      <span className="flex items-center text-gray-400">
+                        to
+                      </span>
                       <input
                         type="date"
                         value={dateFilter.endDate}
-                        onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+                        onChange={(e) =>
+                          setDateFilter((prev) => ({
+                            ...prev,
+                            endDate: e.target.value,
+                          }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       />
                     </div>
@@ -553,7 +608,7 @@ export const Report = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                   <div className="flex items-center justify-between">
                     <div>
@@ -581,7 +636,7 @@ export const Report = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                   <div className="flex items-center justify-between">
                     <div>
@@ -595,7 +650,7 @@ export const Report = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
                   <div className="flex items-center justify-between">
                     <div>
@@ -633,10 +688,14 @@ export const Report = () => {
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
                   <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <h2 className="text-lg font-bold text-gray-800">Wallet Transactions</h2>
+                      <h2 className="text-lg font-bold text-gray-800">
+                        Wallet Transactions
+                      </h2>
                       <div className="text-sm text-gray-600">
-                        Showing <span className="font-bold">{filteredData.length}</span> of{" "}
-                        <span className="font-bold">{allData.length}</span> records
+                        Showing{" "}
+                        <span className="font-bold">{filteredData.length}</span>{" "}
+                        of <span className="font-bold">{allData.length}</span>{" "}
+                        records
                       </div>
                     </div>
                   </div>
@@ -645,15 +704,33 @@ export const Report = () => {
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr className="text-left text-gray-600 text-sm font-medium">
-                          <th className="py-3 px-4 border-b border-gray-100">#</th>
-                          <th className="py-3 px-4 border-b border-gray-100">WALLET TYPE</th>
-                          <th className="py-3 px-4 border-b border-gray-100">DATE</th>
-                          <th className="py-3 px-4 border-b border-gray-100">USER</th>
-                          <th className="py-3 px-4 border-b border-gray-100">ROLE</th>
-                          <th className="py-3 px-4 border-b border-gray-100">PHONE</th>
-                          <th className="py-3 px-4 border-b border-gray-100">AMOUNT</th>
-                          <th className="py-3 px-4 border-b border-gray-100">STATUS</th>
-                          <th className="py-3 px-4 border-b border-gray-100 text-center">ACTION</th>
+                          <th className="py-3 px-4 border-b border-gray-100">
+                            #
+                          </th>
+                          <th className="py-3 px-4 border-b border-gray-100">
+                            WALLET TYPE
+                          </th>
+                          <th className="py-3 px-4 border-b border-gray-100">
+                            DATE
+                          </th>
+                          <th className="py-3 px-4 border-b border-gray-100">
+                            USER
+                          </th>
+                          <th className="py-3 px-4 border-b border-gray-100">
+                            ROLE
+                          </th>
+                          <th className="py-3 px-4 border-b border-gray-100">
+                            PHONE
+                          </th>
+                          <th className="py-3 px-4 border-b border-gray-100">
+                            AMOUNT
+                          </th>
+                          <th className="py-3 px-4 border-b border-gray-100">
+                            STATUS
+                          </th>
+                          <th className="py-3 px-4 border-b border-gray-100 text-center">
+                            ACTION
+                          </th>
                         </tr>
                       </thead>
 
@@ -664,7 +741,9 @@ export const Report = () => {
                               <div className="flex flex-col items-center justify-center text-gray-400">
                                 <FiCreditCard className="text-4xl mb-2" />
                                 <p className="text-lg">No records found</p>
-                                <p className="text-sm">Try adjusting your filters</p>
+                                <p className="text-sm">
+                                  Try adjusting your filters
+                                </p>
                               </div>
                             </td>
                           </tr>
@@ -673,35 +752,47 @@ export const Report = () => {
                             const uniqueId = row[row.id_field] || row.id;
                             const isExpanded = expandedRows.has(uniqueId);
                             const Icon = row.wallet_icon;
-                            
+
                             return (
                               <React.Fragment key={`${row.wallet_type}-${i}`}>
                                 <tr
                                   onClick={() => handleRowClick(row)}
                                   className={`
                                     cursor-pointer transition-all duration-150
-                                    ${isExpanded ? 'bg-blue-50' : 'hover:bg-gray-50'}
+                                    ${isExpanded ? "bg-blue-50" : "hover:bg-gray-50"}
                                     border-b border-gray-100
                                   `}
                                 >
                                   <td className="py-3 px-4">
                                     <div className="flex items-center">
-                                      <div className={`w-2 h-2 rounded-full mr-3 ${isExpanded ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                                      <span className="font-medium text-gray-700">{i + 1}</span>
+                                      <div
+                                        className={`w-2 h-2 rounded-full mr-3 ${isExpanded ? "bg-blue-500" : "bg-gray-300"}`}
+                                      ></div>
+                                      <span className="font-medium text-gray-700">
+                                        {i + 1}
+                                      </span>
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">
-                                    <div className={`flex items-center gap-2 ${row.wallet_textColor}`}>
-                                      <div className={`p-1.5 rounded-lg ${row.wallet_bgColor}`}>
+                                    <div
+                                      className={`flex items-center gap-2 ${row.wallet_textColor}`}
+                                    >
+                                      <div
+                                        className={`p-1.5 rounded-lg ${row.wallet_bgColor}`}
+                                      >
                                         <Icon className="text-sm" />
                                       </div>
-                                      <span className="text-sm font-medium">{row.wallet_name}</span>
+                                      <span className="text-sm font-medium">
+                                        {row.wallet_name}
+                                      </span>
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">
                                     <div className="flex items-center">
                                       <FiCalendar className="mr-2 text-gray-400 text-sm" />
-                                      <span className="text-sm text-gray-800">{row.date}</span>
+                                      <span className="text-sm text-gray-800">
+                                        {row.date}
+                                      </span>
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">
@@ -709,7 +800,9 @@ export const Report = () => {
                                       <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
                                         <FiUser className="text-blue-500 text-sm" />
                                       </div>
-                                      <span className="text-sm font-medium text-gray-800">{row.name}</span>
+                                      <span className="text-sm font-medium text-gray-800">
+                                        {row.name}
+                                      </span>
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">
@@ -720,7 +813,9 @@ export const Report = () => {
                                   <td className="py-3 px-4">
                                     <div className="flex items-center">
                                       <FiPhone className="mr-2 text-gray-400 text-sm" />
-                                      <span className="text-sm text-gray-800">{row.phone}</span>
+                                      <span className="text-sm text-gray-800">
+                                        {row.phone}
+                                      </span>
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">
@@ -729,10 +824,12 @@ export const Report = () => {
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">
-                                    <span className={`
+                                    <span
+                                      className={`
                                       text-xs px-2 py-1 rounded-full font-medium border
                                       ${getStatusColor(row.status)}
-                                    `}>
+                                    `}
+                                    >
                                       {row.status}
                                     </span>
                                   </td>
@@ -765,7 +862,9 @@ export const Report = () => {
                                         <div className="flex items-center justify-between mb-2">
                                           <div className="flex items-center text-blue-600 text-sm">
                                             <FiChevronUp className="mr-1" />
-                                            <span className="font-medium">Transaction Details</span>
+                                            <span className="font-medium">
+                                              Transaction Details
+                                            </span>
                                           </div>
                                           <button
                                             onClick={() => handleRowClick(row)}
@@ -777,45 +876,75 @@ export const Report = () => {
                                         <div className="bg-white rounded-lg border border-gray-200 p-3">
                                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                                             <div>
-                                              <p className="text-gray-500 mb-1">Transaction ID</p>
+                                              <p className="text-gray-500 mb-1">
+                                                Transaction ID
+                                              </p>
                                               <p className="font-medium text-gray-800 font-mono">
                                                 {uniqueId}
                                               </p>
                                             </div>
                                             <div>
-                                              <p className="text-gray-500 mb-1">Wallet Type</p>
-                                              <p className="font-medium text-gray-800">{row.wallet_name}</p>
+                                              <p className="text-gray-500 mb-1">
+                                                Wallet Type
+                                              </p>
+                                              <p className="font-medium text-gray-800">
+                                                {row.wallet_name}
+                                              </p>
                                             </div>
                                             <div>
-                                              <p className="text-gray-500 mb-1">Date</p>
-                                              <p className="font-medium text-gray-800">{row.date}</p>
+                                              <p className="text-gray-500 mb-1">
+                                                Date
+                                              </p>
+                                              <p className="font-medium text-gray-800">
+                                                {row.date}
+                                              </p>
                                             </div>
                                             <div>
-                                              <p className="text-gray-500 mb-1">Amount</p>
-                                              <p className="font-medium text-gray-800">{formatAmount(row.amount)}</p>
+                                              <p className="text-gray-500 mb-1">
+                                                Amount
+                                              </p>
+                                              <p className="font-medium text-gray-800">
+                                                {formatAmount(row.amount)}
+                                              </p>
                                             </div>
                                             {row.land_id && (
                                               <div>
-                                                <p className="text-gray-500 mb-1">Land ID</p>
-                                                <p className="font-medium text-gray-800">{row.land_id}</p>
+                                                <p className="text-gray-500 mb-1">
+                                                  Land ID
+                                                </p>
+                                                <p className="font-medium text-gray-800">
+                                                  {row.land_id}
+                                                </p>
                                               </div>
                                             )}
                                             {row.session_id && (
                                               <div>
-                                                <p className="text-gray-500 mb-1">Session ID</p>
-                                                <p className="font-medium text-gray-800 font-mono">{row.session_id}</p>
+                                                <p className="text-gray-500 mb-1">
+                                                  Session ID
+                                                </p>
+                                                <p className="font-medium text-gray-800 font-mono">
+                                                  {row.session_id}
+                                                </p>
                                               </div>
                                             )}
                                             {row.state && (
                                               <div>
-                                                <p className="text-gray-500 mb-1">State</p>
-                                                <p className="font-medium text-gray-800">{row.state}</p>
+                                                <p className="text-gray-500 mb-1">
+                                                  State
+                                                </p>
+                                                <p className="font-medium text-gray-800">
+                                                  {row.state}
+                                                </p>
                                               </div>
                                             )}
                                             {row.district && (
                                               <div>
-                                                <p className="text-gray-500 mb-1">District</p>
-                                                <p className="font-medium text-gray-800">{row.district}</p>
+                                                <p className="text-gray-500 mb-1">
+                                                  District
+                                                </p>
+                                                <p className="font-medium text-gray-800">
+                                                  {row.district}
+                                                </p>
                                               </div>
                                             )}
                                           </div>
@@ -836,7 +965,9 @@ export const Report = () => {
                   <div className="px-6 py-4 border-t border-gray-100 bg-gray-50">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-gray-600">
                       <div>
-                        Displaying <span className="font-bold">{filteredData.length}</span> records
+                        Displaying{" "}
+                        <span className="font-bold">{filteredData.length}</span>{" "}
+                        records
                       </div>
                       <div className="flex items-center flex-wrap gap-3">
                         <div className="flex items-center space-x-3">
@@ -857,21 +988,39 @@ export const Report = () => {
                           <div className="flex items-center gap-2">
                             <span className="text-xs">Active wallets:</span>
                             <div className="flex flex-wrap gap-1">
-                              {Array.from(new Set(filteredData.map(row => row.wallet_type))).slice(0, 3).map(type => {
-                                const config = walletConfig[type];
-                                if (!config) return null;
-                                return (
-                                  <span 
-                                    key={type} 
-                                    className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600"
-                                  >
-                                    {config.name}
-                                  </span>
-                                );
-                              })}
-                              {Array.from(new Set(filteredData.map(row => row.wallet_type))).length > 3 && (
+                              {Array.from(
+                                new Set(
+                                  filteredData.map((row) => row.wallet_type),
+                                ),
+                              )
+                                .slice(0, 3)
+                                .map((type) => {
+                                  const config = walletConfig[type];
+                                  if (!config) return null;
+                                  return (
+                                    <span
+                                      key={type}
+                                      className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600"
+                                    >
+                                      {config.name}
+                                    </span>
+                                  );
+                                })}
+                              {Array.from(
+                                new Set(
+                                  filteredData.map((row) => row.wallet_type),
+                                ),
+                              ).length > 3 && (
                                 <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-600">
-                                  +{Array.from(new Set(filteredData.map(row => row.wallet_type))).length - 3} more
+                                  +
+                                  {Array.from(
+                                    new Set(
+                                      filteredData.map(
+                                        (row) => row.wallet_type,
+                                      ),
+                                    ),
+                                  ).length - 3}{" "}
+                                  more
                                 </span>
                               )}
                             </div>
@@ -885,9 +1034,9 @@ export const Report = () => {
                 {/* Data Summary */}
                 <div className="mt-6 text-center text-sm text-gray-500">
                   <p>
-                    Data fetched: {new Date().toLocaleString()} • 
-                    Total wallet types in filter: {Object.keys(walletConfig).length} • 
-                    Use "Refresh" to update with current filters
+                    Data fetched: {new Date().toLocaleString()} • Total wallet
+                    types in filter: {Object.keys(walletConfig).length} • Use
+                    "Refresh" to update with current filters
                   </p>
                 </div>
               </>
@@ -902,7 +1051,8 @@ export const Report = () => {
                     No Data Loaded Yet
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Set your filters above and click "Apply Filters & Fetch Data" to load specific wallet transaction data.
+                    Set your filters above and click "Apply Filters & Fetch
+                    Data" to load specific wallet transaction data.
                   </p>
                   <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center">
@@ -929,7 +1079,7 @@ export const Report = () => {
               refreshTable={fetchWalletData}
             />
           )}
-          
+
           {currentWalletType === "land" && (
             <UpdateLandModal
               row={selectedRow}
@@ -938,7 +1088,7 @@ export const Report = () => {
               isLandMonth={false}
             />
           )}
-          
+
           {currentWalletType === "land_month" && (
             <UpdateLandModal
               row={selectedRow}
@@ -947,7 +1097,7 @@ export const Report = () => {
               isLandMonth={true}
             />
           )}
-          
+
           {currentWalletType === "physical" && (
             <UpdatePhysicalVerificationModal
               row={selectedRow}
@@ -955,7 +1105,7 @@ export const Report = () => {
               onSuccess={handleUpdateSuccess}
             />
           )}
-          
+
           {currentWalletType === "poster" && (
             <UpdatePosterModal
               row={selectedRow}
@@ -963,7 +1113,7 @@ export const Report = () => {
               onSuccess={handleUpdateSuccess}
             />
           )}
-          
+
           {currentWalletType === "job" && (
             <UpdateJobModal
               row={selectedRow}
@@ -971,7 +1121,7 @@ export const Report = () => {
               onSuccess={handleUpdateSuccess}
             />
           )}
-          
+
           {currentWalletType === "ads" && (
             <UpdateAdsModal
               row={selectedRow}

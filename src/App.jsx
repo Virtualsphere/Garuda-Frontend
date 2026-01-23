@@ -33,6 +33,7 @@ import { Review } from './pages/Review';
 import { Notification } from './pages/Notification';
 import { LandPurchaseDetail } from './pages/LandPurchaseDetail';
 import { UpdateLandPurchaseModal } from './pages/UpdateLandPurchaseModal';
+import LandReport from './pages/LandReport';
 function App() {
 
   return (
@@ -67,8 +68,9 @@ function App() {
           <Route path="banner" element={<Banner />} />
           <Route path="review" element={<Review />} />
           <Route path="notification" element={<Notification />} />
-          <Route path="/land-purchase" element={<LandPurchaseDetail />} />
-          <Route path="/land-purchase/modal" element={<UpdateLandPurchaseModal />} />
+          <Route path="land-purchase" element={<LandPurchaseDetail />} />
+          <Route path="land-purchase/modal" element={<UpdateLandPurchaseModal />} />
+          <Route path="land/report" element={<LandReport />} />
           <Route path="map" element={<GarudaMap />} />
         </Route>
         <Route index element={<Signin />} />
